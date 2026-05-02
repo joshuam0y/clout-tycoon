@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import './ControlPanel.css';
-import { prestigeEras } from '../data/gameData';
+import { prestigeEras, PRESTIGE_RUN_CLOUT_THRESHOLD } from '../data/gameData';
 import { formatNumber, formatRate } from '../utils/formatNumber';
 
 export const ControlPanel = ({
@@ -10,13 +10,17 @@ export const ControlPanel = ({
   currentEra,
   prestigeCount,
   prestigeMultiplier,
+  reputationIncomeMultiplier,
   passiveCloutPerSecond,
   clickCloutPerClick,
   lifetimeClout,
+  runCloutEarned,
+  gems,
   totalClicks,
   onClickPostContent,
   onPrestige,
-  onOpenShop
+  onOpenShop,
+  onOpenHowToPlay
 }) => {
   const [isClicking, setIsClicking] = useState(false);
   const [floaters, setFloaters] = useState([]);
@@ -30,11 +34,15 @@ export const ControlPanel = ({
     setTimeout(() => setIsClicking(false), 100);
   };
 
-  const canPrestige = lifetimeClout >= 100000;
+  const canPrestige = runCloutEarned >= PRESTIGE_RUN_CLOUT_THRESHOLD;
+  const runProgress = Math.min(1, runCloutEarned / PRESTIGE_RUN_CLOUT_THRESHOLD);
   const currentEraData = prestigeEras[currentEra];
 
   return (
     <div className="control-panel panel">
+      <button type="button" className="how-to-side-link" onClick={onOpenHowToPlay}>
+        How to play
+      </button>
       {/* Era display */}
       <div className="era-display" style={{ borderColor: currentEraData.theme.primary }}>
         <div className="era-name" style={{ color: currentEraData.theme.primary }}>
@@ -59,9 +67,18 @@ export const ControlPanel = ({
           <span className="stat-label">Followers</span>
           <span className="stat-value">{formatNumber(followers)}</span>
         </div>
+        <div className="stat-row follower-hint">
+          <span>Audience boosts clout & deal payouts; lowers hire/build cost.</span>
+        </div>
         <div className="stat">
           <span className="stat-label">Reputation</span>
           <span className="stat-value">{Math.floor(reputation)}%</span>
+        </div>
+        <div className="stat-row reputation-impact">
+          <span title="Applied to passive clout & each post. 100% = full baseline at maximum reputation score. Near 0% reputation you drop to ~55%.">
+            Rep multiplier
+          </span>
+          <span>{(reputationIncomeMultiplier * 100).toFixed(0)}%</span>
         </div>
       </div>
 
@@ -99,8 +116,21 @@ export const ControlPanel = ({
           <span>{totalClicks.toLocaleString()}</span>
         </div>
         <div className="stat-row">
-          <span>Lifetime Clout:</span>
+          <span>Lifetime Clout (all-time):</span>
           <span>{formatNumber(lifetimeClout)}</span>
+        </div>
+        <div className="stat-row run-clout-row">
+          <span>This run (prestige bar):</span>
+          <span>
+            {formatNumber(runCloutEarned)} / {formatNumber(PRESTIGE_RUN_CLOUT_THRESHOLD)}
+          </span>
+        </div>
+        <div className="prestige-run-bar" aria-hidden>
+          <div className="prestige-run-bar-fill" style={{ width: `${runProgress * 100}%` }} />
+        </div>
+        <div className="stat-row gems-row">
+          <span>Gems:</span>
+          <span>{gems} 💎</span>
         </div>
       </div>
 
@@ -119,10 +149,14 @@ export const ControlPanel = ({
           onClick={onPrestige}
           disabled={!canPrestige}
         >
-          Prestige {canPrestige ? '✓' : `(${formatNumber(100000 - lifetimeClout)} more)`}
+          Prestige{' '}
+          {canPrestige
+            ? '✓'
+            : `(${formatNumber(Math.max(0, PRESTIGE_RUN_CLOUT_THRESHOLD - runCloutEarned))} run clout)`}
         </button>
         <div className="prestige-hint">
-          Reset everything for permanent +50% multiplier
+          Resets a run at {formatNumber(PRESTIGE_RUN_CLOUT_THRESHOLD)} this-run clout. Lifetime clout &
+          gems stay. +45% permanent mult per prestige. +1 💎 per prestige, plus +1 extra every 4th prestige.
         </div>
       </div>
     </div>

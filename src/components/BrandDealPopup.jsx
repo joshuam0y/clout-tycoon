@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import './BrandDealPopup.css';
 import { brandDealTypes } from '../data/gameData';
+import { formatNumber } from '../utils/formatNumber';
 
 export const BrandDealPopup = ({ activeBrandDeal, onAccept, onDecline }) => {
   const [timeLeft, setTimeLeft] = useState(0);
@@ -16,16 +17,15 @@ export const BrandDealPopup = ({ activeBrandDeal, onAccept, onDecline }) => {
     return () => clearInterval(interval);
   }, [activeBrandDeal]);
 
-  if (!activeBrandDeal) return null;
+  const deal = useMemo(
+    () => (activeBrandDeal ? brandDealTypes.find(d => d.id === activeBrandDeal.typeId) : null),
+    [activeBrandDeal]
+  );
 
-  const deal = brandDealTypes.find(d => d.id === activeBrandDeal.typeId);
+  if (!activeBrandDeal || !deal) return null;
+
   const timeLeftSeconds = Math.ceil(timeLeft / 1000);
   const progress = (timeLeft / 15000) * 100;
-
-  const formatNumber = (num) => {
-    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-    return Math.floor(num).toString();
-  };
 
   return (
     <div className="brand-deal-overlay">
@@ -48,21 +48,22 @@ export const BrandDealPopup = ({ activeBrandDeal, onAccept, onDecline }) => {
 
           <div className="deal-rewards">
             <div className="reward-item">
-              <span className="reward-label">Clout:</span>
-              <span className="reward-value clout">
-                +{formatNumber(activeBrandDeal.cloutReward)}
-              </span>
+              <span className="reward-label">Clout</span>
+              <span className="reward-value clout">+{formatNumber(activeBrandDeal.cloutReward)}</span>
             </div>
             <div className="reward-item">
-              <span className="reward-label">Followers:</span>
+              <span className="reward-label">Followers</span>
               <span className="reward-value followers">
                 +{formatNumber(activeBrandDeal.followersReward)}
               </span>
             </div>
             <div className="reward-item">
-              <span className="reward-label">Reputation:</span>
-              <span className={`reward-value ${activeBrandDeal.reputationChange >= 0 ? 'positive' : 'negative'}`}>
-                {activeBrandDeal.reputationChange >= 0 ? '+' : ''}{activeBrandDeal.reputationChange}
+              <span className="reward-label">Reputation</span>
+              <span
+                className={`reward-value ${activeBrandDeal.reputationChange >= 0 ? 'positive' : 'negative'}`}
+              >
+                {activeBrandDeal.reputationChange >= 0 ? '+' : ''}
+                {activeBrandDeal.reputationChange}
               </span>
             </div>
           </div>
@@ -79,11 +80,7 @@ export const BrandDealPopup = ({ activeBrandDeal, onAccept, onDecline }) => {
         </div>
 
         <div className="deal-actions">
-          <button
-            type="button"
-            className="decline-deal-button"
-            onClick={onDecline}
-          >
+          <button type="button" className="decline-deal-button" onClick={onDecline}>
             Decline
           </button>
           <button

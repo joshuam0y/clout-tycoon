@@ -7,10 +7,12 @@ import { ShopPanel } from './components/ShopPanel';
 import { BrandDealPopup } from './components/BrandDealPopup';
 import { Notifications } from './components/Notifications';
 import { MonetizationPanel } from './components/MonetizationPanel';
+import { HowToPlayModal } from './components/HowToPlayModal';
 
 function App() {
   const gameState = useGameState();
   const [showMonetizationPanel, setShowMonetizationPanel] = useState(false);
+  const [howToPlayOpen, setHowToPlayOpen] = useState(true);
 
   const handleCellClick = (position) => {
     if (!gameState.selectedTool) return;
@@ -48,9 +50,12 @@ function App() {
           currentEra={gameState.currentEra}
           prestigeCount={gameState.prestigeCount}
           prestigeMultiplier={gameState.prestigeMultiplier}
+          reputationIncomeMultiplier={gameState.reputationIncomeMultiplier}
           passiveCloutPerSecond={gameState.passiveCloutPerSecond}
           clickCloutPerClick={gameState.clickCloutPerClick}
           lifetimeClout={gameState.lifetimeClout}
+          runCloutEarned={gameState.runCloutEarned}
+          gems={gameState.gems}
           totalClicks={gameState.totalClicks}
           onClickPostContent={gameState.clickPostContent}
           onPrestige={gameState.prestige}
@@ -68,6 +73,7 @@ function App() {
         {/* Right panel - Shop */}
         <ShopPanel
           clout={gameState.clout}
+          followers={gameState.followers}
           currentEra={gameState.currentEra}
           selectedTool={gameState.selectedTool}
           onSelectTool={gameState.setSelectedTool}
@@ -75,6 +81,7 @@ function App() {
           buildings={gameState.buildings}
           clickUpgradeLevels={gameState.clickUpgradeLevels}
           onBuyClickUpgrade={gameState.buyClickUpgrade}
+          onOpenHowToPlay={() => setHowToPlayOpen(true)}
         />
       </div>
 
@@ -85,12 +92,29 @@ function App() {
         onDecline={gameState.declineBrandDeal}
       />
 
+      {howToPlayOpen && <HowToPlayModal onClose={() => setHowToPlayOpen(false)} />}
+
       {/* Notifications */}
       <Notifications notifications={gameState.notifications} />
 
       {/* Monetization panel */}
       {showMonetizationPanel && (
-        <MonetizationPanel onClose={() => setShowMonetizationPanel(false)} />
+        <MonetizationPanel
+          onClose={() => setShowMonetizationPanel(false)}
+          gems={gameState.gems}
+          gemCloutMultStacks={gameState.gemCloutMultStacks}
+          maxGemCloutStacks={gameState.maxGemCloutStacks}
+          passiveCloutPerSecond={gameState.passiveCloutPerSecond}
+          achievementDefs={gameState.achievementDefs}
+          achievementsUnlocked={gameState.achievementsUnlocked}
+          gachaCosts={gameState.gachaCosts}
+          gemEconomy={gameState.gemEconomy}
+          onBuyGemStack={gameState.buyGemCloutStack}
+          onCloutSurge={gameState.buyCloutSurge}
+          onGachaPull={gameState.pullGacha}
+          onGrantGemPack={gameState.grantGemsFromPack}
+          onMarketInject={gameState.marketCloutInjection}
+        />
       )}
     </div>
   );

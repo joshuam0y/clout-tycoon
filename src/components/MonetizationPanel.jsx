@@ -1,68 +1,181 @@
 import { useState } from 'react';
 import './MonetizationPanel.css';
+import { formatNumber } from '../utils/formatNumber';
 
-export const MonetizationPanel = ({ onClose }) => {
-  const [activeTab, setActiveTab] = useState('gacha');
+export const MonetizationPanel = ({
+  onClose,
+  gems,
+  gemCloutMultStacks,
+  maxGemCloutStacks,
+  passiveCloutPerSecond,
+  achievementDefs,
+  achievementsUnlocked,
+  gachaCosts,
+  gemEconomy,
+  onBuyGemStack,
+  onCloutSurge,
+  onGachaPull,
+  onGrantGemPack,
+  onMarketInject
+}) => {
+  const [activeTab, setActiveTab] = useState('gems');
   const [isPulling, setIsPulling] = useState(false);
 
-  const handleGachaPull = () => {
+  const handleGacha = multi => {
+    if (gems < (multi ? gachaCosts.multi : gachaCosts.single)) return;
     setIsPulling(true);
     setTimeout(() => {
+      onGachaPull(multi);
       setIsPulling(false);
-      alert('Gacha system placeholder - Would pull a premium influencer card!');
-    }, 2000);
+    }, 900);
   };
 
+  const syndicatePct = (gemCloutMultStacks * gemEconomy.stackBonus * 100).toFixed(0);
+
   return (
-    <div className="monetization-overlay">
+    <div className="monetization-overlay" role="dialog" aria-labelledby="premium-shop-title">
       <div className="monetization-panel panel-purple">
         <div className="monetization-header">
-          <h2>Premium Shop</h2>
-          <button className="close-button" onClick={onClose}>✕</button>
+          <h2 id="premium-shop-title">Premium Shop</h2>
+          <button type="button" className="close-button" onClick={onClose} aria-label="Close">
+            ✕
+          </button>
         </div>
 
-        {/* Tab navigation */}
         <div className="monetization-tabs">
           <button
-            className={`tab ${activeTab === 'gacha' ? 'active' : ''}`}
-            onClick={() => setActiveTab('gacha')}
+            type="button"
+            className={`tab ${activeTab === 'gems' ? 'active' : ''}`}
+            onClick={() => setActiveTab('gems')}
           >
-            Gacha
+            Gems
           </button>
           <button
+            type="button"
             className={`tab ${activeTab === 'boosts' ? 'active' : ''}`}
             onClick={() => setActiveTab('boosts')}
           >
             Boosts
           </button>
           <button
-            className={`tab ${activeTab === 'market' ? 'active' : ''}`}
-            onClick={() => setActiveTab('market')}
+            type="button"
+            className={`tab ${activeTab === 'gacha' ? 'active' : ''}`}
+            onClick={() => setActiveTab('gacha')}
           >
-            Market
+            Drops
+          </button>
+          <button
+            type="button"
+            className={`tab ${activeTab === 'achievements' ? 'active' : ''}`}
+            onClick={() => setActiveTab('achievements')}
+          >
+            Trophies
           </button>
         </div>
 
-        {/* Content */}
         <div className="monetization-content">
+          {activeTab === 'gems' && (
+            <div className="gems-section">
+              <h3>Get Gems</h3>
+              <p className="section-description">
+                Gems are earned in-game from prestige and achievements. Purchases below simulate topping
+                up — no real payment is processed in this build.
+              </p>
+              <div className="gem-packs">
+                <button type="button" className="gem-pack" onClick={() => onGrantGemPack(45)}>
+                  +45 💎
+                  <span className="gem-pack-sub">Starter</span>
+                </button>
+                <button type="button" className="gem-pack primary-pack" onClick={() => onGrantGemPack(120)}>
+                  +120 💎
+                  <span className="gem-pack-sub">Creator</span>
+                </button>
+                <button type="button" className="gem-pack" onClick={() => onGrantGemPack(350)}>
+                  +350 💎
+                  <span className="gem-pack-sub">Agency</span>
+                </button>
+              </div>
+              <div className="gem-uses-hint">
+                <strong>What gems do:</strong> permanent +4% all clout per Syndicate stack (max {maxGemCloutStacks}
+                ), instant clout surges based on your passive rate, viral clout drops, and rival “noise
+                campaigns” that inject clout at scale.
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'boosts' && (
+            <div className="boosts-section">
+              <h3>Spend Gems</h3>
+              <p className="section-description">
+                Syndicate stacks multiply everything — posts, passive, and brand deals. Surge converts gems into
+                raw clout using your current passive DPS.
+              </p>
+
+              <div className="boost-items">
+                <div className="boost-item">
+                  <div className="boost-header">
+                    <span className="boost-icon">🏙️</span>
+                    <div className="boost-info">
+                      <h4>Syndicate Kickback (+{gemEconomy.stackBonus * 100}% all Clout)</h4>
+                      <p>
+                        Permanent. Owned: {gemCloutMultStacks}/{maxGemCloutStacks} (total +{syndicatePct}% from
+                        gems).
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="boost-buy"
+                    onClick={onBuyGemStack}
+                    disabled={gemCloutMultStacks >= maxGemCloutStacks || gems < gemEconomy.stackCost}
+                  >
+                    {gemEconomy.stackCost} 💎
+                  </button>
+                </div>
+
+                <div className="boost-item">
+                  <div className="boost-header">
+                    <span className="boost-icon">⚡</span>
+                    <div className="boost-info">
+                      <h4>Clout Surge</h4>
+                      <p>
+                        Instantly gain ~72 seconds of passive at your current rate (
+                        {formatNumber(passiveCloutPerSecond)}/s).
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="boost-buy"
+                    onClick={onCloutSurge}
+                    disabled={gems < gemEconomy.surgeCost || passiveCloutPerSecond <= 0}
+                  >
+                    {gemEconomy.surgeCost} 💎
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {activeTab === 'gacha' && (
             <div className="gacha-section">
-              <h3>Premium Influencer Gacha</h3>
+              <h3>Viral Drops</h3>
               <p className="section-description">
-                Pull premium influencers with superior stats and unique abilities!
+                Spend gems for bundled clout based on your passive output — stronger when your agency is
+                already humming.
               </p>
 
               <div className={`gacha-machine ${isPulling ? 'pulling' : ''}`}>
                 <div className="gacha-display">
                   {isPulling ? (
                     <div className="gacha-animation">
-                      <div className="spinner"></div>
-                      <p>Summoning...</p>
+                      <div className="spinner" />
+                      <p>Routing hype...</p>
                     </div>
                   ) : (
                     <div className="gacha-prompt">
-                      <span className="gacha-icon">🎰</span>
-                      <p>Ready to pull!</p>
+                      <span className="gacha-icon">📣</span>
+                      <p>Ready when you are.</p>
                     </div>
                   )}
                 </div>
@@ -70,147 +183,82 @@ export const MonetizationPanel = ({ onClose }) => {
 
               <div className="gacha-options">
                 <button
+                  type="button"
                   className="gacha-button primary"
-                  onClick={handleGachaPull}
-                  disabled={isPulling}
+                  onClick={() => handleGacha(false)}
+                  disabled={isPulling || gems < gachaCosts.single}
                 >
-                  Single Pull (100 💎)
+                  Single ({gachaCosts.single} 💎)
                 </button>
                 <button
+                  type="button"
                   className="gacha-button"
-                  onClick={handleGachaPull}
-                  disabled={isPulling}
+                  onClick={() => handleGacha(true)}
+                  disabled={isPulling || gems < gachaCosts.multi}
                 >
-                  10x Pull (900 💎)
+                  10× ({gachaCosts.multi} 💎)
                 </button>
               </div>
-
-              <div className="gacha-rates">
-                <h4>Drop Rates</h4>
-                <div className="rate-item legendary">⭐⭐⭐ Legendary: 1%</div>
-                <div className="rate-item epic">⭐⭐ Epic: 10%</div>
-                <div className="rate-item rare">⭐ Rare: 89%</div>
-              </div>
             </div>
           )}
 
-          {activeTab === 'boosts' && (
-            <div className="boosts-section">
-              <h3>Permanent Boosts</h3>
-              <p className="section-description">
-                One-time purchases that boost your agency forever!
-              </p>
-
-              <div className="boost-items">
-                <div className="boost-item">
-                  <div className="boost-header">
-                    <span className="boost-icon">⚡</span>
-                    <div className="boost-info">
-                      <h4>Clout Multiplier x2</h4>
-                      <p>Double all Clout gains permanently</p>
-                    </div>
-                  </div>
-                  <button className="boost-buy">500 💎</button>
-                </div>
-
-                <div className="boost-item">
-                  <div className="boost-header">
-                    <span className="boost-icon">⏱️</span>
-                    <div className="boost-info">
-                      <h4>Instant Construction</h4>
-                      <p>Skip all building timers instantly</p>
-                    </div>
-                  </div>
-                  <button className="boost-buy">200 💎</button>
-                </div>
-
-                <div className="boost-item">
-                  <div className="boost-header">
-                    <span className="boost-icon">👑</span>
-                    <div className="boost-info">
-                      <h4>VIP Auto-Accept</h4>
-                      <p>Automatically accept brand deals</p>
-                    </div>
-                  </div>
-                  <button className="boost-buy">300 💎</button>
-                </div>
-
-                <div className="boost-item">
-                  <div className="boost-header">
-                    <span className="boost-icon">💰</span>
-                    <div className="boost-info">
-                      <h4>Passive Income Boost</h4>
-                      <p>+50% to all passive generation</p>
-                    </div>
-                  </div>
-                  <button className="boost-buy">400 💎</button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'market' && (
-            <div className="market-section">
-              <h3>Market Manipulation</h3>
-              <p className="section-description">
-                Sabotage rival agencies and dominate the influencer market!
-              </p>
-
-              <div className="rival-agencies">
-                <div className="rival-card">
-                  <div className="rival-header">
-                    <h4>TrendHouse Agency</h4>
-                    <div className="rival-threat">Threat: High 🔴</div>
-                  </div>
-                  <div className="rival-stats">
-                    <div>Clout: 45.2K</div>
-                    <div>Influencers: 12</div>
-                  </div>
-                  <button className="sabotage-button">Sabotage (150 💎)</button>
-                </div>
-
-                <div className="rival-card">
-                  <div className="rival-header">
-                    <h4>Viral Squad Inc.</h4>
-                    <div className="rival-threat">Threat: Medium 🟡</div>
-                  </div>
-                  <div className="rival-stats">
-                    <div>Clout: 28.7K</div>
-                    <div>Influencers: 8</div>
-                  </div>
-                  <button className="sabotage-button">Sabotage (100 💎)</button>
-                </div>
-
-                <div className="rival-card">
-                  <div className="rival-header">
-                    <h4>Content Kings</h4>
-                    <div className="rival-threat">Threat: Low 🟢</div>
-                  </div>
-                  <div className="rival-stats">
-                    <div>Clout: 12.1K</div>
-                    <div>Influencers: 5</div>
-                  </div>
-                  <button className="sabotage-button">Sabotage (50 💎)</button>
-                </div>
-              </div>
-
-              <div className="sabotage-effects">
-                <h4>Sabotage Effects</h4>
-                <ul>
-                  <li>🔻 Reduce rival's Clout by 20%</li>
-                  <li>📉 Lower rival's reputation</li>
-                  <li>💎 Steal followers for yourself</li>
-                  <li>⏰ Slow their production for 5 minutes</li>
-                </ul>
-              </div>
+          {activeTab === 'achievements' && (
+            <div className="achievements-section">
+              <h3>Trophies</h3>
+              <p className="section-description">Complete goals to earn free gems.</p>
+              <ul className="achievement-list">
+                {achievementDefs.map(def => {
+                  const done = !!achievementsUnlocked[def.id];
+                  return (
+                    <li key={def.id} className={`achievement-row ${done ? 'done' : ''}`}>
+                      <span className="ach-icon">{done ? '✓' : '○'}</span>
+                      <div className="ach-body">
+                        <div className="ach-name">{def.name}</div>
+                        <div className="ach-desc">{def.description}</div>
+                      </div>
+                      <span className="ach-reward">+{def.gemReward} 💎</span>
+                    </li>
+                  );
+                })}
+              </ul>
             </div>
           )}
         </div>
 
+        {activeTab !== 'gems' && activeTab !== 'achievements' && (
+          <div className="market-inline">
+            <h4>Market noise (clout injection)</h4>
+            <p className="section-description small">
+              Spend gems to simulate a press cycle — payout scales with your passive clout/sec.
+            </p>
+            <div className="market-buttons">
+              <button type="button" className="sabotage-button" onClick={() => onMarketInject(50, 'Buzz')}>
+                Buzz (50 💎)
+              </button>
+              <button
+                type="button"
+                className="sabotage-button"
+                onClick={() => onMarketInject(120, 'Trend hijack')}
+              >
+                Trend hijack (120 💎)
+              </button>
+              <button
+                type="button"
+                className="sabotage-button"
+                onClick={() => onMarketInject(200, 'Full blitz')}
+              >
+                Full blitz (200 💎)
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="premium-currency">
-          <span className="currency-label">Premium Gems:</span>
-          <span className="currency-value">0 💎</span>
-          <button className="buy-currency">Buy Gems</button>
+          <span className="currency-label">Gems</span>
+          <span className="currency-value">{gems} 💎</span>
+          <button type="button" className="buy-currency" onClick={() => setActiveTab('gems')}>
+            Get gems
+          </button>
         </div>
       </div>
     </div>

@@ -46,16 +46,20 @@
 }
 
 body {
-  font-family: 'Courier New', monospace;
+  font-family: Sora, 'Segoe UI', system-ui, sans-serif;
   background: var(--bg-void);
   color: var(--text-primary);
   overflow: hidden;
   user-select: none;
+  min-height: 100dvh;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
 }
 
 #root {
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
+  min-height: 100dvh;
 }
 
 /* Neon grid background */
@@ -104,15 +108,15 @@ button {
   background: var(--bg-panel);
   border: 2px solid var(--neon-cyan);
   color: var(--text-primary);
-  font-family: 'Courier New', monospace;
+  font-family: inherit;
   font-size: 14px;
-  font-weight: bold;
+  font-weight: 700;
   padding: var(--spacing-sm) var(--spacing-md);
   cursor: pointer;
   border-radius: 4px;
   transition: all var(--speed-fast);
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.08em;
   position: relative;
   overflow: hidden;
 }
@@ -179,9 +183,9 @@ button:disabled:hover {
 
 .stat-label {
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.08em;
 }
 
 .stat-value {

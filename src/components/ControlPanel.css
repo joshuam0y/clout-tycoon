@@ -1,12 +1,30 @@
 .control-panel {
   width: 300px;
-  height: 100vh;
+  height: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
   overflow-y: auto;
+  padding-bottom: calc(var(--spacing-md) + env(safe-area-inset-bottom, 0px));
   border-radius: 0;
   border-right: none;
+}
+
+.how-to-side-link {
+  width: 100%;
+  min-height: 40px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  border-color: var(--neon-cyan);
+  background: rgba(0, 255, 255, 0.08);
+  color: var(--neon-cyan);
+  text-shadow: 0 0 12px rgba(0, 255, 255, 0.5);
+}
+
+.how-to-side-link:hover {
+  box-shadow: var(--glow-cyan);
 }
 
 .era-display {
@@ -171,11 +189,26 @@
   font-weight: bold;
 }
 
+.reputation-impact {
+  border-left: 3px solid var(--neon-yellow);
+}
+
+.reputation-impact span:last-child {
+  color: var(--neon-yellow);
+  text-shadow: var(--glow-yellow);
+}
+
 .premium-shop-button {
   width: 100%;
   height: 50px;
   font-size: 16px;
   margin-top: var(--spacing-md);
+  padding: 0 var(--spacing-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  overflow: visible;
   border-color: var(--neon-yellow);
   background: linear-gradient(135deg, rgba(255, 255, 0, 0.2), rgba(255, 136, 0, 0.2));
 }
@@ -185,7 +218,7 @@
 }
 
 .prestige-section {
-  margin-top: auto;
+  margin-top: var(--spacing-md);
   padding-top: var(--spacing-md);
   border-top: 1px solid var(--neon-purple);
 }
@@ -208,4 +241,38 @@
   color: var(--text-muted);
   text-align: center;
   line-height: 1.4;
+}
+
+.follower-hint {
+  font-size: 10px;
+  line-height: 1.35;
+  color: var(--text-muted);
+  border-left: 3px solid var(--neon-pink);
+}
+
+.run-clout-row span:last-child {
+  color: var(--neon-yellow);
+  text-shadow: var(--glow-yellow);
+}
+
+.prestige-run-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 0, 0.25);
+  overflow: hidden;
+  margin: 4px 0 var(--spacing-sm);
+}
+
+.prestige-run-bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--neon-purple), var(--neon-yellow));
+  box-shadow: var(--glow-yellow);
+  transition: width 0.25s ease-out;
+}
+
+.gems-row span:last-child {
+  color: var(--neon-yellow);
+  text-shadow: var(--glow-yellow);
 }

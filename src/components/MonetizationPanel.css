@@ -14,12 +14,13 @@
 }
 
 .monetization-panel {
-  width: 90%;
-  max-width: 700px;
-  max-height: 90vh;
+  width: min(560px, 96vw);
+  min-height: 420px;
+  max-height: min(88vh, 720px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  padding: var(--spacing-md) var(--spacing-lg);
   animation: popupSlideIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
@@ -57,13 +58,17 @@
 
 .monetization-tabs {
   display: flex;
-  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
   margin: var(--spacing-md) 0;
 }
 
 .tab {
-  flex: 1;
-  height: 45px;
+  flex: 1 1 22%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px 6px;
+  font-size: 11px;
   background: rgba(128, 0, 255, 0.1);
   border-color: var(--neon-purple);
   opacity: 0.5;
@@ -82,8 +87,10 @@
 
 .monetization-content {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  padding: var(--spacing-md) 0;
+  overflow-x: hidden;
+  padding: var(--spacing-sm) 4px var(--spacing-md) 0;
 }
 
 .monetization-content h3 {
@@ -386,4 +393,147 @@
 
 .buy-currency:hover {
   box-shadow: var(--glow-yellow);
+}
+
+/* Gem packs */
+.gem-packs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+@media (max-width: 520px) {
+  .gem-packs {
+    grid-template-columns: 1fr;
+  }
+}
+
+.gem-pack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 72px;
+  font-size: 15px;
+  border-color: var(--neon-yellow);
+  background: rgba(255, 255, 0, 0.06);
+}
+
+.gem-pack.primary-pack {
+  border-color: var(--neon-pink);
+  background: rgba(255, 0, 255, 0.08);
+}
+
+.gem-pack-sub {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.gem-uses-hint {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+  padding: var(--spacing-md);
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 8px;
+  border: 1px solid rgba(128, 0, 255, 0.35);
+}
+
+.gem-uses-hint strong {
+  color: var(--text-primary);
+}
+
+.section-description.small {
+  font-size: 12px;
+  margin-bottom: var(--spacing-sm);
+}
+
+.market-inline {
+  padding: var(--spacing-md) 0 0;
+  border-top: 1px solid rgba(128, 0, 255, 0.35);
+  margin-top: var(--spacing-sm);
+}
+
+.market-inline h4 {
+  color: var(--neon-orange);
+  font-size: 14px;
+  margin-bottom: var(--spacing-xs);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.market-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.market-buttons .sabotage-button {
+  flex: 1 1 140px;
+}
+
+/* Achievements */
+.achievement-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.achievement-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(100, 100, 140, 0.5);
+  border-radius: 8px;
+}
+
+.achievement-row.done {
+  border-color: var(--neon-green);
+  background: rgba(0, 255, 136, 0.06);
+}
+
+.ach-icon {
+  flex-shrink: 0;
+  width: 24px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.achievement-row.done .ach-icon {
+  color: var(--neon-green);
+}
+
+.ach-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.ach-name {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.ach-desc {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.35;
+  margin-top: 2px;
+}
+
+.ach-reward {
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--neon-yellow);
 }

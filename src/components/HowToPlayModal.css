@@ -1,0 +1,122 @@
+.how-to-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-md);
+  animation: howToFade 0.25s ease-out;
+}
+
+@keyframes howToFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.how-to-panel {
+  width: min(480px, 100%);
+  max-height: min(85vh, 640px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-color: var(--neon-pink);
+  box-shadow: var(--glow-pink), 0 24px 48px rgba(0, 0, 0, 0.5);
+}
+
+.how-to-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid rgba(255, 0, 255, 0.35);
+}
+
+.how-to-header h2 {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--neon-cyan);
+  text-shadow: var(--glow-cyan);
+}
+
+.how-to-close {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  padding: 0;
+  font-size: 1.1rem;
+  line-height: 1;
+  border-color: var(--neon-pink);
+}
+
+.how-to-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--spacing-md) 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.how-to-body section {
+  margin-bottom: var(--spacing-lg);
+}
+
+.how-to-body section:last-child {
+  margin-bottom: 0;
+}
+
+.how-to-body h3 {
+  margin: 0 0 var(--spacing-sm);
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--neon-yellow);
+}
+
+.how-to-body ol {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.how-to-body li {
+  padding-left: 0.25rem;
+}
+
+.how-to-body strong {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.how-to-body p {
+  margin: 0 0 var(--spacing-sm);
+}
+
+.how-to-body p:last-child {
+  margin-bottom: 0;
+}
+
+.how-to-start {
+  margin-top: var(--spacing-md);
+  width: 100%;
+  min-height: 52px;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}

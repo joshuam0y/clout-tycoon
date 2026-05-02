@@ -1,22 +1,69 @@
 .shop-panel {
   width: 320px;
-  height: 100vh;
+  flex: 0 0 320px;
+  height: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
-  overflow-y: auto;
+  overflow: hidden;
+  padding: 0;
   border-radius: 0;
   border-left: none;
 }
 
+.shop-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: var(--spacing-md);
+  padding-bottom: calc(var(--spacing-xl) + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.shop-follower-discount {
+  display: block;
+  margin-top: 6px;
+  color: var(--neon-green);
+  font-weight: 700;
+}
+
+.shop-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+  margin-bottom: var(--spacing-sm);
+}
+
 .shop-title {
-  font-size: 24px;
+  font-size: 22px;
+  font-weight: 800;
   color: var(--neon-cyan);
   text-align: center;
   text-transform: uppercase;
   letter-spacing: 3px;
   text-shadow: var(--glow-cyan);
-  margin-bottom: var(--spacing-sm);
+  margin: 0;
+}
+
+.shop-how-to {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  padding: 6px 10px;
+  min-height: 0;
+  border-color: var(--neon-pink);
+  color: var(--neon-pink);
+  background: rgba(255, 0, 255, 0.08);
+  text-transform: uppercase;
+}
+
+.shop-how-to:hover {
+  box-shadow: var(--glow-pink);
 }
 
 .shop-tagline {
@@ -87,8 +134,9 @@
 }
 
 .upgrade-cost.afford {
-  color: var(--neon-green);
-  text-shadow: var(--glow-green);
+  color: var(--neon-yellow);
+  font-weight: 800;
+  text-shadow: 0 0 8px rgba(255, 255, 0, 0.35);
 }
 
 .shop-section {
@@ -181,9 +229,16 @@
 }
 
 .item-cost {
-  font-size: 13px;
-  font-weight: bold;
+  font-size: 14px;
+  font-weight: 800;
   text-align: right;
+  color: var(--neon-yellow);
+  text-shadow: 0 0 8px rgba(255, 255, 0, 0.35);
+}
+
+.shop-item.cannot-buy .item-cost {
+  color: var(--text-muted);
+  text-shadow: none;
 }
 
 .item-meta {
