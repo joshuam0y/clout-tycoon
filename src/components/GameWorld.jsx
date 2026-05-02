@@ -10,6 +10,13 @@ const DRAG_THRESHOLD_PX = 5;
 /** Viewport top-left in world px; no bounds — pan forever */
 const INITIAL_VIEW_OFFSET = { x: -18 * CELL_SIZE, y: -12 * CELL_SIZE };
 
+/** Decorative blueprint pads (world tiles) — pointer-events none; place anywhere on the grid */
+const BLUEPRINT_PADS = [
+  { key: 'talent', worldX: -2, worldY: -1, w: 1, h: 1, label: 'Talent', sym: '⬡' },
+  { key: 'desk', worldX: 1, worldY: -1, w: 1, h: 1, label: 'Desk', sym: '⌗' },
+  { key: 'studio', worldX: 3, worldY: -2, w: 2, h: 2, label: 'Studio pad', sym: '▦' }
+];
+
 export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick }) => {
   const [viewOffset, setViewOffset] = useState(INITIAL_VIEW_OFFSET);
   const [hoveredCell, setHoveredCell] = useState(null);
