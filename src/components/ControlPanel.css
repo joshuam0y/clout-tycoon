@@ -1,0 +1,211 @@
+.control-panel {
+  width: 300px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  overflow-y: auto;
+  border-radius: 0;
+  border-right: none;
+}
+
+.era-display {
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px solid;
+  border-radius: 4px;
+  padding: var(--spacing-md);
+  text-align: center;
+}
+
+.era-name {
+  font-size: 18px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: var(--spacing-xs);
+  text-shadow: 0 0 10px currentColor;
+}
+
+.era-description {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.prestige-info {
+  margin-top: var(--spacing-sm);
+  font-size: 11px;
+  color: var(--neon-purple);
+  text-shadow: var(--glow-purple);
+}
+
+.clout-hero {
+  text-align: center;
+  padding: var(--spacing-md);
+  background: linear-gradient(180deg, rgba(0, 255, 255, 0.12), rgba(255, 0, 255, 0.06));
+  border: 2px solid var(--neon-cyan);
+  border-radius: 8px;
+  box-shadow: inset 0 0 24px rgba(0, 255, 255, 0.08);
+}
+
+.clout-hero-label {
+  font-size: 11px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.clout-hero-value {
+  font-size: 32px;
+  font-weight: bold;
+  color: var(--neon-cyan);
+  text-shadow: var(--glow-cyan);
+  line-height: 1.1;
+  margin-top: 4px;
+}
+
+.economy-strip {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-sm);
+}
+
+.economy-cell {
+  padding: var(--spacing-sm);
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(0, 255, 136, 0.35);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.economy-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+}
+
+.economy-value {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.economy-value.passive {
+  color: var(--neon-green);
+  text-shadow: var(--glow-green);
+}
+
+.economy-value.click {
+  color: var(--neon-pink);
+  text-shadow: var(--glow-pink);
+}
+
+.post-button-wrap {
+  position: relative;
+  margin: var(--spacing-md) 0;
+}
+
+.click-float {
+  position: absolute;
+  left: 50%;
+  bottom: 70%;
+  transform: translateX(-50%);
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--neon-yellow);
+  text-shadow: 0 0 12px var(--neon-yellow);
+  pointer-events: none;
+  animation: floatUp 0.55s ease-out forwards;
+  z-index: 2;
+}
+
+@keyframes floatUp {
+  0% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-36px) scale(1.05);
+  }
+}
+
+.main-stats {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.post-button {
+  width: 100%;
+  height: 80px;
+  font-size: 20px;
+  margin: 0;
+  background: linear-gradient(135deg, rgba(255, 0, 255, 0.3), rgba(0, 255, 255, 0.3));
+}
+
+.post-button:active {
+  transform: scale(0.95);
+}
+
+.secondary-stats {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  font-size: 12px;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--spacing-xs);
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+  color: var(--text-secondary);
+}
+
+.stat-row span:last-child {
+  color: var(--text-primary);
+  font-weight: bold;
+}
+
+.premium-shop-button {
+  width: 100%;
+  height: 50px;
+  font-size: 16px;
+  margin-top: var(--spacing-md);
+  border-color: var(--neon-yellow);
+  background: linear-gradient(135deg, rgba(255, 255, 0, 0.2), rgba(255, 136, 0, 0.2));
+}
+
+.premium-shop-button:hover {
+  box-shadow: var(--glow-yellow), 0 0 30px var(--neon-yellow);
+}
+
+.prestige-section {
+  margin-top: auto;
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--neon-purple);
+}
+
+.prestige-button {
+  width: 100%;
+  height: 50px;
+  font-size: 16px;
+  border-color: var(--neon-purple);
+  background: linear-gradient(135deg, rgba(128, 0, 255, 0.2), rgba(255, 0, 128, 0.2));
+}
+
+.prestige-button:hover:not(:disabled) {
+  box-shadow: var(--glow-purple), 0 0 30px var(--neon-purple);
+}
+
+.prestige-hint {
+  margin-top: var(--spacing-xs);
+  font-size: 10px;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.4;
+}

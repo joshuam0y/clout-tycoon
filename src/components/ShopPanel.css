@@ -1,0 +1,231 @@
+.shop-panel {
+  width: 320px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  overflow-y: auto;
+  border-radius: 0;
+  border-left: none;
+}
+
+.shop-title {
+  font-size: 24px;
+  color: var(--neon-cyan);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  text-shadow: var(--glow-cyan);
+  margin-bottom: var(--spacing-sm);
+}
+
+.shop-tagline {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+  margin: 0 0 var(--spacing-sm);
+  line-height: 1.4;
+}
+
+.shop-upgrades {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.shop-upgrade {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  text-align: left;
+  background: rgba(0, 255, 255, 0.06);
+  border: 2px solid var(--neon-cyan);
+  border-radius: 6px;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.shop-upgrade:not(:disabled):hover {
+  transform: translateX(3px);
+  box-shadow: var(--glow-cyan);
+}
+
+.shop-upgrade.disabled {
+  opacity: 0.45;
+}
+
+.upgrade-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--spacing-sm);
+}
+
+.upgrade-name {
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--text-primary);
+}
+
+.upgrade-level {
+  font-size: 11px;
+  color: var(--neon-yellow);
+  font-weight: bold;
+}
+
+.upgrade-desc {
+  font-size: 10px;
+  color: var(--text-secondary);
+  line-height: 1.35;
+}
+
+.upgrade-cost {
+  font-size: 12px;
+  font-weight: bold;
+  text-align: right;
+  color: #666688;
+}
+
+.upgrade-cost.afford {
+  color: var(--neon-green);
+  text-shadow: var(--glow-green);
+}
+
+.shop-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.section-title {
+  font-size: 14px;
+  color: var(--neon-pink);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  padding: var(--spacing-xs) 0;
+  border-bottom: 1px solid var(--neon-pink);
+}
+
+.shop-items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.shop-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-md);
+  text-align: left;
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px solid;
+  transition: all 0.2s;
+  height: auto;
+}
+
+.shop-item:not(:disabled):hover {
+  transform: translateX(4px);
+}
+
+.shop-item.selected {
+  background: rgba(255, 255, 255, 0.05);
+  animation: selectedPulse 1s ease-in-out infinite;
+}
+
+@keyframes selectedPulse {
+  0%, 100% {
+    transform: translateX(4px);
+  }
+  50% {
+    transform: translateX(8px);
+  }
+}
+
+.shop-item.disabled {
+  opacity: 0.4;
+}
+
+.item-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.item-icon {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.item-info {
+  flex: 1;
+}
+
+.item-name {
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.item-stats {
+  font-size: 11px;
+  color: var(--neon-green);
+  text-shadow: var(--glow-green);
+}
+
+.item-description {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.3;
+}
+
+.item-cost {
+  font-size: 13px;
+  font-weight: bold;
+  text-align: right;
+}
+
+.item-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-top: 2px;
+}
+
+.item-owned {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.selected-indicator {
+  font-size: 10px;
+  color: var(--neon-yellow);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: var(--spacing-xs);
+  background: rgba(255, 255, 0, 0.1);
+  border-radius: 4px;
+  animation: blink 1s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.clear-selection {
+  margin-top: var(--spacing-md);
+  background: rgba(255, 0, 0, 0.2);
+  border-color: var(--neon-pink);
+}
+
+.clear-selection:hover {
+  box-shadow: 0 0 20px var(--neon-pink);
+}

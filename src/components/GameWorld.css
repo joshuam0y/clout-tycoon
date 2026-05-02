@@ -1,0 +1,177 @@
+.game-world {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.world-grid {
+  position: relative;
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px solid var(--neon-cyan);
+  box-shadow: var(--glow-cyan), inset 0 0 50px rgba(0, 255, 255, 0.1);
+}
+
+.grid-cell {
+  position: absolute;
+  border: 1px solid rgba(0, 255, 255, 0.05);
+  transition: background-color 0.2s;
+}
+
+.grid-cell.clickable:hover {
+  background-color: rgba(0, 255, 255, 0.2);
+  border-color: rgba(0, 255, 255, 0.3);
+  cursor: crosshair;
+}
+
+/* Building styles */
+.building {
+  position: absolute;
+  background: var(--bg-panel);
+  border: 2px solid;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  animation: buildingAppear 0.5s ease-out;
+  pointer-events: none;
+}
+
+@keyframes buildingAppear {
+  from {
+    transform: scale(0) rotate(180deg);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) rotate(0);
+    opacity: 1;
+  }
+}
+
+.building-icon {
+  font-size: 24px;
+  z-index: 2;
+  animation: buildingPulse 2s ease-in-out infinite;
+}
+
+@keyframes buildingPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.building-glow {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  opacity: 0.1;
+  border-radius: 4px;
+  animation: buildingGlow 3s ease-in-out infinite;
+}
+
+@keyframes buildingGlow {
+  0%, 100% {
+    opacity: 0.1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* Influencer styles */
+.influencer {
+  position: absolute;
+  background: var(--bg-dark);
+  border: 2px solid;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  animation: influencerAppear 0.5s ease-out;
+  pointer-events: none;
+}
+
+@keyframes influencerAppear {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.influencer-icon {
+  font-size: 20px;
+  z-index: 2;
+  animation: influencerBob 1.5s ease-in-out infinite;
+}
+
+@keyframes influencerBob {
+  0%, 100% {
+    transform: translateY(0) rotate(-5deg);
+  }
+  50% {
+    transform: translateY(-3px) rotate(5deg);
+  }
+}
+
+.influencer-particles {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  opacity: 0.6;
+  animation: particles 2s linear infinite;
+}
+
+@keyframes particles {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(0, -20px) scale(0);
+    opacity: 0;
+  }
+}
+
+/* Empty world message */
+.empty-world {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+}
+
+.start-message {
+  background: var(--bg-panel);
+  border: 2px solid var(--neon-pink);
+  border-radius: 8px;
+  padding: var(--spacing-xl);
+  box-shadow: var(--glow-pink), inset 0 0 30px rgba(255, 0, 255, 0.2);
+}
+
+.start-message h2 {
+  color: var(--neon-pink);
+  font-size: 32px;
+  margin-bottom: var(--spacing-md);
+  letter-spacing: 4px;
+  text-shadow: var(--glow-pink);
+}
+
+.start-message p {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin: var(--spacing-sm) 0;
+}

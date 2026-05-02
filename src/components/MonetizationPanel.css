@@ -1,0 +1,389 @@
+.monetization-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: overlayFadeIn 0.3s ease-out;
+}
+
+.monetization-panel {
+  width: 90%;
+  max-width: 700px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: popupSlideIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.monetization-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: var(--spacing-md);
+  border-bottom: 2px solid var(--neon-purple);
+}
+
+.monetization-header h2 {
+  color: var(--neon-purple);
+  font-size: 28px;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  text-shadow: var(--glow-purple);
+  margin: 0;
+}
+
+.close-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border-color: var(--neon-pink);
+  font-size: 24px;
+  padding: 0;
+  line-height: 1;
+}
+
+.close-button:hover {
+  background: var(--neon-pink);
+  color: var(--bg-dark);
+}
+
+.monetization-tabs {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin: var(--spacing-md) 0;
+}
+
+.tab {
+  flex: 1;
+  height: 45px;
+  background: rgba(128, 0, 255, 0.1);
+  border-color: var(--neon-purple);
+  opacity: 0.5;
+  transition: all 0.2s;
+}
+
+.tab.active {
+  opacity: 1;
+  background: rgba(128, 0, 255, 0.3);
+  box-shadow: var(--glow-purple);
+}
+
+.tab:hover {
+  opacity: 0.8;
+}
+
+.monetization-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-md) 0;
+}
+
+.monetization-content h3 {
+  color: var(--neon-cyan);
+  font-size: 20px;
+  margin-bottom: var(--spacing-sm);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.section-description {
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin-bottom: var(--spacing-lg);
+  line-height: 1.5;
+}
+
+/* Gacha section */
+.gacha-machine {
+  background: rgba(0, 0, 0, 0.5);
+  border: 3px solid var(--neon-pink);
+  border-radius: 12px;
+  padding: var(--spacing-xl);
+  margin: var(--spacing-lg) 0;
+  box-shadow: var(--glow-pink), inset 0 0 30px rgba(255, 0, 255, 0.2);
+}
+
+.gacha-display {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gacha-animation {
+  text-align: center;
+}
+
+.spinner {
+  width: 80px;
+  height: 80px;
+  border: 6px solid rgba(255, 0, 255, 0.2);
+  border-top-color: var(--neon-pink);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto var(--spacing-md);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.gacha-prompt {
+  text-align: center;
+}
+
+.gacha-icon {
+  font-size: 80px;
+  display: block;
+  margin-bottom: var(--spacing-md);
+  animation: gachaBounce 2s ease-in-out infinite;
+}
+
+@keyframes gachaBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.gacha-options {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.gacha-button {
+  flex: 1;
+  height: 60px;
+  font-size: 16px;
+}
+
+.gacha-rates {
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 8px;
+  padding: var(--spacing-md);
+}
+
+.gacha-rates h4 {
+  color: var(--text-primary);
+  font-size: 14px;
+  margin-bottom: var(--spacing-sm);
+  text-transform: uppercase;
+}
+
+.rate-item {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  margin: var(--spacing-xs) 0;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.rate-item.legendary {
+  background: rgba(255, 215, 0, 0.1);
+  border-left: 3px solid #ffd700;
+  color: #ffd700;
+}
+
+.rate-item.epic {
+  background: rgba(138, 43, 226, 0.1);
+  border-left: 3px solid #8a2be2;
+  color: #8a2be2;
+}
+
+.rate-item.rare {
+  background: rgba(0, 191, 255, 0.1);
+  border-left: 3px solid #00bfff;
+  color: #00bfff;
+}
+
+/* Boosts section */
+.boost-items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.boost-item {
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px solid var(--neon-cyan);
+  border-radius: 8px;
+  padding: var(--spacing-md);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s;
+}
+
+.boost-item:hover {
+  background: rgba(0, 255, 255, 0.05);
+  border-color: var(--neon-pink);
+  box-shadow: 0 0 20px var(--neon-cyan);
+}
+
+.boost-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  flex: 1;
+}
+
+.boost-icon {
+  font-size: 36px;
+}
+
+.boost-info h4 {
+  color: var(--text-primary);
+  font-size: 16px;
+  margin-bottom: var(--spacing-xs);
+}
+
+.boost-info p {
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.boost-buy {
+  min-width: 120px;
+  height: 45px;
+  font-size: 16px;
+  border-color: var(--neon-green);
+  background: rgba(0, 255, 136, 0.1);
+}
+
+.boost-buy:hover {
+  box-shadow: var(--glow-green);
+}
+
+/* Market section */
+.rival-agencies {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.rival-card {
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px solid var(--neon-orange);
+  border-radius: 8px;
+  padding: var(--spacing-md);
+  transition: all 0.2s;
+}
+
+.rival-card:hover {
+  background: rgba(255, 136, 0, 0.05);
+  box-shadow: 0 0 20px var(--neon-orange);
+}
+
+.rival-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+.rival-header h4 {
+  color: var(--text-primary);
+  font-size: 16px;
+}
+
+.rival-threat {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.rival-stats {
+  display: flex;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.sabotage-button {
+  width: 100%;
+  height: 45px;
+  border-color: var(--neon-orange);
+  background: rgba(255, 136, 0, 0.1);
+}
+
+.sabotage-button:hover {
+  box-shadow: 0 0 20px var(--neon-orange);
+}
+
+.sabotage-effects {
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 8px;
+  padding: var(--spacing-md);
+}
+
+.sabotage-effects h4 {
+  color: var(--text-primary);
+  font-size: 14px;
+  margin-bottom: var(--spacing-sm);
+  text-transform: uppercase;
+}
+
+.sabotage-effects ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sabotage-effects li {
+  padding: var(--spacing-xs) 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Premium currency */
+.premium-currency {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: 2px solid var(--neon-purple);
+  margin-top: var(--spacing-md);
+}
+
+.currency-label {
+  color: var(--text-secondary);
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
+.currency-value {
+  color: var(--neon-yellow);
+  font-size: 20px;
+  font-weight: bold;
+  text-shadow: var(--glow-yellow);
+  flex: 1;
+}
+
+.buy-currency {
+  min-width: 150px;
+  height: 50px;
+  font-size: 16px;
+  border-color: var(--neon-yellow);
+  background: rgba(255, 255, 0, 0.1);
+}
+
+.buy-currency:hover {
+  box-shadow: var(--glow-yellow);
+}
