@@ -313,26 +313,39 @@
   position: absolute;
   z-index: 25;
   pointer-events: none;
-  transform: translateY(calc(-100% - 6px));
-  padding: 8px 10px;
-  border-radius: 8px;
-  background: rgba(8, 12, 24, 0.95);
+  transform: translate(-50%, calc(-100% - 10px));
+  min-width: 220px;
+  max-width: min(320px, calc(100vw - 32px));
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(8, 12, 24, 0.96);
   border: 1px solid rgba(0, 255, 255, 0.5);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
-  font-size: 11px;
-  line-height: 1.35;
+  box-shadow:
+    0 8px 28px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  font-size: 12px;
+  line-height: 1.45;
   color: var(--text-secondary);
+  text-align: left;
+  white-space: normal;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .entity-hover-tooltip.talent-hover-tooltip {
   border-color: rgba(255, 0, 255, 0.45);
+  box-shadow:
+    0 8px 28px rgba(0, 0, 0, 0.55),
+    0 0 24px rgba(255, 0, 255, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .entity-hover-title {
   font-weight: 800;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-primary);
-  margin-bottom: 4px;
+  letter-spacing: 0.02em;
 }
 
 .entity-hover-line strong {

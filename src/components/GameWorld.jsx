@@ -499,20 +499,24 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick })
               <div
                 className="entity-hover-tooltip talent-hover-tooltip"
                 style={{
-                  left: p.left,
-                  top: p.top,
-                  width: CELL_SIZE
+                  left: p.left + CELL_SIZE / 2,
+                  top: p.top
                 }}
               >
                 <div className="entity-hover-title">
                   {tt.icon} {tt.name}
                 </div>
                 <div className="entity-hover-line">
-                  Base on tile: <strong>{tt.baseCloutPerSecond.toFixed(2)}</strong> Clout/s before grid buffs
+                  Base on tile <strong>{tt.baseCloutPerSecond.toFixed(2)}</strong> Clout/s (before grid buffs).
                 </div>
                 <div className="entity-hover-line talent-hover-buff">
-                  Grid buff (structures + pairings):{' '}
-                  <strong>×{hoveredTalentGridBuff >= 10 ? hoveredTalentGridBuff.toFixed(1) : hoveredTalentGridBuff.toFixed(2)}</strong>
+                  Grid buff (structures + pairings){' '}
+                  <strong>
+                    ×
+                    {hoveredTalentGridBuff >= 10
+                      ? hoveredTalentGridBuff.toFixed(1)
+                      : hoveredTalentGridBuff.toFixed(2)}
+                  </strong>
                 </div>
               </div>
             );
