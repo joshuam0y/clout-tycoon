@@ -29,7 +29,6 @@ import {
   BASE_POST_CLOUT,
   CLOUT_PRICE_MULTIPLIER,
   PRESTIGE_MULT_PER_LEVEL,
-  CLICK_UPGRADE_MULT_SOFTEN,
   getMinPrestige
 } from '../data/gameData';
 import {
@@ -296,8 +295,7 @@ export const useGameState = () => {
         if (level === 0) return;
         if (u.kind === 'flat') flat += level * u.perLevel;
         else {
-          const eff = u.perLevel * CLICK_UPGRADE_MULT_SOFTEN;
-          mult *= Math.pow(1 + eff, level);
+          mult *= Math.pow(1 + u.perLevel, level);
         }
       });
       return flat * mult * CLICK_OUTPUT_GLOBAL_MULT;

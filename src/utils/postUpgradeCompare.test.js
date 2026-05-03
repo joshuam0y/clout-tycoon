@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { CLICK_UPGRADE_MULT_SOFTEN } from '../data/gameData';
 
 /** Thumbnail Science (post_t05) `perLevel` in gameData */
 const THUMBNAIL_PER_LEVEL = 0.04;
@@ -8,11 +7,10 @@ const THUMBNAIL_PER_LEVEL = 0.04;
  * Toy model: each post = B × M × T, where
  * B = "flat" Clout from base + all Adds… rows,
  * M = all other mults (prestige, followers, other mult rows… folded into one),
- * T = Thumbnail row only: (1 + eff) ** L
+ * T = Thumbnail row only: (1 + perLevel) ** L
  */
 function toyPostClout(B, M, thumbnailLevel) {
-  const eff = THUMBNAIL_PER_LEVEL * CLICK_UPGRADE_MULT_SOFTEN;
-  const T = Math.pow(1 + eff, thumbnailLevel);
+  const T = Math.pow(1 + THUMBNAIL_PER_LEVEL, thumbnailLevel);
   return B * M * T;
 }
 

@@ -96,9 +96,6 @@ export const INTERN_STACKING_EXP = 0.58;
 /** Permanent prestige mult: 1 + prestigeLevel × this (linear, gentler than old curves). */
 export const PRESTIGE_MULT_PER_LEVEL = 0.24;
 
-/** Softens % post-upgrade stacking so levels aren’t pure exponentials */
-export const CLICK_UPGRADE_MULT_SOFTEN = 0.76;
-
 export function reputationIncomeMultiplierFromRep(reputation) {
   const rep = Math.max(0, Math.min(100, reputation));
   const n = rep / 100;
