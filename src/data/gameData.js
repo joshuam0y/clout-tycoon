@@ -738,7 +738,7 @@ export const clickUpgradeTypes = [
   {
     id: 'thumbnail',
     name: 'Thumbnail Science',
-    description: '+4% Clout per post per level',
+    description: '+4 payout boost per post per level',
     baseCost: 420,
     growth: 1.16,
     kind: 'mult',
@@ -747,7 +747,7 @@ export const clickUpgradeTypes = [
   {
     id: 'schedule',
     name: 'Content Calendar',
-    description: '+5% Clout per post per level',
+    description: '+5 payout boost per post per level',
     baseCost: 1100,
     growth: 1.16,
     kind: 'mult',
@@ -756,7 +756,7 @@ export const clickUpgradeTypes = [
   {
     id: 'collab',
     name: 'Collab Engine',
-    description: '+6% Clout per post per level',
+    description: '+6 payout boost per post per level',
     baseCost: 4200,
     growth: 1.17,
     kind: 'mult',
@@ -765,7 +765,7 @@ export const clickUpgradeTypes = [
   {
     id: 'drama',
     name: 'Strategic Drama',
-    description: '+8% Clout per post per level',
+    description: '+8 payout boost per post per level',
     baseCost: 9500,
     growth: 1.18,
     kind: 'mult',
@@ -774,7 +774,7 @@ export const clickUpgradeTypes = [
   {
     id: 'brand_kit',
     name: 'Brand Kit',
-    description: '+10% Clout per post per level',
+    description: '+10 payout boost per post per level',
     baseCost: 24000,
     growth: 1.18,
     kind: 'mult',
@@ -783,7 +783,7 @@ export const clickUpgradeTypes = [
   {
     id: 'talk_show',
     name: 'Talk Show Slot',
-    description: '+12% Clout per post per level',
+    description: '+12 payout boost per post per level',
     baseCost: 88000,
     growth: 1.19,
     kind: 'mult',
@@ -793,7 +793,7 @@ export const clickUpgradeTypes = [
   {
     id: 'superbowl',
     name: 'Halftime Bid',
-    description: '+15% Clout per post per level',
+    description: '+15 payout boost per post per level',
     baseCost: 520000,
     growth: 1.2,
     kind: 'mult',
@@ -803,7 +803,7 @@ export const clickUpgradeTypes = [
   {
     id: 'matrix_pr',
     name: 'Matrix PR Blitz',
-    description: '+22% Clout per post per level',
+    description: '+22 payout boost per post per level',
     baseCost: 6200000,
     growth: 1.21,
     kind: 'mult',
@@ -813,7 +813,7 @@ export const clickUpgradeTypes = [
   {
     id: 'singularity_feed',
     name: 'Singularity Feed',
-    description: '+28% Clout per post per level',
+    description: '+28 payout boost per post per level',
     baseCost: 52000000,
     growth: 1.22,
     kind: 'mult',
@@ -823,7 +823,7 @@ export const clickUpgradeTypes = [
   {
     id: 'omni_waves',
     name: 'Omnichannel Waves',
-    description: '+32% Clout per post per level',
+    description: '+32 payout boost per post per level',
     baseCost: 380000000,
     growth: 1.23,
     kind: 'mult',
