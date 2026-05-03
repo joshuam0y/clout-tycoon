@@ -1,11 +1,15 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
   NAMED_SAVES_KEY,
+  ACTIVE_NAMED_SLOT_KEY,
   putNamedSave,
   getNamedSave,
   listNamedSaves,
   deleteNamedSave,
-  sanitizeNamedSaveLabel
+  sanitizeNamedSaveLabel,
+  getActiveNamedSlot,
+  setActiveNamedSlot,
+  clearActiveNamedSlot
 } from './persistence';
 
 const memoryStore = {};
@@ -69,5 +73,14 @@ describe('named browser saves', () => {
     putNamedSave('slot-a', { ...minimalSnap, clout: 1 });
     putNamedSave('slot-a', { ...minimalSnap, clout: 2 });
     expect(getNamedSave('slot-a')?.clout).toBe(2);
+  });
+
+  it('active named slot roundtrips', () => {
+    expect(getActiveNamedSlot()).toBe('');
+    setActiveNamedSlot('  My Run  ');
+    expect(localStorage.getItem(ACTIVE_NAMED_SLOT_KEY)).toBe('My Run');
+    expect(getActiveNamedSlot()).toBe('My Run');
+    clearActiveNamedSlot();
+    expect(getActiveNamedSlot()).toBe('');
   });
 });

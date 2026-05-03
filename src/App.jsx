@@ -85,9 +85,12 @@ function App() {
           onOpenShop={() => setShowMonetizationPanel(true)}
           onOpenHowToPlay={() => setHowToPlayOpen(true)}
           namedSaveSlots={gameState.namedSaveSlots}
+          activeProfileName={gameState.activeProfileName}
+          lastProfileSyncAt={gameState.lastProfileSyncAt}
           onSaveNamed={gameState.saveGameNamed}
           onLoadNamed={gameState.loadGameNamed}
           onDeleteNamedSave={gameState.deleteNamedSaveSlot}
+          onClearProfileBackup={gameState.clearProfileBackup}
           onResetLocalSave={gameState.resetAllLocalProgress}
         />
 

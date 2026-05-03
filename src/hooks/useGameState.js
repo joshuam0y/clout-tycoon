@@ -1,4 +1,11 @@
-import { useState, useEffect, useLayoutEffect, useCallback, useRef, useMemo } from 'react';
+import {
+  useState,
+  useEffect,
+  useLayoutEffect,
+  useCallback,
+  useRef,
+  useMemo
+} from 'react';
 import {
   influencerTypes,
   buildingTypes,
@@ -41,12 +48,17 @@ import {
   getNamedSave,
   listNamedSaves,
   deleteNamedSave,
-  sanitizeNamedSaveLabel
+  sanitizeNamedSaveLabel,
+  getActiveNamedSlot,
+  setActiveNamedSlot,
+  clearActiveNamedSlot
 } from '../utils/persistence';
 import { playPrestigeChime } from '../utils/sound';
 import { computePassiveIncomeSnapshot } from '../utils/computePassiveIncomeSnapshot';
 
 const TICK_INTERVAL = 100;
+/** Backup active named slot on this interval while playing */
+const NAMED_PROFILE_AUTOSAVE_MS = 5000;
 const BRAND_DEAL_SPAWN_CHANCE_PER_TICK = 0.00052;
 const BRAND_DEAL_COOLDOWN_ACCEPT_MS = 32000;
 const BRAND_DEAL_COOLDOWN_DECLINE_MS = 22000;
@@ -161,6 +173,8 @@ export const useGameState = () => {
   const [selectedTool, setSelectedTool] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [namedSaveListTick, setNamedSaveListTick] = useState(0);
+  const [activeProfileName, setActiveProfileName] = useState(() => getActiveNamedSlot());
+  const [lastProfileSyncAt, setLastProfileSyncAt] = useState(null);
 
   const [totalClicks, setTotalClicks] = useState(() => savedGame?.totalClicks ?? 0);
   const [lifetimeClout, setLifetimeClout] = useState(() => savedGame?.lifetimeClout ?? 0);
@@ -916,6 +930,29 @@ export const useGameState = () => {
     ]
   );
 
+  const buildCurrentSnapshotRef = useRef(buildCurrentSnapshot);
+  buildCurrentSnapshotRef.current = buildCurrentSnapshot;
+
+  useEffect(() => {
+    if (!activeProfileName) return;
+    const name = activeProfileName;
+    const tick = () => {
+      if (putNamedSave(name, buildCurrentSnapshotRef.current())) {
+        setLastProfileSyncAt(Date.now());
+        setNamedSaveListTick(t => t + 1);
+      }
+    };
+    tick();
+    const id = window.setInterval(tick, NAMED_PROFILE_AUTOSAVE_MS);
+    return () => clearInterval(id);
+  }, [activeProfileName]);
+
+  const clearProfileBackup = useCallback(() => {
+    clearActiveNamedSlot();
+    setActiveProfileName('');
+    setLastProfileSyncAt(null);
+  }, []);
+
   const saveGameNamed = useCallback(
     label => {
       const name = sanitizeNamedSaveLabel(label);
@@ -927,7 +964,10 @@ export const useGameState = () => {
         addNotification('Could not save (browser storage full or blocked).', 'warning');
         return false;
       }
-      addNotification(`Saved “${name}” in this browser.`, 'success');
+      setActiveNamedSlot(name);
+      setActiveProfileName(name);
+      setLastProfileSyncAt(Date.now());
+      addNotification(`Profile “${name}” saved — will auto-backup every few seconds.`, 'success');
       setNamedSaveListTick(t => t + 1);
       return true;
     },
@@ -946,9 +986,10 @@ export const useGameState = () => {
         addNotification(`No save named “${name}” found.`, 'warning');
         return false;
       }
+      setActiveNamedSlot(name);
       writeGameSnapshot(snap);
       markResetSaveGuard();
-      addNotification('Loading save…', 'success');
+      addNotification('Loading your agency…', 'success');
       window.setTimeout(() => window.location.reload(), 100);
       return true;
     },
@@ -963,15 +1004,21 @@ export const useGameState = () => {
         addNotification('Could not delete that save.', 'warning');
         return false;
       }
+      if (name === activeProfileName) {
+        clearActiveNamedSlot();
+        setActiveProfileName('');
+        setLastProfileSyncAt(null);
+      }
       addNotification(`Deleted “${name}”.`, 'success');
       setNamedSaveListTick(t => t + 1);
       return true;
     },
-    [addNotification]
+    [addNotification, activeProfileName]
   );
 
   const resetAllLocalProgress = useCallback(() => {
     markResetSaveGuard();
+    clearActiveNamedSlot();
     clearAllLocalGameData();
     window.location.reload();
   }, []);
@@ -1050,9 +1097,12 @@ export const useGameState = () => {
     gemClickMult: getGemClickMult(),
     gemPassiveMult: getGemPassiveMult(),
     namedSaveSlots,
+    activeProfileName,
+    lastProfileSyncAt,
     saveGameNamed,
     loadGameNamed,
     deleteNamedSaveSlot,
+    clearProfileBackup,
     resetAllLocalProgress
   };
 };

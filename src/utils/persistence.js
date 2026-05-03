@@ -6,12 +6,46 @@ export const SAVE_KEY = 'clout-tycoon-save';
 /** Multiple named snapshots stored in-browser (same origin); keys are user-chosen labels. */
 export const NAMED_SAVES_KEY = 'clout-tycoon-named-saves';
 
+/** Which named slot receives periodic backups while playing (`''` = none). */
+export const ACTIVE_NAMED_SLOT_KEY = 'clout-tycoon-active-named-slot';
+
 const MAX_NAMED_SAVE_LABEL_LENGTH = 80;
 
 export function sanitizeNamedSaveLabel(raw) {
   if (typeof raw !== 'string') return '';
   const t = raw.trim().slice(0, MAX_NAMED_SAVE_LABEL_LENGTH);
   return t;
+}
+
+export function getActiveNamedSlot() {
+  try {
+    const raw = localStorage.getItem(ACTIVE_NAMED_SLOT_KEY);
+    if (!raw) return '';
+    return sanitizeNamedSaveLabel(raw);
+  } catch {
+    return '';
+  }
+}
+
+export function setActiveNamedSlot(label) {
+  const name = sanitizeNamedSaveLabel(label);
+  try {
+    if (!name) {
+      localStorage.removeItem(ACTIVE_NAMED_SLOT_KEY);
+      return;
+    }
+    localStorage.setItem(ACTIVE_NAMED_SLOT_KEY, name);
+  } catch {
+    /* ignore */
+  }
+}
+
+export function clearActiveNamedSlot() {
+  try {
+    localStorage.removeItem(ACTIVE_NAMED_SLOT_KEY);
+  } catch {
+    /* ignore */
+  }
 }
 
 export function listNamedSaves() {

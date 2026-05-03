@@ -152,10 +152,11 @@ const PAGES = [
           — each extra copy of the same role costs more on an accelerating curve.
         </p>
         <p>
-          Use <strong>Save in browser</strong> / <strong>Load from browser</strong> in the left panel: pick a name,
-          store snapshots in this browser only (no download files). <strong>Reset local save</strong> clears your live
-          autosave and SFX toggle — named slots you saved stay until you delete them. <strong>SFX</strong> toggles the
-          prestige sound only.
+          In <strong>Your agency</strong> (left panel): name a <strong>profile</strong> and save — the game will{' '}
+          <strong>keep backing that slot up</strong> every few seconds in this browser (plus the usual live autosave).
+          Load a profile to continue; <strong>Stop auto-backup</strong> pauses named-slot updates without deleting the
+          profile. <strong>Reset session</strong> clears the current autosave and sound preference; named lists stay
+          until you delete them. <strong>Sound</strong> is the prestige chime only.
         </p>
       </>
     )

@@ -10,6 +10,21 @@ import {
 import { formatNumber, formatRate } from '../utils/formatNumber';
 import { getFollowerBonusSummary } from '../utils/gameMath';
 
+function formatSaveAge(ts) {
+  if (ts == null) return '…';
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 4) return 'just now';
+  if (s < 60) return `${s}s ago`;
+  const m = Math.floor(s / 60);
+  if (m < 120) return `${m}m ago`;
+  return new Date(ts).toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit'
+  });
+}
+
 export const ControlPanel = ({
   clout,
   followers,
@@ -30,9 +45,12 @@ export const ControlPanel = ({
   onOpenShop,
   onOpenHowToPlay,
   namedSaveSlots = [],
+  activeProfileName = '',
+  lastProfileSyncAt = null,
   onSaveNamed,
   onLoadNamed,
   onDeleteNamedSave,
+  onClearProfileBackup,
   onResetLocalSave
 }) => {
   const [isClicking, setIsClicking] = useState(false);
@@ -41,6 +59,19 @@ export const ControlPanel = ({
   const [sfxMuted, setSfxMutedState] = useState(() => isSfxMuted());
   const [saveNameInput, setSaveNameInput] = useState('');
   const [loadPick, setLoadPick] = useState('');
+  const [syncAgeTick, setSyncAgeTick] = useState(0);
+
+  useEffect(() => {
+    if (!lastProfileSyncAt) return undefined;
+    const id = window.setInterval(() => setSyncAgeTick(t => t + 1), 1000);
+    return () => clearInterval(id);
+  }, [lastProfileSyncAt]);
+
+  useEffect(() => {
+    if (activeProfileName && namedSaveSlots.some(s => s.name === activeProfileName)) {
+      setLoadPick(prev => (prev === '' ? activeProfileName : prev));
+    }
+  }, [activeProfileName, namedSaveSlots]);
 
   useEffect(() => {
     if (!activeFrenzy) return;
@@ -85,104 +116,171 @@ export const ControlPanel = ({
         How to play
       </button>
 
-      <div className="save-data-row save-named-tools">
-        <div className="save-named-block">
-          <label className="save-named-label" htmlFor="named-save-input">
-            Save in browser
-          </label>
-          <div className="save-named-row">
-            <input
-              id="named-save-input"
-              type="text"
-              className="save-named-input"
-              placeholder="Name this save…"
-              value={saveNameInput}
-              maxLength={80}
-              onChange={e => setSaveNameInput(e.target.value)}
-              onKeyDown={e => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
+      <section className="save-profile-card" aria-label="Save and profile">
+        <header className="save-profile-header">
+          <h2 className="save-profile-title">Your agency</h2>
+          {activeProfileName ? (
+            <p className="save-profile-welcome">
+              Welcome back, <span className="save-profile-name">{activeProfileName}</span>
+            </p>
+          ) : (
+            <p className="save-profile-welcome save-profile-welcome--muted">
+              Save under a name to turn on automatic backups to that slot (this browser only).
+            </p>
+          )}
+        </header>
+
+        <div className="save-profile-status">
+          <span
+            className={`save-status-pulse ${activeProfileName ? 'save-status-pulse--on' : ''}`}
+            aria-hidden
+          />
+          <div className="save-profile-status-text">
+            {activeProfileName ? (
+              <>
+                <span
+                  className="save-age-line"
+                  aria-live="polite"
+                  data-sync-tick={syncAgeTick}
+                >
+                  {formatSaveAge(lastProfileSyncAt)}
+                  <span className="save-age-hint"> · named slot</span>
+                </span>
+                <button
+                  type="button"
+                  className="save-stop-backup"
+                  onClick={() => {
+                    if (
+                      window.confirm(
+                        'Stop auto-backup to this named slot? Your named save stays in the list — only automatic updates pause.'
+                      )
+                    ) {
+                      onClearProfileBackup();
+                      if (loadPick === activeProfileName) setLoadPick('');
+                    }
+                  }}
+                >
+                  Stop auto-backup
+                </button>
+              </>
+            ) : (
+              <span>
+                Session autosaves continuously. Named profiles add an extra copy every few seconds once you save one.
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="save-profile-grid">
+          <div className="save-profile-field">
+            <label className="save-field-label" htmlFor="named-save-input">
+              Save / update profile
+            </label>
+            <div className="save-field-row">
+              <input
+                id="named-save-input"
+                type="text"
+                className="save-field-input"
+                placeholder="e.g. Main campaign"
+                value={saveNameInput}
+                maxLength={80}
+                autoComplete="off"
+                onChange={e => setSaveNameInput(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (onSaveNamed(saveNameInput)) setSaveNameInput('');
+                  }
+                }}
+              />
+              <button
+                type="button"
+                className="save-primary-btn"
+                onClick={() => {
                   if (onSaveNamed(saveNameInput)) setSaveNameInput('');
-                }
-              }}
-            />
-            <button
-              type="button"
-              className="save-data-btn"
-              onClick={() => {
-                if (onSaveNamed(saveNameInput)) setSaveNameInput('');
-              }}
-            >
-              Save
-            </button>
+                }}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+
+          <div className="save-profile-field">
+            <label className="save-field-label" htmlFor="named-load-select">
+              Load profile
+            </label>
+            <div className="save-field-row save-field-row--wrap">
+              <select
+                id="named-load-select"
+                className="save-field-select"
+                value={loadPick}
+                onChange={e => setLoadPick(e.target.value)}
+                aria-label="Choose a saved profile"
+              >
+                <option value="">Select…</option>
+                {namedSaveSlots.map(s => (
+                  <option key={s.name} value={s.name}>
+                    {s.name} · {new Date(s.savedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}{' '}
+                    {new Date(s.savedAt).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}
+                  </option>
+                ))}
+              </select>
+              <div className="save-load-actions">
+                <button
+                  type="button"
+                  className="save-secondary-btn"
+                  disabled={!loadPick}
+                  onClick={() => onLoadNamed(loadPick)}
+                >
+                  Load
+                </button>
+                <button
+                  type="button"
+                  className="save-danger-btn"
+                  disabled={!loadPick}
+                  title="Remove this slot from this browser"
+                  onClick={() => {
+                    if (!loadPick) return;
+                    if (window.confirm(`Delete “${loadPick}” from this browser?`)) {
+                      onDeleteNamedSave(loadPick);
+                      setLoadPick('');
+                    }
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-        <div className="save-named-block">
-          <label className="save-named-label" htmlFor="named-load-select">
-            Load from browser
-          </label>
-          <div className="save-named-row">
-            <select
-              id="named-load-select"
-              className="save-named-select"
-              value={loadPick}
-              onChange={e => setLoadPick(e.target.value)}
-              aria-label="Choose a saved game name"
-            >
-              <option value="">— choose a save —</option>
-              {namedSaveSlots.map(s => (
-                <option key={s.name} value={s.name}>
-                  {s.name} ({new Date(s.savedAt).toLocaleString()})
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              className="save-data-btn"
-              disabled={!loadPick}
-              onClick={() => onLoadNamed(loadPick)}
-            >
-              Load
-            </button>
-            <button
-              type="button"
-              className="save-data-btn save-delete-btn"
-              disabled={!loadPick}
-              title="Remove this named slot only"
-              onClick={() => {
-                if (!loadPick) return;
-                if (window.confirm(`Delete saved game “${loadPick}” from this browser?`)) {
-                  onDeleteNamedSave(loadPick);
-                  setLoadPick('');
-                }
-              }}
-            >
-              Delete
-            </button>
-          </div>
+
+        <div className="save-profile-toolbar">
+          <button
+            type="button"
+            className="save-toolbar-btn"
+            onClick={toggleSfx}
+            title="Mute prestige chime"
+          >
+            Sound {sfxMuted ? 'off' : 'on'}
+          </button>
+          <button
+            type="button"
+            className="save-toolbar-btn save-toolbar-btn--danger"
+            title="Clears this session’s autosave and sound preference. Named slots stay until you delete them."
+            onClick={() => {
+              if (
+                window.confirm(
+                  'Reset this session’s autosave and sound toggle? Named profiles in the list are kept. This cannot be undone.'
+                )
+              ) {
+                onResetLocalSave();
+              }
+            }}
+          >
+            Reset session
+          </button>
         </div>
-        <button type="button" className="save-data-btn sfx-toggle" onClick={toggleSfx} title="Mute prestige chime">
-          SFX {sfxMuted ? 'off' : 'on'}
-        </button>
-      </div>
-      <div className="save-data-row save-reset-row">
-        <button
-          type="button"
-          className="save-data-btn save-reset-btn"
-          title="Clears live autosave + SFX toggle; named browser slots below are kept until you delete them"
-          onClick={() => {
-            if (
-              window.confirm(
-                'Reset your live game and SFX toggle? Named saves you created below stay in the browser until you delete them. This cannot be undone.'
-              )
-            ) {
-              onResetLocalSave();
-            }
-          }}
-        >
-          Reset local save
-        </button>
-      </div>
+      </section>
       {/* Theme label (cosmetic — scales with prestige depth; shop has no era locks) */}
       <div className="era-display" style={{ borderColor: currentEraData.theme.primary }}>
         <div className="era-name" style={{ color: currentEraData.theme.primary }}>
