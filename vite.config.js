@@ -9,5 +9,9 @@ export default defineConfig({
     assetsDir: 'assets',
     emptyOutDir: true
   },
-  base: '/'
+  base: '/',
+  test: {
+    environment: 'node',
+    include: ['src/**/*.test.js']
+  }
 })

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './App.css';
 import { useGameState } from './hooks/useGameState';
 import { GameWorld } from './components/GameWorld';
@@ -11,8 +11,31 @@ import { HowToPlayModal } from './components/HowToPlayModal';
 
 function App() {
   const gameState = useGameState();
+  const { clickPostContent, prestige, activeBrandDeal } = gameState;
   const [showMonetizationPanel, setShowMonetizationPanel] = useState(false);
   const [howToPlayOpen, setHowToPlayOpen] = useState(true);
+
+  useEffect(() => {
+    const onKey = e => {
+      if (howToPlayOpen || showMonetizationPanel || activeBrandDeal) return;
+      const el = e.target;
+      if (el instanceof HTMLElement) {
+        const tag = el.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || el.isContentEditable) return;
+      }
+      if (e.code === 'Space' || e.code === 'Enter') {
+        e.preventDefault();
+        clickPostContent();
+        return;
+      }
+      if (e.code === 'KeyP') {
+        e.preventDefault();
+        prestige();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [howToPlayOpen, showMonetizationPanel, activeBrandDeal, clickPostContent, prestige]);
 
   const handleCellClick = (position) => {
     if (!gameState.selectedTool) return;
@@ -53,6 +76,7 @@ function App() {
           lifetimeClout={gameState.lifetimeClout}
           runCloutEarned={gameState.runCloutEarned}
           gems={gameState.gems}
+          staffCount={gameState.managers.length}
           totalClicks={gameState.totalClicks}
           prestigeRunCloutRequired={gameState.prestigeRunCloutRequired}
           activeFrenzy={gameState.activeFrenzy}
@@ -60,6 +84,8 @@ function App() {
           onPrestige={gameState.prestige}
           onOpenShop={() => setShowMonetizationPanel(true)}
           onOpenHowToPlay={() => setHowToPlayOpen(true)}
+          onExportSave={gameState.exportSaveToFile}
+          onImportSave={gameState.importSaveFromFileText}
         />
 
         {/* Center - Game world */}
@@ -80,6 +106,8 @@ function App() {
           buildings={gameState.buildings}
           clickUpgradeLevels={gameState.clickUpgradeLevels}
           onBuyClickUpgrade={gameState.buyClickUpgrade}
+          managers={gameState.managers}
+          onBuyManager={gameState.buyManager}
         />
       </div>
 

@@ -33,8 +33,8 @@ const PAGES = [
             Tap <strong>Post Content</strong> for Clout. Keep posting — it stays important all game.
           </li>
           <li>
-            Use the <strong>Agency Shop</strong> (right): three tabs — post upgrades, talent, buildings.
-            Pick something, then click an empty tile on the grid.
+            Use the <strong>Agency Shop</strong> (right): four tabs — post upgrades, talent, buildings, and{' '}
+            <strong>staff</strong> (automation). Pick placement tools, then click an empty tile on the grid.
           </li>
           <li>
             Creators earn passive Clout. <strong>Buildings multiply</strong> anyone in range (hover while
@@ -46,7 +46,11 @@ const PAGES = [
             buff footprint and range drawn on the grid (no popup).
           </li>
           <li>
-            <strong>Drag</strong> the map to pan. Your placements stay on the grid; only the camera moves.
+            <strong>Drag or swipe</strong> the map to pan. Your placements stay on the grid; only the camera moves.
+          </li>
+          <li>
+            <strong>Space</strong> or <strong>Enter</strong> posts when no text field is focused.{' '}
+            <strong>P</strong> prestiges when your run bar is full (same rules as the button).
           </li>
         </ol>
       </>
@@ -89,6 +93,10 @@ const PAGES = [
           <strong>bad rep</strong>, which hurts income until you recover.
         </p>
         <p>
+          The game rotates a <strong>weekly sponsor meta</strong> (UTC): certain contract flavors spawn more often
+          that week. <strong>Brand Scouts</strong> (staff hire) stack extra weight on those favored deals.
+        </p>
+        <p>
           Deals stay hidden until you have at least{' '}
           <strong>{BRAND_DEALS_MIN_LIFETIME_CLOUT.toLocaleString()} lifetime Clout</strong> <em>and</em> either{' '}
           <strong>{BRAND_DEALS_MIN_INFLUENCERS} influencers</strong> on the roster, or a solo path:{' '}
@@ -129,6 +137,22 @@ const PAGES = [
         Spend <strong>gems</strong> (from prestige and trophies) on permanent multipliers, surges, and clout
         drops. The game is fully playable without it — gems reward long-term play across many prestiges.
       </p>
+    )
+  },
+  {
+    title: 'Saves & staff',
+    body: (
+      <>
+        <p>
+          <strong>Staff</strong> (shop tab) spends Clout like other hires: interns auto-post, agents auto-accept brand
+          deals, executive producers boost passive, brand scouts tilt the <strong>weekly sponsor meta</strong> toward
+          favored contracts — duplicates stack with rising prices.
+        </p>
+        <p>
+          Use <strong>Export save</strong> / <strong>Import save</strong> in the left panel to back up or move your
+          progress (JSON file). <strong>SFX</strong> toggles the prestige sound only.
+        </p>
+      </>
     )
   }
 ];

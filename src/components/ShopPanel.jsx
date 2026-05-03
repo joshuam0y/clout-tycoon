@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import './ShopPanel.css';
-import { influencerTypes, buildingTypes, clickUpgradeTypes } from '../data/gameData';
+import { influencerTypes, buildingTypes, clickUpgradeTypes, managerTypes } from '../data/gameData';
 import { scaledUnitCost, clickUpgradeNextCost, getFollowerCostMult } from '../utils/gameMath';
 import { formatNumber, formatRate } from '../utils/formatNumber';
 
 const TABS = [
   { id: 'upgrades', label: 'Posts' },
   { id: 'influencers', label: 'Talent' },
-  { id: 'buildings', label: 'Builds' }
+  { id: 'buildings', label: 'Builds' },
+  { id: 'staff', label: 'Staff' }
 ];
 
 export const ShopPanel = ({
@@ -17,8 +18,10 @@ export const ShopPanel = ({
   onSelectTool,
   influencers,
   buildings,
+  managers,
   clickUpgradeLevels,
-  onBuyClickUpgrade
+  onBuyClickUpgrade,
+  onBuyManager
 }) => {
   const [shopTab, setShopTab] = useState('upgrades');
   const costMult = getFollowerCostMult(followers);
@@ -126,6 +129,58 @@ export const ShopPanel = ({
                       </span>
                     </div>
                     {isSelected && <div className="selected-indicator">Click grid to place</div>}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {shopTab === 'staff' && (
+            <div className="shop-items shop-staff">
+              {managerTypes.map(m => {
+                const owned = managers.filter(x => x.typeId === m.id).length;
+                const raw = scaledUnitCost(m.cost, owned);
+                const nextCost = Math.ceil(raw * costMult);
+                const canAfford = clout >= nextCost;
+                const detail =
+                  m.effect === 'autoclick'
+                    ? `${m.clicksPerSecond ?? 10} posts/s each`
+                    : m.effect === 'autodeals'
+                      ? 'Accepts brand deals automatically'
+                      : m.effect === 'globalboost'
+                        ? `×${m.multiplier ?? 1.5} passive each (stacks)`
+                        : m.effect === 'brandseason'
+                          ? 'Favored deals this week spawn heavier (+6% each on-meta)'
+                          : '';
+
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    className={`shop-item ${!canAfford ? 'disabled' : ''}`}
+                    onClick={() => onBuyManager(m.id)}
+                    disabled={!canAfford}
+                  >
+                    <div className="item-header">
+                      <span className="item-icon" style={{ textShadow: '0 0 10px #88ffee' }}>
+                        {m.id === 'intern'
+                          ? '📱'
+                          : m.id === 'agent'
+                            ? '🤝'
+                            : m.id === 'scout'
+                              ? '🎯'
+                              : '🎬'}
+                      </span>
+                      <div className="item-info">
+                        <div className="item-name">{m.name}</div>
+                        <div className="item-stats">{detail}</div>
+                      </div>
+                    </div>
+                    <div className="item-description">{m.description}</div>
+                    <div className="item-meta">
+                      <span className="item-owned">×{owned} hired</span>
+                      <span className="item-cost">{formatNumber(nextCost)} Clout</span>
+                    </div>
                   </button>
                 );
               })}

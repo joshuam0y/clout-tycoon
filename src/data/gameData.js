@@ -69,7 +69,43 @@ export const achievementDefs = [
   { id: 'first_prestige', name: 'Reboot', gemReward: 5, description: 'Prestige once.' },
   { id: 'five_prestige', name: 'Season Finale', gemReward: 15, description: 'Reach prestige level 5.' },
   { id: 'followers_10k', name: 'Verified Energy', gemReward: 4, description: 'Reach 10,000 followers.' },
-  { id: 'deal_master', name: 'Brand Whisperer', gemReward: 3, description: 'Accept 25 brand deals (this save).' }
+  { id: 'deal_master', name: 'Brand Whisperer', gemReward: 3, description: 'Accept 25 brand deals (this save).' },
+  { id: 'first_staff', name: 'People Ops', gemReward: 2, description: 'Hire your first staff member.' },
+  { id: 'big_developer', name: 'Big Developer', gemReward: 4, description: 'Place 10 buildings on the grid.' },
+  { id: 'deep_bench', name: 'Deep Bench', gemReward: 4, description: 'Have 10 influencers on the roster at once.' },
+  { id: 'prestige_x', name: 'Series Regular', gemReward: 12, description: 'Reach prestige level 10.' },
+  { id: 'billion_life', name: 'Nine Zeros', gemReward: 12, description: 'Reach 1 billion lifetime Clout.' },
+  { id: 'gem_bank', name: 'Gem Vault', gemReward: 5, description: 'Hold 500 gems at once.' },
+  {
+    id: 'brand_navigator',
+    name: 'Brand Navigator',
+    gemReward: 3,
+    description: 'Hire 2+ Brand Scouts (deal-season specialists).'
+  },
+  {
+    id: 'million_run',
+    name: 'Seven Figure Sprint',
+    gemReward: 8,
+    description: 'Earn 1,000,000 Clout in a single run before prestiging.'
+  },
+  {
+    id: 'click_machine',
+    name: 'Thumb Legend',
+    gemReward: 6,
+    description: 'Reach 100,000 total posts (all-time).'
+  },
+  {
+    id: 'deal_century',
+    name: 'Contract Machine',
+    gemReward: 8,
+    description: 'Accept 100 brand deals (all-time).'
+  },
+  {
+    id: 'full_agency',
+    name: 'Full Agency',
+    gemReward: 10,
+    description: 'Employ intern, agent, executive producer, and brand scout at the same time.'
+  }
 ];
 
 // Influencer types — cost and output climb sharply at the top tiers
@@ -104,6 +140,28 @@ export const influencerTypes = [
     baseCloutPerSecond: 0.48,
     color: '#00ffff',
     icon: '🌟',
+    requiredEra: 0
+  },
+  {
+    id: 'sketch_comic',
+    name: 'Sketch Comic',
+    description:
+      'Punchy shorts and reaction beats. Synergy: ×1.1 near Laugh Track Booth when in range.',
+    cost: 220,
+    baseCloutPerSecond: 0.55,
+    color: '#ffcc44',
+    icon: '😂',
+    requiredEra: 0
+  },
+  {
+    id: 'tutorial_captain',
+    name: 'How-To Captain',
+    description:
+      'Edutainment and deep dives. Synergy: ×1.07 near Creator Desk when in buff range.',
+    cost: 305,
+    baseCloutPerSecond: 0.66,
+    color: '#77ee99',
+    icon: '📚',
     requiredEra: 0
   },
   {
@@ -300,7 +358,7 @@ export const buildingTypes = [
     id: 'desk',
     name: 'Creator Desk',
     description:
-      'Basic setup — small buff to adjacent talent. Synergy: extra ×1.06 with Nano Creator / Petfluencer in range.',
+      'Basic setup — small buff to adjacent talent. Synergy: extra ×1.06 with Nano / Pet, ×1.07 with How-To Captain in range.',
     cost: 145,
     effect: 'multiply',
     multiplier: 1.45,
@@ -349,6 +407,20 @@ export const buildingTypes = [
     range: 1,
     color: '#44ff99',
     icon: '🟩',
+    size: 1,
+    requiredEra: 0
+  },
+  {
+    id: 'laugh_track',
+    name: 'Laugh Track Booth',
+    description:
+      'Crowd energy on tap — pairing ×1.1 with Sketch Comic talent when they’re in buff range.',
+    cost: 265,
+    effect: 'multiply',
+    multiplier: 1.32,
+    range: 2,
+    color: '#ffaa33',
+    icon: '📣',
     size: 1,
     requiredEra: 0
   },
@@ -541,19 +613,26 @@ export const buildingTypes = [
  */
 export const synergyRules = [
   { buildingTypeId: 'desk', influencerTypeIds: ['pet', 'nano'], bonusMultiplier: 1.06 },
+  { buildingTypeId: 'desk', influencerTypeIds: ['tutorial_captain'], bonusMultiplier: 1.07 },
   { buildingTypeId: 'ringlight', influencerTypeIds: ['foodie'], bonusMultiplier: 1.09 },
   { buildingTypeId: 'greenscreen', influencerTypeIds: ['coach'], bonusMultiplier: 1.08 },
+  { buildingTypeId: 'laugh_track', influencerTypeIds: ['sketch_comic'], bonusMultiplier: 1.1 },
   { buildingTypeId: 'vanity_set', influencerTypeIds: ['beauty_guru'], bonusMultiplier: 1.11 },
   { buildingTypeId: 'studio', influencerTypeIds: ['dj'], bonusMultiplier: 1.22 },
   { buildingTypeId: 'podcast_nook', influencerTypeIds: ['podcast'], bonusMultiplier: 1.17 },
+  { buildingTypeId: 'podcast_nook', influencerTypeIds: ['micro'], bonusMultiplier: 1.05 },
   { buildingTypeId: 'server', influencerTypeIds: ['gamer'], bonusMultiplier: 1.13 },
   { buildingTypeId: 'warroom', influencerTypeIds: ['viral'], bonusMultiplier: 1.15 },
+  { buildingTypeId: 'warroom', influencerTypeIds: ['ai'], bonusMultiplier: 1.08 },
   { buildingTypeId: 'drone_bay', influencerTypeIds: ['travel_vlog'], bonusMultiplier: 1.13 },
+  { buildingTypeId: 'drone_bay', influencerTypeIds: ['foodie'], bonusMultiplier: 1.05 },
   { buildingTypeId: 'billboard', influencerTypeIds: ['lifestyle'], bonusMultiplier: 1.11 },
+  { buildingTypeId: 'ringlight', influencerTypeIds: ['lifestyle'], bonusMultiplier: 1.06 },
   { buildingTypeId: 'lan_arena', influencerTypeIds: ['esports_pro'], bonusMultiplier: 1.16 },
   { buildingTypeId: 'hq', influencerTypeIds: ['celebrity'], bonusMultiplier: 1.23 },
   { buildingTypeId: 'holo_deck', influencerTypeIds: ['synth_idol'], bonusMultiplier: 1.24 },
   { buildingTypeId: 'satellite_relay', influencerTypeIds: ['vtuber'], bonusMultiplier: 1.21 },
+  { buildingTypeId: 'satellite_relay', influencerTypeIds: ['celebrity'], bonusMultiplier: 1.06 },
   { buildingTypeId: 'fan_fest_arena', influencerTypeIds: ['mogul'], bonusMultiplier: 1.28 },
   { buildingTypeId: 'quantum_stage', influencerTypeIds: ['world_icon'], bonusMultiplier: 1.35 },
   { buildingTypeId: 'orbital_set', influencerTypeIds: ['galaxy_ambassador'], bonusMultiplier: 1.34 }
@@ -670,6 +749,24 @@ export const clickUpgradeTypes = [
     growth: 1.21,
     kind: 'mult',
     perLevel: 0.22
+  },
+  {
+    id: 'singularity_feed',
+    name: 'Singularity Feed',
+    description: '+28% post power per level (multiplies)',
+    baseCost: 52000000,
+    growth: 1.22,
+    kind: 'mult',
+    perLevel: 0.28
+  },
+  {
+    id: 'omni_waves',
+    name: 'Omnichannel Waves',
+    description: '+32% post power per level (multiplies)',
+    baseCost: 380000000,
+    growth: 1.23,
+    kind: 'mult',
+    perLevel: 0.32
   }
 ];
 
@@ -725,6 +822,18 @@ export const brandDealTypes = [
     color: '#ff00dd'
   },
   {
+    id: 'merch_drop',
+    name: 'Merch Drop Collab',
+    description: 'Limited run — fans rally; clean reputation bump.',
+    cloutShare: 0.072,
+    followersShare: 0.055,
+    reputationDelta: 4,
+    minClout: 38,
+    minFollowers: 6,
+    requiredEra: 0,
+    color: '#88ff66'
+  },
+  {
     id: 'viral_push',
     name: 'Viral Push',
     description: 'Trend hijack — chunky % of your bank, noticeable rep hit.',
@@ -759,6 +868,18 @@ export const brandDealTypes = [
     minFollowers: 35,
     requiredEra: 1,
     color: '#ffdd00'
+  },
+  {
+    id: 'creator_fund',
+    name: 'Creator Fund Grant',
+    description: 'Platform stipend — huge optics, strong reputation.',
+    cloutShare: 0.098,
+    followersShare: 0.082,
+    reputationDelta: 8,
+    minClout: 210,
+    minFollowers: 42,
+    requiredEra: 1,
+    color: '#66ffaa'
   },
   {
     id: 'aipartner',
@@ -797,6 +918,55 @@ export const brandDealTypes = [
     color: '#ff2266'
   }
 ];
+
+/** One real-time week per phase (UTC). Rotates which deal ids get a spawn-weight bias. */
+const DEAL_SEASON_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+export const brandDealSeasonPhases = [
+  {
+    id: 'clean',
+    label: 'Clean partnerships',
+    favoredDealIds: ['sponsored', 'partnership', 'merch_drop', 'exclusive', 'creator_fund'],
+    weightMult: 1.38
+  },
+  {
+    id: 'momentum',
+    label: 'Momentum pushes',
+    favoredDealIds: ['viral_push', 'aipartner', 'merch_drop'],
+    weightMult: 1.34
+  },
+  {
+    id: 'risk',
+    label: 'High-risk season',
+    favoredDealIds: ['controversy', 'viral_push', 'scorched_earth'],
+    weightMult: 1.4
+  },
+  {
+    id: 'arena',
+    label: 'Arena & whale deals',
+    favoredDealIds: ['stadium', 'exclusive', 'creator_fund', 'scorched_earth', 'aipartner'],
+    weightMult: 1.33
+  }
+];
+
+export function getBrandDealSeasonWeekIndex(nowMs = Date.now()) {
+  return Math.floor(nowMs / DEAL_SEASON_WEEK_MS);
+}
+
+export function getActiveBrandDealSeasonPhase(nowMs = Date.now()) {
+  const i = getBrandDealSeasonWeekIndex(nowMs);
+  return brandDealSeasonPhases[i % brandDealSeasonPhases.length];
+}
+
+/**
+ * Extra weight on favored deals this week. Brand Scouts stack: +6% each on favored picks only.
+ */
+export function getBrandDealSeasonalWeightMult(dealId, nowMs = Date.now(), brandScoutCount = 0) {
+  const phase = getActiveBrandDealSeasonPhase(nowMs);
+  if (!phase.favoredDealIds.includes(dealId)) return 1;
+  const scoutMult = 1 + 0.06 * Math.max(0, brandScoutCount);
+  return phase.weightMult * scoutMult;
+}
 
 // Prestige eras
 export const prestigeEras = [
@@ -859,5 +1029,12 @@ export const managerTypes = [
     cost: 50000,
     effect: 'globalboost',
     multiplier: 1.5
+  },
+  {
+    id: 'scout',
+    name: 'Brand Scout',
+    description: 'Reads sponsor cycles — boosts spawn odds for this week’s favored deal types (stackable).',
+    cost: 120000,
+    effect: 'brandseason'
   }
 ];

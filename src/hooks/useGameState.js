@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import {
   influencerTypes,
   buildingTypes,
@@ -6,12 +6,14 @@ import {
   prestigeEras,
   clickUpgradeTypes,
   achievementDefs,
+  managerTypes,
   getPrestigeRunCloutRequired,
   PRESTIGE_GEMS_BASE,
   brandDealsMaySpawn,
   reputationIncomeMultiplierFromRep,
   getSynergyMultiplierFromBuildingTypes,
-  computeBrandDealPayouts
+  computeBrandDealPayouts,
+  getBrandDealSeasonalWeightMult
 } from '../data/gameData';
 import {
   scaledUnitCost,
@@ -20,7 +22,13 @@ import {
   getFollowerCostMult,
   distanceToBuildingFootprint
 } from '../utils/gameMath';
-import { loadGameSnapshot, writeGameSnapshot } from '../utils/persistence';
+import {
+  loadGameSnapshot,
+  writeGameSnapshot,
+  downloadSaveFile,
+  importSaveFromJsonText
+} from '../utils/persistence';
+import { playPrestigeChime } from '../utils/sound';
 
 const TICK_INTERVAL = 100;
 const BRAND_DEAL_SPAWN_CHANCE_PER_TICK = 0.00065;
@@ -28,8 +36,6 @@ const BRAND_DEAL_COOLDOWN_ACCEPT_MS = 32000;
 const BRAND_DEAL_COOLDOWN_DECLINE_MS = 22000;
 const BRAND_DEAL_COOLDOWN_EXPIRE_MS = 20000;
 const BRAND_DEAL_DURATION_MS = 20000;
-const MIN_REPUTATION_INCOME_MULTIPLIER = 0.35;
-const MAX_REPUTATION_INCOME_MULTIPLIER = 1.65;
 const MAX_GEM_CLOUT_STACKS = 10;
 const GEM_STACK_COST_BASE = 48;
 const GEM_STACK_COST_PER_OWNED = 14;
@@ -89,12 +95,39 @@ function achievementMet(id, snap) {
       return snap.followers >= 10000;
     case 'deal_master':
       return snap.brandDealsAccepted >= 25;
+    case 'first_staff':
+      return (snap.managers?.length ?? 0) >= 1;
+    case 'big_developer':
+      return snap.buildings.length >= 10;
+    case 'deep_bench':
+      return snap.influencers.length >= 10;
+    case 'prestige_x':
+      return snap.prestigeCount >= 10;
+    case 'billion_life':
+      return snap.lifetimeClout >= 1_000_000_000;
+    case 'gem_bank':
+      return (snap.gems ?? 0) >= 500;
+    case 'brand_navigator':
+      return (snap.managers?.filter(m => m.typeId === 'scout').length ?? 0) >= 2;
+    case 'million_run':
+      return snap.runCloutEarned >= 1_000_000;
+    case 'click_machine':
+      return snap.totalClicks >= 100_000;
+    case 'deal_century':
+      return snap.brandDealsAccepted >= 100;
+    case 'full_agency': {
+      const ids = new Set((snap.managers ?? []).map(m => m.typeId));
+      return ids.has('intern') && ids.has('agent') && ids.has('producer') && ids.has('scout');
+    }
     default:
       return false;
   }
 }
 
 export const useGameState = () => {
+  const acceptBrandDealRef = useRef(() => {});
+  const internClickRemainderRef = useRef(0);
+
   const [clout, setClout] = useState(() => savedGame?.clout ?? 0);
   const [followers, setFollowers] = useState(() => savedGame?.followers ?? 0);
   const [reputation, setReputation] = useState(() => savedGame?.reputation ?? 100);
@@ -213,8 +246,14 @@ export const useGameState = () => {
         ? activeFrenzy.multiplier
         : 1;
 
+    const producerDef = managerTypes.find(m => m.id === 'producer');
+    const baseProducerMult = producerDef?.multiplier ?? 1.5;
+    const producerCount = managers.filter(m => m.typeId === 'producer').length;
+    const producerMult = Math.pow(baseProducerMult, producerCount);
+
     return (
       totalCloutPerSecond *
+      producerMult *
       prestigeMultiplier *
       getFollowerCloutMult(followers) *
       getReputationIncomeMultiplier() *
@@ -225,6 +264,7 @@ export const useGameState = () => {
   }, [
     influencers,
     buildings,
+    managers,
     prestigeMultiplier,
     followers,
     getReputationIncomeMultiplier,
@@ -352,7 +392,23 @@ export const useGameState = () => {
 
       return true;
     },
-    [clout, buildings, influencers, followers]
+    [clout, buildings, influencers, followers, addNotification]
+  );
+
+  const buyManager = useCallback(
+    typeId => {
+      const def = managerTypes.find(m => m.id === typeId);
+      if (!def) return false;
+      const owned = managers.filter(m => m.typeId === typeId).length;
+      const rawCost = scaledUnitCost(def.cost, owned);
+      const cost = Math.ceil(rawCost * getFollowerCostMult(followers));
+      if (clout < cost) return false;
+      setClout(c => c - cost);
+      setManagers(prev => [...prev, { id: Date.now() + Math.random(), typeId }]);
+      addNotification(`Hired ${def.name}!`, 'success');
+      return true;
+    },
+    [clout, managers, followers, addNotification]
   );
 
   const acceptBrandDeal = useCallback(() => {
@@ -423,6 +479,7 @@ export const useGameState = () => {
       `Prestige ${newPrestigeCount}! +${prestigeGems} 💎 · ${prestigeEras[themeEra].name}`,
       'prestige'
     );
+    playPrestigeChime();
 
     return true;
   }, [runCloutEarned, prestigeCount, addNotification]);
@@ -434,7 +491,7 @@ export const useGameState = () => {
     addNotification(deal ? `Passed on ${deal.name}` : 'Brand deal declined', 'info');
     setActiveBrandDeal(null);
     setBrandDealCooldown(BRAND_DEAL_COOLDOWN_DECLINE_MS);
-  }, [activeBrandDeal]);
+  }, [activeBrandDeal, addNotification]);
 
   const buyClickUpgrade = useCallback(
     upgradeId => {
@@ -450,7 +507,7 @@ export const useGameState = () => {
       addNotification(`${def.name} → Lv.${level + 1}`, 'success');
       return true;
     },
-    [clout, clickUpgradeLevels]
+    [clout, clickUpgradeLevels, addNotification]
   );
 
   const buyGemCloutStack = useCallback(() => {
@@ -516,7 +573,7 @@ export const useGameState = () => {
     addCloutEarned(burst);
     addNotification(`Clout Surge: +${Math.floor(burst)} (~${CLOUT_SURGE_SECONDS}s passive)`, 'success');
     return true;
-  }, [gems, calculatePassiveIncome, addCloutEarned]);
+  }, [gems, calculatePassiveIncome, addCloutEarned, addNotification]);
 
   const pullGacha = useCallback(
     (multi = false) => {
@@ -616,11 +673,13 @@ export const useGameState = () => {
       totalClicks,
       influencers,
       buildings,
+      managers,
       runCloutEarned,
       lifetimeClout,
       prestigeCount,
       followers,
-      brandDealsAccepted
+      brandDealsAccepted,
+      gems
     };
     achievementDefs.forEach(def => {
       if (achievementsUnlocked[def.id]) return;
@@ -638,7 +697,10 @@ export const useGameState = () => {
     prestigeCount,
     followers,
     brandDealsAccepted,
-    achievementsUnlocked
+    managers,
+    gems,
+    achievementsUnlocked,
+    addNotification
   ]);
 
   useEffect(() => {
@@ -662,6 +724,26 @@ export const useGameState = () => {
       if (influencers.length > 0) {
         const followerGrowth = (influencers.length * 0.0085 * TICK_INTERVAL) / 1000;
         setFollowers(prev => prev + followerGrowth);
+      }
+
+      const internN = managers.filter(m => m.typeId === 'intern').length;
+      if (internN > 0) {
+        const cps = internN * (managerTypes.find(m => m.id === 'intern')?.clicksPerSecond ?? 10);
+        internClickRemainderRef.current += (cps * TICK_INTERVAL) / 1000;
+        while (internClickRemainderRef.current >= 1) {
+          internClickRemainderRef.current -= 1;
+          const earned = getClickClout();
+          addCloutEarned(earned);
+          setTotalClicks(tc => tc + 1);
+          if (Math.random() < 0.07) {
+            setFollowers(f => f + 1);
+          }
+        }
+      }
+
+      if (activeBrandDeal && managers.some(m => m.typeId === 'agent')) {
+        const fn = acceptBrandDealRef.current;
+        if (typeof fn === 'function') fn();
       }
 
       if (brandDealCooldown > 0) {
@@ -700,12 +782,14 @@ export const useGameState = () => {
         const availableDeals = brandDealTypes;
 
         if (availableDeals.length > 0) {
+          const scoutN = managers.filter(m => m.typeId === 'scout').length;
           const weightedDeals = availableDeals.map(deal => {
             const risky = deal.reputationDelta < 0;
             const repPct = reputation / 100;
             let weight = risky ? 0.42 + (1 - repPct) * 0.85 : 0.65 + repPct * 0.55;
             if (risky && reputation < 35) weight *= 1.35;
             if (!risky && reputation < 25) weight *= 0.65;
+            weight *= getBrandDealSeasonalWeightMult(deal.id, now, scoutN);
             return { deal, weight: Math.max(0.06, weight) };
           });
 
@@ -720,7 +804,6 @@ export const useGameState = () => {
             }
           }
 
-          const now = Date.now();
           setActiveBrandDeal({
             typeId: picked.id,
             startedAt: now,
@@ -752,8 +835,73 @@ export const useGameState = () => {
     frenzyCooldownEndAt,
     totalClicks,
     addCloutEarned,
-    addNotification
+    addNotification,
+    managers,
+    getClickClout
   ]);
+
+  const importSaveFromFileText = useCallback(
+    text => {
+      const snap = importSaveFromJsonText(text);
+      if (!snap) {
+        addNotification('Could not read that save file.', 'warning');
+        return false;
+      }
+      writeGameSnapshot(snap);
+      addNotification('Save imported — reloading…', 'success');
+      window.setTimeout(() => window.location.reload(), 120);
+      return true;
+    },
+    [addNotification]
+  );
+
+  const exportSaveToFile = useCallback(() => {
+    downloadSaveFile({
+      clout,
+      followers,
+      reputation,
+      prestigeCount,
+      prestigeMultiplier,
+      influencers,
+      buildings,
+      managers,
+      totalClicks,
+      lifetimeClout,
+      runCloutEarned,
+      clickUpgradeLevels,
+      brandDealCooldown,
+      gems,
+      gemCloutMultStacks,
+      gemClickMultStacks,
+      gemPassiveMultStacks,
+      achievementsUnlocked,
+      brandDealsAccepted
+    });
+  }, [
+    clout,
+    followers,
+    reputation,
+    prestigeCount,
+    prestigeMultiplier,
+    influencers,
+    buildings,
+    managers,
+    totalClicks,
+    lifetimeClout,
+    runCloutEarned,
+    clickUpgradeLevels,
+    brandDealCooldown,
+    gems,
+    gemCloutMultStacks,
+    gemClickMultStacks,
+    gemPassiveMultStacks,
+    achievementsUnlocked,
+    brandDealsAccepted
+  ]);
+
+  useLayoutEffect(() => {
+    acceptBrandDealRef.current = acceptBrandDeal;
+  }, [acceptBrandDeal]);
 
   return {
     clout,
@@ -790,6 +938,7 @@ export const useGameState = () => {
     clickPostContent,
     hireInfluencer,
     placeBuilding,
+    buyManager,
     buyClickUpgrade,
     acceptBrandDeal,
     declineBrandDeal,
@@ -816,6 +965,8 @@ export const useGameState = () => {
     },
     gemCloutMult: getGemCloutMult(),
     gemClickMult: getGemClickMult(),
-    gemPassiveMult: getGemPassiveMult()
+    gemPassiveMult: getGemPassiveMult(),
+    exportSaveToFile,
+    importSaveFromFileText
   };
 };

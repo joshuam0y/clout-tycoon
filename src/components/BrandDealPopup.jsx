@@ -14,18 +14,20 @@ export const BrandDealPopup = ({
   onAccept,
   onDecline
 }) => {
-  const [timeLeft, setTimeLeft] = useState(0);
+  /** Re-render cadence while the modal is open (deal countdown reads wall clock below). */
+  const [, bumpTimer] = useState(0);
 
   useEffect(() => {
     if (!activeBrandDeal) return;
-
-    const interval = setInterval(() => {
-      const remaining = Math.max(0, activeBrandDeal.expiresAt - Date.now());
-      setTimeLeft(remaining);
-    }, 100);
-
-    return () => clearInterval(interval);
+    const id = setInterval(() => bumpTimer(n => n + 1), 100);
+    return () => clearInterval(id);
   }, [activeBrandDeal]);
+
+  /* eslint-disable react-hooks/purity -- live countdown needs Date.now vs expiresAt */
+  const timeLeft = activeBrandDeal
+    ? Math.max(0, activeBrandDeal.expiresAt - Date.now())
+    : 0;
+  /* eslint-enable react-hooks/purity */
 
   const deal = useMemo(
     () => (activeBrandDeal ? brandDealTypes.find(d => d.id === activeBrandDeal.typeId) : null),

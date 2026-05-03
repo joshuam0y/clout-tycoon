@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './ControlPanel.css';
+import { isSfxMuted, setSfxMuted } from '../utils/sound';
 import {
   prestigeEras,
   getPrestigeRunCloutRequired,
-  PRESTIGE_RUN_CLOUT_MULT_PER_STEP
+  PRESTIGE_RUN_CLOUT_MULT_PER_STEP,
+  getActiveBrandDealSeasonPhase
 } from '../data/gameData';
 import { formatNumber, formatRate } from '../utils/formatNumber';
 import { getFollowerBonusSummary } from '../utils/gameMath';
@@ -19,16 +21,36 @@ export const ControlPanel = ({
   lifetimeClout,
   runCloutEarned,
   gems,
+  staffCount,
   totalClicks,
   prestigeRunCloutRequired,
   activeFrenzy,
   onClickPostContent,
   onPrestige,
   onOpenShop,
-  onOpenHowToPlay
+  onOpenHowToPlay,
+  onExportSave,
+  onImportSave
 }) => {
   const [isClicking, setIsClicking] = useState(false);
   const [floaters, setFloaters] = useState([]);
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  const [sfxMuted, setSfxMutedState] = useState(() => isSfxMuted());
+  const importInputRef = useRef(null);
+
+  useEffect(() => {
+    if (!activeFrenzy) return;
+    const tick = () => setNowMs(Date.now());
+    tick();
+    const id = setInterval(tick, 250);
+    return () => clearInterval(id);
+  }, [activeFrenzy]);
+
+  const toggleSfx = () => {
+    const next = !sfxMuted;
+    setSfxMuted(next);
+    setSfxMutedState(next);
+  };
 
   const handleClick = () => {
     setIsClicking(true);
@@ -45,13 +67,12 @@ export const ControlPanel = ({
   const displayEra = Math.min(2, Math.floor(prestigeCount / 3));
   const currentEraData = prestigeEras[displayEra];
   const followerBonuses = getFollowerBonusSummary(followers);
+  const dealSeason = getActiveBrandDealSeasonPhase();
   const nextRunReq = getPrestigeRunCloutRequired(prestigeCount + 1);
   const frenzyLive =
-    activeFrenzy && Date.now() < activeFrenzy.endsAt
-      ? activeFrenzy
-      : null;
+    activeFrenzy && nowMs < activeFrenzy.endsAt ? activeFrenzy : null;
   const frenzySecLeft = frenzyLive
-    ? Math.max(0, Math.ceil((frenzyLive.endsAt - Date.now()) / 1000))
+    ? Math.max(0, Math.ceil((frenzyLive.endsAt - nowMs) / 1000))
     : 0;
 
   return (
@@ -59,6 +80,34 @@ export const ControlPanel = ({
       <button type="button" className="how-to-side-link" onClick={onOpenHowToPlay}>
         How to play
       </button>
+
+      <div className="save-data-row">
+        <button type="button" className="save-data-btn" onClick={onExportSave}>
+          Export save
+        </button>
+        <button type="button" className="save-data-btn" onClick={() => importInputRef.current?.click()}>
+          Import save
+        </button>
+        <input
+          ref={importInputRef}
+          type="file"
+          accept="application/json,.json"
+          className="save-file-input-hidden"
+          aria-hidden
+          tabIndex={-1}
+          onChange={e => {
+            const f = e.target.files?.[0];
+            e.target.value = '';
+            if (!f) return;
+            const reader = new FileReader();
+            reader.onload = () => onImportSave(String(reader.result ?? ''));
+            reader.readAsText(f);
+          }}
+        />
+        <button type="button" className="save-data-btn sfx-toggle" onClick={toggleSfx} title="Mute prestige chime">
+          SFX {sfxMuted ? 'off' : 'on'}
+        </button>
+      </div>
       {/* Theme label (cosmetic — scales with prestige depth; shop has no era locks) */}
       <div className="era-display" style={{ borderColor: currentEraData.theme.primary }}>
         <div className="era-name" style={{ color: currentEraData.theme.primary }}>
@@ -99,6 +148,9 @@ export const ControlPanel = ({
           Moves on <strong>brand deals</strong> only (+ clean partnerships, − risky ones). No separate Clout →
           Rep trade.
         </div>
+        <div className="deal-season-hint" title="Weights rotate weekly (UTC). Brand Scouts amplify favored types.">
+          This week’s deals: <strong>{dealSeason.label}</strong>
+        </div>
       </div>
 
       {frenzyLive && (
@@ -135,6 +187,7 @@ export const ControlPanel = ({
           type="button"
           className={`post-button primary ${isClicking ? 'click-effect' : ''}`}
           onClick={handleClick}
+          title="Shortcut: Space or Enter (when not typing)"
         >
           Post Content
         </button>
@@ -163,6 +216,10 @@ export const ControlPanel = ({
           <span>Gems:</span>
           <span>{gems.toLocaleString()} 💎</span>
         </div>
+        <div className="stat-row">
+          <span>Staff hired:</span>
+          <span>{staffCount.toLocaleString()}</span>
+        </div>
       </div>
 
       {/* Premium shop button */}
@@ -179,6 +236,7 @@ export const ControlPanel = ({
           className="prestige-button"
           onClick={onPrestige}
           disabled={!canPrestige}
+          title={canPrestige ? 'Shortcut: P' : undefined}
         >
           Prestige{' '}
           {canPrestige

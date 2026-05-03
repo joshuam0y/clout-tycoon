@@ -20,6 +20,7 @@
 .world-grid {
   position: relative;
   overflow: hidden;
+  touch-action: none;
   background:
     radial-gradient(circle at 25% 20%, rgba(0, 180, 255, 0.12), transparent 45%),
     radial-gradient(circle at 75% 80%, rgba(255, 0, 190, 0.12), transparent 45%),

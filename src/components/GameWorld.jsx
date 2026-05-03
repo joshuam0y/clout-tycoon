@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import './GameWorld.css';
 import { influencerTypes, buildingTypes } from '../data/gameData';
 import { getLocalGridBuffMultiplier } from '../utils/gameMath';
@@ -7,9 +7,22 @@ const CELL_SIZE = 36;
 const VIEW_COLS = 36;
 const VIEW_ROWS = 24;
 const DRAG_THRESHOLD_PX = 5;
+/** After a pan, block the synthetic click (esp. mobile ~300ms later) so tiles don’t place by accident */
+const DRAG_SUPPRESS_CLICK_MS = 420;
 
 /** Viewport top-left in world px; (0,0) is screen center — pads cluster on origin */
 const INITIAL_VIEW_OFFSET = { x: -18 * CELL_SIZE, y: -12 * CELL_SIZE };
+
+/** Stable 0–3s delay from id (avoid Math.random in render). */
+function animationDelayFromId(id) {
+  const s = String(id);
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return `${(Math.abs(h) % 3000) / 1000}s`;
+}
 
 export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick }) => {
   const [viewOffset, setViewOffset] = useState(INITIAL_VIEW_OFFSET);
@@ -85,33 +98,36 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick })
     return getLocalGridBuffMultiplier(hoveredTalentOnly, buildings);
   }, [hoveredTalentOnly, buildings]);
 
-  const getPlacementState = anchor => {
-    if (!selectedTool || !anchor || selectedPlacementSize <= 0) {
-      return { valid: false, isOutOfBounds: false, reason: '' };
-    }
+  const getPlacementState = useCallback(
+    anchor => {
+      if (!selectedTool || !anchor || selectedPlacementSize <= 0) {
+        return { valid: false, isOutOfBounds: false, reason: '' };
+      }
 
-    for (let y = anchor.y; y < anchor.y + selectedPlacementSize; y++) {
-      for (let x = anchor.x; x < anchor.x + selectedPlacementSize; x++) {
-        const influencerOccupied = influencers.some(
-          influencer => influencer.position.x === x && influencer.position.y === y
-        );
-        if (influencerOccupied) {
-          return { valid: false, isOutOfBounds: false, reason: 'Occupied by influencer' };
-        }
+      for (let y = anchor.y; y < anchor.y + selectedPlacementSize; y++) {
+        for (let x = anchor.x; x < anchor.x + selectedPlacementSize; x++) {
+          const influencerOccupied = influencers.some(
+            influencer => influencer.position.x === x && influencer.position.y === y
+          );
+          if (influencerOccupied) {
+            return { valid: false, isOutOfBounds: false, reason: 'Occupied by influencer' };
+          }
 
-        const buildingOccupied = buildings.some(building => doesBuildingCoverTile(building, x, y));
-        if (buildingOccupied) {
-          return { valid: false, isOutOfBounds: false, reason: 'Occupied by building' };
+          const buildingOccupied = buildings.some(building => doesBuildingCoverTile(building, x, y));
+          if (buildingOccupied) {
+            return { valid: false, isOutOfBounds: false, reason: 'Occupied by building' };
+          }
         }
       }
-    }
 
-    return { valid: true, isOutOfBounds: false, reason: '' };
-  };
+      return { valid: true, isOutOfBounds: false, reason: '' };
+    },
+    [selectedTool, selectedPlacementSize, influencers, buildings]
+  );
 
   const hoveredPlacementState = useMemo(
     () => getPlacementState(hoveredCell),
-    [hoveredCell, selectedTool, selectedPlacementSize, influencers, buildings]
+    [hoveredCell, getPlacementState]
   );
 
   const footprintPreviewTiles = useMemo(() => {
@@ -265,19 +281,22 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick })
     top: worldY * CELL_SIZE - viewOffset.y
   });
 
-  const handleMouseDown = event => {
+  const handlePointerDown = event => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
     suppressPlacementClickRef.current = false;
     dragStateRef.current = {
+      pointerId: event.pointerId,
       startX: event.clientX,
       startY: event.clientY,
       offsetStartX: viewOffset.x,
       offsetStartY: viewOffset.y,
       moved: false
     };
+    event.currentTarget.setPointerCapture(event.pointerId);
   };
 
-  const handleMouseMove = event => {
-    if (!dragStateRef.current) return;
+  const handlePointerMove = event => {
+    if (!dragStateRef.current || event.pointerId !== dragStateRef.current.pointerId) return;
 
     const dxPx = event.clientX - dragStateRef.current.startX;
     const dyPx = event.clientY - dragStateRef.current.startY;
@@ -292,12 +311,22 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick })
     setIsDragging(true);
   };
 
-  const handleMouseUp = () => {
-    const moved = dragStateRef.current?.moved ?? false;
+  const endPointerDrag = event => {
+    if (!dragStateRef.current || event.pointerId !== dragStateRef.current.pointerId) return;
+    try {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    } catch {
+      /* already released */
+    }
+    const moved = dragStateRef.current.moved;
     dragStateRef.current = null;
-    if (moved) suppressPlacementClickRef.current = true;
+    if (moved) {
+      suppressPlacementClickRef.current = true;
+      window.setTimeout(() => {
+        suppressPlacementClickRef.current = false;
+      }, DRAG_SUPPRESS_CLICK_MS);
+    }
     requestAnimationFrame(() => {
-      suppressPlacementClickRef.current = false;
       setIsDragging(false);
     });
   };
@@ -311,13 +340,16 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick })
             width: VIEW_COLS * CELL_SIZE,
             height: VIEW_ROWS * CELL_SIZE
           }}
-          onMouseLeave={() => {
+          onPointerLeave={e => {
             setHoveredCell(null);
-            handleMouseUp();
+            if (dragStateRef.current?.pointerId === e.pointerId) {
+              endPointerDrag(e);
+            }
           }}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={endPointerDrag}
+          onPointerCancel={endPointerDrag}
         >
         {/* Grid cells */}
         {visibleCells.map(cell => (
@@ -339,6 +371,7 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick })
               height: CELL_SIZE
             }}
             onMouseEnter={() => setHoveredCell({ x: cell.worldX, y: cell.worldY })}
+            onPointerEnter={() => setHoveredCell({ x: cell.worldX, y: cell.worldY })}
             onClick={() => handleCellClick(cell.worldX, cell.worldY)}
           />
         ))}
@@ -443,7 +476,7 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick })
                 boxShadow: isBoostedPreview
                   ? `0 0 24px ${selectedBuildingType?.color ?? type.color}, 0 0 10px ${type.color}`
                   : `0 0 15px ${type.color}`,
-                animationDelay: `${Math.random() * 3}s`
+                animationDelay: animationDelayFromId(influencer.id)
               }}
             >
               <span className="influencer-icon">{type.icon}</span>
@@ -481,7 +514,7 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick })
             );
           })()}
 
-        <div className="camera-hint">Drag to pan · infinite grid</div>
+        <div className="camera-hint">Drag / swipe to pan · infinite grid</div>
         </div>
       </div>
     </div>
