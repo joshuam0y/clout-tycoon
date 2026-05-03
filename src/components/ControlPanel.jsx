@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import './ControlPanel.css';
-import { prestigeEras, PRESTIGE_RUN_CLOUT_SCALE_PER_PRESTIGE } from '../data/gameData';
+import { prestigeEras, getPrestigeRunCloutRequired } from '../data/gameData';
 import { formatNumber, formatRate } from '../utils/formatNumber';
 import { getFollowerBonusSummary } from '../utils/gameMath';
 
@@ -41,7 +41,8 @@ export const ControlPanel = ({
   const runProgress = Math.min(1, runCloutEarned / required);
   const currentEraData = prestigeEras[currentEra];
   const followerBonuses = getFollowerBonusSummary(followers);
-  const prestigeScalePct = Math.round((PRESTIGE_RUN_CLOUT_SCALE_PER_PRESTIGE - 1) * 100);
+  const nextRunReq = getPrestigeRunCloutRequired(prestigeCount + 1);
+  const prestigeStepPct = Math.round((nextRunReq / Math.max(1, required) - 1) * 100);
   const frenzyLive =
     activeFrenzy && Date.now() < activeFrenzy.endsAt
       ? activeFrenzy
@@ -152,7 +153,7 @@ export const ControlPanel = ({
         </div>
         <div className="stat-row gems-row">
           <span>Gems:</span>
-          <span>{gems} 💎</span>
+          <span>{gems.toLocaleString()} 💎</span>
         </div>
       </div>
 
@@ -177,9 +178,10 @@ export const ControlPanel = ({
             : `(${formatNumber(Math.max(0, required - runCloutEarned))} run clout)`}
         </button>
         <div className="prestige-hint">
-          This run needs {formatNumber(required)} Clout to prestige (next run’s bar is ~{prestigeScalePct}% higher
-          per prestige you’ve already finished — compounds). Lifetime clout &amp; gems stay. +45% permanent mult
-          per prestige. +1 💎 per prestige, +1 extra every 4th.
+          This run needs {formatNumber(required)} Clout to prestige. After your next prestige, the following run’s
+          bar jumps ~{prestigeStepPct}% vs this run’s requirement (extra super-linear scaling at higher prestige
+          depth). Lifetime clout &amp; gems stay. +45% permanent mult per prestige. +1 💎 per prestige, +1 extra
+          every 4th.
         </div>
       </div>
     </div>

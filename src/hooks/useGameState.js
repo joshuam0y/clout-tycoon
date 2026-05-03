@@ -9,13 +9,15 @@ import {
   getPrestigeRunCloutRequired,
   PRESTIGE_GEMS_BASE,
   brandDealsMaySpawn,
-  reputationIncomeMultiplierFromRep
+  reputationIncomeMultiplierFromRep,
+  getSynergyMultiplierFromBuildingTypes
 } from '../data/gameData';
 import {
   scaledUnitCost,
   clickUpgradeNextCost,
   getFollowerCloutMult,
-  getFollowerCostMult
+  getFollowerCostMult,
+  distanceToBuildingFootprint
 } from '../utils/gameMath';
 import { loadGameSnapshot, writeGameSnapshot } from '../utils/persistence';
 
@@ -62,21 +64,6 @@ const doesBuildingCoverTile = (building, tileX, tileY) => {
     tileY >= building.position.y &&
     tileY < building.position.y + buildingType.size
   );
-};
-
-const distanceToBuildingFootprint = (building, tileX, tileY) => {
-  const buildingType = buildingTypes.find(t => t.id === building.typeId);
-  if (!buildingType) return Number.POSITIVE_INFINITY;
-
-  const minX = building.position.x;
-  const maxX = building.position.x + buildingType.size - 1;
-  const minY = building.position.y;
-  const maxY = building.position.y + buildingType.size - 1;
-
-  const dx = tileX < minX ? minX - tileX : tileX > maxX ? tileX - maxX : 0;
-  const dy = tileY < minY ? minY - tileY : tileY > maxY ? tileY - maxY : 0;
-
-  return dx + dy;
 };
 
 function achievementMet(id, snap) {
@@ -198,6 +185,7 @@ export const useGameState = () => {
     influencers.forEach(influencer => {
       const type = influencerTypes.find(t => t.id === influencer.typeId);
       let cloutPerSecond = type.baseCloutPerSecond;
+      const buildingTypesInRange = [];
 
       buildings.forEach(building => {
         const buildingType = buildingTypes.find(t => t.id === building.typeId);
@@ -209,9 +197,13 @@ export const useGameState = () => {
           );
           if (distance <= buildingType.range) {
             cloutPerSecond *= buildingType.multiplier;
+            buildingTypesInRange.push(buildingType.id);
           }
         }
       });
+
+      const uniqueBuildingTypes = [...new Set(buildingTypesInRange)];
+      cloutPerSecond *= getSynergyMultiplierFromBuildingTypes(influencer.typeId, uniqueBuildingTypes);
 
       totalCloutPerSecond += cloutPerSecond;
     });

@@ -35,7 +35,7 @@ export const ShopPanel = ({
           <h2 className="shop-title">Agency Shop</h2>
         </div>
         <p className="shop-tagline">
-          +18% cost per duplicate. Same item, pricier each time.
+          ~21.5% cost per duplicate. Same item, pricier each time.
           {discountPct > 0 && (
             <span className="shop-follower-discount">
               {' '}

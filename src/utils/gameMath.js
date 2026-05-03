@@ -1,4 +1,20 @@
-import { UNIT_PRICE_GROWTH } from '../data/gameData';
+import { UNIT_PRICE_GROWTH, buildingTypes } from '../data/gameData';
+
+/** Manhattan distance from tile to rectangular building footprint (0 = inside/on edge). */
+export function distanceToBuildingFootprint(building, tileX, tileY) {
+  const buildingType = buildingTypes.find(t => t.id === building.typeId);
+  if (!buildingType) return Number.POSITIVE_INFINITY;
+
+  const minX = building.position.x;
+  const maxX = building.position.x + buildingType.size - 1;
+  const minY = building.position.y;
+  const maxY = building.position.y + buildingType.size - 1;
+
+  const dx = tileX < minX ? minX - tileX : tileX > maxX ? tileX - maxX : 0;
+  const dy = tileY < minY ? minY - tileY : tileY > maxY ? tileY - maxY : 0;
+
+  return dx + dy;
+}
 
 /** Followers scale all clout sources (meaningful but capped) */
 export const getFollowerCloutMult = followers => {

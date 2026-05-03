@@ -1,20 +1,14 @@
-/** Whole numbers for Clout, followers, and costs (no fractional display). */
+/** Whole numbers for Clout, followers, and costs — full value, no K/M/B shorthand. */
 export function formatNumber(num) {
   if (!Number.isFinite(num)) return '0';
-  const n = num;
-  const abs = Math.abs(n);
-  if (abs >= 1e12) return `${Math.floor(n / 1e12)}T`;
-  if (abs >= 1e9) return `${Math.floor(n / 1e9)}B`;
-  if (abs >= 1e6) return `${Math.floor(n / 1e6)}M`;
-  if (abs >= 1e3) return `${Math.floor(n / 1e3)}K`;
-  return Math.floor(n).toLocaleString();
+  return Math.floor(num).toLocaleString();
 }
 
-/** Rates (per second, per click): one decimal place. */
+/** Rates (per second, per click); large values show full integers. */
 export function formatRate(num) {
   if (!Number.isFinite(num) || num === 0) return '0';
   const abs = Math.abs(num);
-  if (abs >= 1000) return formatNumber(num);
+  if (abs >= 1000) return Math.round(num).toLocaleString();
   const s = (Math.round(num * 10) / 10).toFixed(1);
   return s.endsWith('.0') ? s.slice(0, -2) : s;
 }

@@ -41,6 +41,11 @@ const PAGES = [
             placing to see the footprint and buff area).
           </li>
           <li>
+            <strong>Pairing bonuses:</strong> certain talent + structure combos grant an extra multiplier when the
+            talent is inside that building’s buff radius (listed on shop cards). Hover a placed building to see
+            radius, tile count, base buff, and which pairings are active.
+          </li>
+          <li>
             <strong>Drag</strong> the map to pan. Your placements stay on the grid; only the camera moves.
           </li>
         </ol>
@@ -97,7 +102,8 @@ const PAGES = [
         <p>
           When your <strong>this-run Clout</strong> bar fills, you can prestige: the run resets, but lifetime
           stats, gems, and gem upgrades stay. Eras unlock stronger shop items. Each prestige makes the{' '}
-          <strong>next</strong> prestige bar <strong>taller</strong> (compound scaling) — late resets take longer.
+          <strong>next</strong> prestige bar <strong>much taller</strong>: requirements compound per prestige and
+          accelerate further at high prestige counts (super-linear cost growth).
         </p>
         <p>
           <strong>Frenzy events</strong> can fire after a cooldown: <strong>Viral frenzy</strong> boosts post

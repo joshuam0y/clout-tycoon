@@ -1,17 +1,22 @@
 /** Per-unit price scaling (Cookie Clicker–style): each copy costs this much more */
-export const UNIT_PRICE_GROWTH = 1.205;
+export const UNIT_PRICE_GROWTH = 1.215;
 
 /**
  * This-run Clout needed to prestige — base for first run; scales up each time you prestige.
  * completedPrestigeCount = current prestigeCount (0 before first prestige, 1 after first, …).
  */
 export const PRESTIGE_RUN_CLOUT_BASE = 560000;
-/** Each prestige raises the next run’s bar by this factor (compounds). */
-export const PRESTIGE_RUN_CLOUT_SCALE_PER_PRESTIGE = 1.168;
+/** Linear compound per prestige (multiplies per completed prestige index). */
+export const PRESTIGE_RUN_CLOUT_SCALE_PER_PRESTIGE = 1.24;
+/** Extra compounding on n² — makes late prestiges much more expensive. */
+export const PRESTIGE_RUN_CLOUT_SUPER_EXP = 1.017;
 
 export function getPrestigeRunCloutRequired(completedPrestigeCount) {
   const n = Math.max(0, Math.floor(completedPrestigeCount ?? 0));
-  const raw = PRESTIGE_RUN_CLOUT_BASE * Math.pow(PRESTIGE_RUN_CLOUT_SCALE_PER_PRESTIGE, n);
+  const raw =
+    PRESTIGE_RUN_CLOUT_BASE *
+    Math.pow(PRESTIGE_RUN_CLOUT_SCALE_PER_PRESTIGE, n) *
+    Math.pow(PRESTIGE_RUN_CLOUT_SUPER_EXP, n * n);
   return Math.min(Number.MAX_SAFE_INTEGER, Math.floor(raw));
 }
 
@@ -72,13 +77,14 @@ export const achievementDefs = [
   { id: 'deal_master', name: 'Brand Whisperer', gemReward: 3, description: 'Accept 25 brand deals (this save).' }
 ];
 
-// Influencer types - at least 5 different types
+// Influencer types — cost and output climb sharply at the top tiers
 export const influencerTypes = [
   {
     id: 'pet',
     name: 'Petfluencer',
-    description: 'Short clips, huge heart — starter passive',
-    cost: 28,
+    description:
+      'Short clips, huge heart — starter passive. Synergy: ×1.06 near Creator Desk.',
+    cost: 32,
     baseCloutPerSecond: 0.22,
     color: '#88ffcc',
     icon: '🐾',
@@ -87,9 +93,10 @@ export const influencerTypes = [
   {
     id: 'nano',
     name: 'Nano Creator',
-    description: 'Hyper-local, hyper-loyal — slow but cheap',
-    cost: 45,
-    baseCloutPerSecond: 0.35,
+    description:
+      'Hyper-local, hyper-loyal — slow but cheap. Synergy: ×1.06 near Creator Desk.',
+    cost: 52,
+    baseCloutPerSecond: 0.36,
     color: '#66ffee',
     icon: '✨',
     requiredEra: 0
@@ -97,9 +104,9 @@ export const influencerTypes = [
   {
     id: 'micro',
     name: 'Micro Influencer',
-    description: 'Just starting out, but authentic',
-    cost: 75,
-    baseCloutPerSecond: 0.45,
+    description: 'Just starting out, but authentic.',
+    cost: 88,
+    baseCloutPerSecond: 0.48,
     color: '#00ffff',
     icon: '🌟',
     requiredEra: 0
@@ -107,9 +114,10 @@ export const influencerTypes = [
   {
     id: 'foodie',
     name: 'Food Reviewer',
-    description: 'Local spots and reaction takes',
-    cost: 165,
-    baseCloutPerSecond: 0.72,
+    description:
+      'Local spots and reaction takes. Synergy: ×1.09 near Ring Light Bay.',
+    cost: 185,
+    baseCloutPerSecond: 0.78,
     color: '#ffaa66',
     icon: '🍜',
     requiredEra: 0
@@ -117,9 +125,10 @@ export const influencerTypes = [
   {
     id: 'lifestyle',
     name: 'Lifestyle Blogger',
-    description: 'Daily vlogs and aesthetic posts',
-    cost: 320,
-    baseCloutPerSecond: 1.6,
+    description:
+      'Daily vlogs and aesthetic posts. Synergy: ×1.11 near Digital Billboard.',
+    cost: 380,
+    baseCloutPerSecond: 1.75,
     color: '#ff00ff',
     icon: '📸',
     requiredEra: 0
@@ -127,9 +136,10 @@ export const influencerTypes = [
   {
     id: 'coach',
     name: 'Fitness Coach',
-    description: 'Programs, check-ins, steady audience',
-    cost: 520,
-    baseCloutPerSecond: 2.15,
+    description:
+      'Programs, check-ins, steady audience. Synergy: ×1.08 near Green Screen Booth.',
+    cost: 620,
+    baseCloutPerSecond: 2.35,
     color: '#66ff66',
     icon: '💪',
     requiredEra: 0
@@ -137,9 +147,10 @@ export const influencerTypes = [
   {
     id: 'gamer',
     name: 'Gaming Streamer',
-    description: 'Live streams and gaming content',
-    cost: 1100,
-    baseCloutPerSecond: 4,
+    description:
+      'Live streams and gaming content. Synergy: ×1.13 near Server Rack.',
+    cost: 1350,
+    baseCloutPerSecond: 4.2,
     color: '#00ff00',
     icon: '🎮',
     requiredEra: 1
@@ -147,29 +158,53 @@ export const influencerTypes = [
   {
     id: 'viral',
     name: 'Viral Sensations',
-    description: 'Trend-jacking masters',
-    cost: 3400,
-    baseCloutPerSecond: 12,
+    description:
+      'Trend-jacking masters. Synergy: ×1.15 near PR War Room.',
+    cost: 4100,
+    baseCloutPerSecond: 13,
     color: '#ffff00',
     icon: '⚡',
     requiredEra: 1
   },
   {
+    id: 'dj',
+    name: 'DJ Creator',
+    description:
+      'Club streams and remix drops — ×1.22 synergy near Content Studio when in range.',
+    cost: 9200,
+    baseCloutPerSecond: 22,
+    color: '#ff66dd',
+    icon: '🎧',
+    requiredEra: 1
+  },
+  {
     id: 'podcast',
     name: 'Podcast Host',
-    description: 'Long-form takes — slower burn, steady clout',
-    cost: 9500,
-    baseCloutPerSecond: 28,
+    description:
+      'Long-form takes — steady clout. Synergy: ×1.17 near Podcast Nook.',
+    cost: 17500,
+    baseCloutPerSecond: 32,
     color: '#cc88ff',
     icon: '🎙️',
     requiredEra: 1
   },
   {
+    id: 'vtuber',
+    name: 'VTuber Star',
+    description:
+      'Motion-capture persona — huge parasocial pull. Synergy: ×1.21 near Satellite Relay.',
+    cost: 52000,
+    baseCloutPerSecond: 95,
+    color: '#99eeff',
+    icon: '🎭',
+    requiredEra: 1
+  },
+  {
     id: 'ai',
     name: 'AI Influencer',
-    description: 'Generated perfection, endless content',
-    cost: 14500,
-    baseCloutPerSecond: 38,
+    description: 'Generated perfection, endless content.',
+    cost: 165000,
+    baseCloutPerSecond: 420,
     color: '#ff0080',
     icon: '🤖',
     requiredEra: 2
@@ -177,22 +212,46 @@ export const influencerTypes = [
   {
     id: 'celebrity',
     name: 'Red Carpet Talent',
-    description: 'Agency rates go through the roof',
-    cost: 62000,
-    baseCloutPerSecond: 140,
+    description:
+      'Agency rates go through the roof. Synergy: ×1.23 near Agency HQ Tower.',
+    cost: 620000,
+    baseCloutPerSecond: 1650,
     color: '#ffd700',
-    icon: '🎭',
+    icon: '🌟',
+    requiredEra: 2
+  },
+  {
+    id: 'mogul',
+    name: 'Media Mogul',
+    description:
+      'Owns feeds and franchises. Synergy: ×1.28 near Fan Fest Arena.',
+    cost: 5200000,
+    baseCloutPerSecond: 12000,
+    color: '#ffaa00',
+    icon: '👑',
+    requiredEra: 2
+  },
+  {
+    id: 'world_icon',
+    name: 'World Icon',
+    description:
+      'Planetary reach — absurd passive if you can afford them. Synergy: ×1.35 near Quantum Stage.',
+    cost: 42000000,
+    baseCloutPerSecond: 85000,
+    color: '#ffffff',
+    icon: '🌍',
     requiredEra: 2
   }
 ];
 
-// Building types - at least 4 different types
+// Building types — footprint, Manhattan buff radius (from footprint edge), base multiplier
 export const buildingTypes = [
   {
     id: 'desk',
     name: 'Creator Desk',
-    description: 'Basic setup — small buff to adjacent talent',
-    cost: 130,
+    description:
+      'Basic setup — small buff to adjacent talent. Synergy: extra ×1.06 with Nano Creator / Petfluencer in range.',
+    cost: 145,
     effect: 'multiply',
     multiplier: 1.45,
     range: 1,
@@ -204,10 +263,11 @@ export const buildingTypes = [
   {
     id: 'ringlight',
     name: 'Ring Light Bay',
-    description: 'Soft light — wider reach, modest bump',
-    cost: 280,
+    description:
+      'Soft light — wider reach. Synergy: extra ×1.09 with Food Reviewer in range.',
+    cost: 310,
     effect: 'multiply',
-    multiplier: 1.35,
+    multiplier: 1.36,
     range: 2,
     color: '#ffee88',
     icon: '💡',
@@ -217,10 +277,11 @@ export const buildingTypes = [
   {
     id: 'greenscreen',
     name: 'Green Screen Booth',
-    description: 'Cheap effects workflow — tight radius',
-    cost: 395,
+    description:
+      'Cheap effects workflow — tight radius. Synergy: extra ×1.08 with Fitness Coach in range.',
+    cost: 440,
     effect: 'multiply',
-    multiplier: 1.28,
+    multiplier: 1.3,
     range: 1,
     color: '#44ff99',
     icon: '🟩',
@@ -230,10 +291,11 @@ export const buildingTypes = [
   {
     id: 'studio',
     name: 'Content Studio',
-    description: 'Professional production environment',
-    cost: 620,
+    description:
+      'Professional production — pairing bonus ×1.22 with DJ Creator when they’re in range.',
+    cost: 780,
     effect: 'multiply',
-    multiplier: 1.9,
+    multiplier: 1.95,
     range: 2,
     color: '#ff0088',
     icon: '🎬',
@@ -243,23 +305,25 @@ export const buildingTypes = [
   {
     id: 'podcast_nook',
     name: 'Podcast Nook',
-    description: 'Sound-treated corner — mid-range synergy',
-    cost: 720,
+    description:
+      'Sound-treated corner. Synergy: extra ×1.17 with Podcast Host in range.',
+    cost: 920,
     effect: 'multiply',
-    multiplier: 1.42,
+    multiplier: 1.44,
     range: 2,
     color: '#c9a0ff',
-    icon: '🎧',
+    icon: '📻',
     size: 1,
     requiredEra: 0
   },
   {
     id: 'server',
     name: 'Server Rack',
-    description: 'Data processing and analytics',
-    cost: 2600,
+    description:
+      'Data and ingest. Synergy: extra ×1.13 with Gaming Streamer in range.',
+    cost: 3200,
     effect: 'multiply',
-    multiplier: 2.35,
+    multiplier: 2.38,
     range: 3,
     color: '#00ff88',
     icon: '🖥️',
@@ -269,10 +333,11 @@ export const buildingTypes = [
   {
     id: 'warroom',
     name: 'PR War Room',
-    description: 'Crisis management and reputation control',
-    cost: 11000,
+    description:
+      'Crisis cell — boosts viral plays. Synergy: extra ×1.15 with Viral Sensations in range.',
+    cost: 14500,
     effect: 'multiply',
-    multiplier: 2.85,
+    multiplier: 2.88,
     range: 4,
     color: '#ff8800',
     icon: '📡',
@@ -282,10 +347,11 @@ export const buildingTypes = [
   {
     id: 'billboard',
     name: 'Digital Billboard',
-    description: 'City-scale visibility for nearby talent',
-    cost: 22000,
+    description:
+      'City-scale visibility. Synergy: extra ×1.11 with Lifestyle Blogger in range.',
+    cost: 28000,
     effect: 'multiply',
-    multiplier: 2.2,
+    multiplier: 2.25,
     range: 5,
     color: '#00ccff',
     icon: '🪧',
@@ -295,17 +361,89 @@ export const buildingTypes = [
   {
     id: 'hq',
     name: 'Agency HQ Tower',
-    description: 'Glass tower — massive synergy radius',
-    cost: 88000,
+    description:
+      'Glass tower — huge radius. Synergy: extra ×1.23 with Red Carpet Talent in range.',
+    cost: 118000,
     effect: 'multiply',
-    multiplier: 3.4,
+    multiplier: 3.55,
     range: 5,
     color: '#aa66ff',
     icon: '🏢',
     size: 3,
     requiredEra: 2
+  },
+  {
+    id: 'satellite_relay',
+    name: 'Satellite Relay',
+    description:
+      'Orbital uplink — continent-wide buffs. Synergy: extra ×1.21 with VTuber Star in range.',
+    cost: 880000,
+    effect: 'multiply',
+    multiplier: 4.15,
+    range: 6,
+    color: '#66ddff',
+    icon: '🛰️',
+    size: 1,
+    requiredEra: 2
+  },
+  {
+    id: 'fan_fest_arena',
+    name: 'Fan Fest Arena',
+    description:
+      'Tour-scale footprint — insane coverage. Synergy: extra ×1.28 with Media Mogul in range.',
+    cost: 6200000,
+    effect: 'multiply',
+    multiplier: 5.2,
+    range: 7,
+    color: '#ff5599',
+    icon: '🏟️',
+    size: 3,
+    requiredEra: 2
+  },
+  {
+    id: 'quantum_stage',
+    name: 'Quantum Stage',
+    description:
+      'Endgame structure — maximum radius and multiplier. Synergy: extra ×1.35 with World Icon in range.',
+    cost: 38000000,
+    effect: 'multiply',
+    multiplier: 7.5,
+    range: 8,
+    color: '#ddff66',
+    icon: '⚛️',
+    size: 2,
+    requiredEra: 2
   }
 ];
+
+/**
+ * Extra multiplier when the talent type is in range of at least one matching building (once per rule).
+ */
+export const synergyRules = [
+  { buildingTypeId: 'desk', influencerTypeIds: ['pet', 'nano'], bonusMultiplier: 1.06 },
+  { buildingTypeId: 'ringlight', influencerTypeIds: ['foodie'], bonusMultiplier: 1.09 },
+  { buildingTypeId: 'greenscreen', influencerTypeIds: ['coach'], bonusMultiplier: 1.08 },
+  { buildingTypeId: 'studio', influencerTypeIds: ['dj'], bonusMultiplier: 1.22 },
+  { buildingTypeId: 'podcast_nook', influencerTypeIds: ['podcast'], bonusMultiplier: 1.17 },
+  { buildingTypeId: 'server', influencerTypeIds: ['gamer'], bonusMultiplier: 1.13 },
+  { buildingTypeId: 'warroom', influencerTypeIds: ['viral'], bonusMultiplier: 1.15 },
+  { buildingTypeId: 'billboard', influencerTypeIds: ['lifestyle'], bonusMultiplier: 1.11 },
+  { buildingTypeId: 'hq', influencerTypeIds: ['celebrity'], bonusMultiplier: 1.23 },
+  { buildingTypeId: 'satellite_relay', influencerTypeIds: ['vtuber'], bonusMultiplier: 1.21 },
+  { buildingTypeId: 'fan_fest_arena', influencerTypeIds: ['mogul'], bonusMultiplier: 1.28 },
+  { buildingTypeId: 'quantum_stage', influencerTypeIds: ['world_icon'], bonusMultiplier: 1.35 }
+];
+
+export function getSynergyMultiplierFromBuildingTypes(influencerTypeId, uniqueBuildingTypeIds) {
+  const present = new Set(uniqueBuildingTypeIds);
+  let m = 1;
+  for (const rule of synergyRules) {
+    if (!present.has(rule.buildingTypeId)) continue;
+    if (!rule.influencerTypeIds.includes(influencerTypeId)) continue;
+    m *= rule.bonusMultiplier;
+  }
+  return m;
+}
 
 // Manual click upgrades — stack forever with rising costs
 export const clickUpgradeTypes = [
@@ -380,6 +518,33 @@ export const clickUpgradeTypes = [
     growth: 1.18,
     kind: 'mult',
     perLevel: 0.1
+  },
+  {
+    id: 'talk_show',
+    name: 'Talk Show Slot',
+    description: '+12% post power per level (multiplies)',
+    baseCost: 88000,
+    growth: 1.19,
+    kind: 'mult',
+    perLevel: 0.12
+  },
+  {
+    id: 'superbowl',
+    name: 'Halftime Bid',
+    description: '+15% post power per level (multiplies)',
+    baseCost: 520000,
+    growth: 1.2,
+    kind: 'mult',
+    perLevel: 0.15
+  },
+  {
+    id: 'matrix_pr',
+    name: 'Matrix PR Blitz',
+    description: '+22% post power per level (multiplies)',
+    baseCost: 6200000,
+    growth: 1.21,
+    kind: 'mult',
+    perLevel: 0.22
   }
 ];
 
