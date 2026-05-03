@@ -45,6 +45,30 @@
   box-sizing: border-box;
 }
 
+.skip-link {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 6000;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  color: #061018;
+  background: var(--neon-cyan);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 24px rgba(0, 255, 255, 0.5);
+  transform: translateY(-160%);
+  transition: transform 0.18s ease;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+  outline: none;
+}
+
 body {
   font-family: Sora, 'Segoe UI', system-ui, sans-serif;
   background: var(--bg-void);
@@ -204,9 +228,11 @@ button:disabled:hover {
   flex-direction: column;
   gap: var(--spacing-sm);
   pointer-events: none;
+  max-width: min(360px, 92vw);
 }
 
 .notification {
+  pointer-events: auto;
   background: var(--bg-panel);
   border: 2px solid var(--neon-cyan);
   border-radius: 4px;
@@ -214,6 +240,9 @@ button:disabled:hover {
   box-shadow: var(--glow-cyan);
   animation: notificationSlide 0.3s ease-out;
   min-width: 200px;
+  font-size: 13px;
+  line-height: 1.35;
+  word-break: break-word;
 }
 
 .notification.success {
@@ -290,6 +319,27 @@ button:disabled:hover {
   animation: scanline 8s linear infinite;
   pointer-events: none;
   opacity: 0.3;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notification {
+    animation: none;
+  }
+  .skip-link {
+    transition: none;
+  }
+  .scanline {
+    animation: none;
+    opacity: 0.1;
+  }
+  .neon-grid,
+  .glow-pulse,
+  .floating {
+    animation: none;
+  }
+  .neon-grid {
+    opacity: 0.28;
+  }
 }
 
 /* Scrollbar styling */

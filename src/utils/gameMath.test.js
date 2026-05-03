@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import {
   scaledUnitCost,
+  scaledBuildingPlacementCost,
+  combinedSameTypeBuildingMult,
   getFollowerCloutMult,
   getFollowerCostMult,
   clickUpgradeNextCost
@@ -13,6 +15,25 @@ import {
   UNIT_PRICE_DUPLICATE_EXP,
   CLOUT_PRICE_MULTIPLIER
 } from '../data/gameData';
+
+describe('combinedSameTypeBuildingMult', () => {
+  it('first copy is full strength', () => {
+    expect(combinedSameTypeBuildingMult(1.45, 1)).toBeCloseTo(1.45, 8);
+  });
+  it('second copy is weaker than squaring', () => {
+    expect(combinedSameTypeBuildingMult(1.45, 2)).toBeLessThan(1.45 * 1.45);
+    expect(combinedSameTypeBuildingMult(1.45, 2)).toBeGreaterThan(1.45);
+  });
+});
+
+describe('scaledBuildingPlacementCost', () => {
+  it('matches scaledUnitCost for era 0 first buy', () => {
+    expect(scaledBuildingPlacementCost(100, 0, 0)).toBe(scaledUnitCost(100, 0));
+  });
+  it('era 2 costs more than era 0 for same owned count', () => {
+    expect(scaledBuildingPlacementCost(100, 2, 2)).toBeGreaterThan(scaledBuildingPlacementCost(100, 2, 0));
+  });
+});
 
 describe('scaledUnitCost', () => {
   it('returns price-scaled base for zero owned', () => {

@@ -536,3 +536,10 @@
   font-weight: 700;
   color: var(--neon-yellow);
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner,
+  .gacha-icon {
+    animation: none;
+  }
+}

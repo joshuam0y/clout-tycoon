@@ -9,7 +9,9 @@ import {
   sanitizeNamedSaveLabel,
   getActiveNamedSlot,
   setActiveNamedSlot,
-  clearActiveNamedSlot
+  clearActiveNamedSlot,
+  serializeNamedSaveForExport,
+  importNamedSaveFromExportJson
 } from './persistence';
 import { migrateClickUpgradeLevels } from '../data/gameData';
 
@@ -64,6 +66,13 @@ describe('named browser saves', () => {
     const list = listNamedSaves();
     expect(list.length).toBe(1);
     expect(list[0].name).toBe('Alpha Run');
+    expect(list[0].preview).toMatchObject({
+      prestigeCount: 0,
+      clout: 100,
+      lifetimeClout: 100,
+      buildingCount: 0,
+      influencerCount: 0
+    });
     expect(getNamedSave('Alpha Run')?.clout).toBe(100);
     expect(deleteNamedSave('Alpha Run')).toBe(true);
     expect(localStorage.getItem(NAMED_SAVES_KEY)).toBeNull();
@@ -83,6 +92,18 @@ describe('named browser saves', () => {
     expect(getActiveNamedSlot()).toBe('My Run');
     clearActiveNamedSlot();
     expect(getActiveNamedSlot()).toBe('');
+  });
+
+  it('serializes and imports named export JSON', () => {
+    expect(putNamedSave('ExportMe', minimalSnap)).toBe(true);
+    const json = serializeNamedSaveForExport('ExportMe');
+    expect(json).toBeTruthy();
+    expect(JSON.parse(json).app).toBe('clout-tycoon');
+    expect(deleteNamedSave('ExportMe')).toBe(true);
+    const r = importNamedSaveFromExportJson(json);
+    expect(r.ok).toBe(true);
+    expect(r.name).toBe('ExportMe');
+    expect(getNamedSave('ExportMe')?.clout).toBe(100);
   });
 
   it('migrates legacy post upgrade ids to ladder ids', () => {

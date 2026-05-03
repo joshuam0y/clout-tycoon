@@ -106,6 +106,14 @@
   font-weight: 700;
 }
 
+.deal-max-rep-note {
+  font-size: 12px;
+  color: var(--neon-orange);
+  margin: 0 0 var(--spacing-md);
+  line-height: 1.45;
+  text-align: center;
+}
+
 .deal-rewards {
   display: flex;
   flex-direction: column;
@@ -152,6 +160,24 @@
 .reward-value.negative {
   color: var(--neon-orange);
   text-shadow: 0 0 10px var(--neon-orange);
+}
+
+.deal-key-hint {
+  margin: 0 0 8px;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.deal-kbd {
+  display: inline-block;
+  font-size: 10px;
+  font-family: ui-monospace, monospace;
+  padding: 1px 5px;
+  border-radius: 4px;
+  border: 1px solid rgba(120, 140, 200, 0.45);
+  background: rgba(0, 0, 0, 0.35);
+  color: rgba(220, 230, 255, 0.95);
 }
 
 .deal-progress-bar {
@@ -202,5 +228,12 @@
   }
   50% {
     transform: scale(1.05);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .deal-timer,
+  .accept-deal-button {
+    animation: none;
   }
 }

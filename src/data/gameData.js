@@ -8,6 +8,19 @@ export const UNIT_PRICE_GROWTH = 1.248;
 export const UNIT_PRICE_DUPLICATE_EXP = 1.32;
 
 /**
+ * Multiple auras of the same building type on one talent: exponent stacks sublinearly after the first
+ * (1st full ×m, extras add (n−1)×PER_EXTRA to exponent, capped). Tames late-game ring-of-HQ without touching
+ * early single-structure play.
+ */
+export const BUILDING_SAME_TYPE_STACK_EXP_PER_EXTRA = 0.35;
+export const BUILDING_SAME_TYPE_STACK_EXP_CAP = 3.55;
+
+/** Duplicate building costs use slightly steeper growth / exponent by requiredEra (0 = early catalog). */
+export const BUILDING_ERA_GROWTH_FACTOR = 0.062;
+export const BUILDING_ERA_DUPLICATE_EXP_BONUS = [0, 0.055, 0.12];
+export const BUILDING_ERA_FLAT_COST_MULT = [1, 1.2, 1.46];
+
+/**
  * Legacy economy applied 0.48× to manual posts; baseline is now 1 Clout per post (before upgrades).
  * Hire costs, click-upgrade prices, and prestige bars scale by this so pacing matches the old curve.
  */
@@ -76,6 +89,13 @@ export const REPUTATION_INCOME_MULT_MAX = 1.0;
 
 /** Applied to passive Clout/s after all other passive math (anti-runaway). */
 export const PASSIVE_GLOBAL_MULT = 0.42;
+
+/**
+ * Shop / hover: per-tile passive after passive balance only (still excludes grid buffs and roster-wide ×).
+ */
+export function passiveCatalogTunedCps(baseCloutPerSecond) {
+  return (Number(baseCloutPerSecond) || 0) * PASSIVE_GLOBAL_MULT;
+}
 
 /** Flat Clout per manual post before upgrades (Thumb Training etc.) and reputation/gem/prestige mults. */
 export const BASE_POST_CLOUT = 1;
@@ -1032,6 +1052,17 @@ export const brandDealTypes = [
     color: '#ff2266'
   }
 ];
+
+/**
+ * At 100% reputation, deals that only raise reputation have no upside — omit from offers and accepts.
+ */
+export function brandDealOfferableAtReputation(deal, reputation) {
+  const rep = Number(reputation);
+  const delta = deal?.reputationDelta ?? 0;
+  if (!Number.isFinite(rep)) return true;
+  if (rep >= 100 && delta > 0) return false;
+  return true;
+}
 
 /** One real-time week per phase (UTC). Rotates which deal ids get a spawn-weight bias. */
 const DEAL_SEASON_WEEK_MS = 7 * 24 * 60 * 60 * 1000;

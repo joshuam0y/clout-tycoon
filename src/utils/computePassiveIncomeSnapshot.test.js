@@ -82,4 +82,17 @@ describe('computePassiveIncomeSnapshot', () => {
     expect(snap.totalRaw).toBeCloseTo(petBase * grid, 8);
     expect(snap.total).toBeCloseTo(petBase * grid * PASSIVE_GLOBAL_MULT, 8);
   });
+
+  it('same-type building auras stack sublinearly (two desks < desk^2)', () => {
+    const inf = { id: 1, typeId: 'pet', position: { x: 0, y: 0 } };
+    const oneDesk = [{ id: 10, typeId: 'desk', position: { x: 1, y: 0 } }];
+    const twoDesks = [
+      { id: 10, typeId: 'desk', position: { x: 1, y: 0 } },
+      { id: 11, typeId: 'desk', position: { x: 0, y: 1 } }
+    ];
+    const g1 = getLocalGridBuffMultiplier(inf, oneDesk);
+    const g2 = getLocalGridBuffMultiplier(inf, twoDesks);
+    expect(g2).toBeLessThan(g1 * g1 - 1e-9);
+    expect(g2).toBeGreaterThan(g1);
+  });
 });

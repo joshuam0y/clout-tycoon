@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import './App.css';
+import { formatNumber } from './utils/formatNumber';
 import { useGameState } from './hooks/useGameState';
 import { GameWorld } from './components/GameWorld';
 import { ControlPanel } from './components/ControlPanel';
@@ -14,15 +15,44 @@ function App() {
   const { clickPostContent, prestige, activeBrandDeal } = gameState;
   const [showMonetizationPanel, setShowMonetizationPanel] = useState(false);
   const [howToPlayOpen, setHowToPlayOpen] = useState(true);
+  const [saveVaultOpen, setSaveVaultOpen] = useState(false);
+
+  useEffect(() => {
+    document.title = `Clout Tycoon · ${formatNumber(gameState.clout)} Clout · P${gameState.prestigeCount}`;
+  }, [gameState.clout, gameState.prestigeCount]);
 
   useEffect(() => {
     const onKey = e => {
-      if (howToPlayOpen || showMonetizationPanel || activeBrandDeal) return;
       const el = e.target;
-      if (el instanceof HTMLElement) {
-        const tag = el.tagName;
-        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || el.isContentEditable) return;
+      const inTextField =
+        el instanceof HTMLElement &&
+        (['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName) || el.isContentEditable);
+
+      if (e.code === 'KeyI' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        if (inTextField) return;
+        if (showMonetizationPanel || activeBrandDeal) return;
+        e.preventDefault();
+        setHowToPlayOpen(v => !v);
+        return;
       }
+
+      if (howToPlayOpen) return;
+      if (inTextField) return;
+      if (e.code === 'Escape') {
+        if (saveVaultOpen) return;
+        if (showMonetizationPanel) {
+          e.preventDefault();
+          setShowMonetizationPanel(false);
+          return;
+        }
+        if (activeBrandDeal) return;
+        if (gameState.selectedTool) {
+          e.preventDefault();
+          gameState.setSelectedTool(null);
+        }
+        return;
+      }
+      if (showMonetizationPanel || activeBrandDeal) return;
       if (e.code === 'Space' || e.code === 'Enter') {
         e.preventDefault();
         clickPostContent();
@@ -31,11 +61,26 @@ function App() {
       if (e.code === 'KeyP') {
         e.preventDefault();
         prestige();
+        return;
+      }
+      if (e.code === 'KeyG') {
+        e.preventDefault();
+        setShowMonetizationPanel(true);
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [howToPlayOpen, showMonetizationPanel, activeBrandDeal, clickPostContent, prestige]);
+  }, [
+    howToPlayOpen,
+    setHowToPlayOpen,
+    showMonetizationPanel,
+    activeBrandDeal,
+    clickPostContent,
+    prestige,
+    gameState.selectedTool,
+    gameState.setSelectedTool,
+    saveVaultOpen
+  ]);
 
   const handleCellClick = (position) => {
     if (!gameState.selectedTool) return;
@@ -57,13 +102,16 @@ function App() {
 
   return (
     <div className="app">
+      <a href="#game-main" className="skip-link">
+        Skip to grid
+      </a>
       {/* Neon grid background */}
       <div className="neon-grid" />
 
       {/* Scanline effect */}
       <div className="scanline" />
 
-      <div className="game-layout">
+      <div className="game-layout" aria-label="Agency panels and grid">
         {/* Left panel - Controls and stats */}
         <ControlPanel
           clout={gameState.clout}
@@ -92,6 +140,9 @@ function App() {
           onDeleteNamedSave={gameState.deleteNamedSaveSlot}
           onClearProfileBackup={gameState.clearProfileBackup}
           onResetLocalSave={gameState.resetAllLocalProgress}
+          onImportNamedSave={gameState.importNamedSaveJson}
+          saveVaultHotkeyActive={!howToPlayOpen && !showMonetizationPanel && !activeBrandDeal}
+          onSaveVaultOpenChange={setSaveVaultOpen}
         />
 
         {/* Center - Game world */}
@@ -132,6 +183,7 @@ function App() {
         gemCloutMult={gameState.gemCloutMult}
         onAccept={gameState.acceptBrandDeal}
         onDecline={gameState.declineBrandDeal}
+        deferEscapeDecline={saveVaultOpen}
       />
 
       {howToPlayOpen && <HowToPlayModal onClose={() => setHowToPlayOpen(false)} />}
@@ -143,6 +195,7 @@ function App() {
       {showMonetizationPanel && (
         <MonetizationPanel
           onClose={() => setShowMonetizationPanel(false)}
+          deferEscapeClose={saveVaultOpen}
           gems={gameState.gems}
           gemCloutMultStacks={gameState.gemCloutMultStacks}
           gemClickMultStacks={gameState.gemClickMultStacks}

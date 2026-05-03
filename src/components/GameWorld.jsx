@@ -1,6 +1,11 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './GameWorld.css';
-import { influencerTypes, buildingTypes } from '../data/gameData';
+import {
+  influencerTypes,
+  buildingTypes,
+  passiveCatalogTunedCps,
+  PASSIVE_GLOBAL_MULT
+} from '../data/gameData';
 import { getLocalGridBuffMultiplier } from '../utils/gameMath';
 import { formatRate } from '../utils/formatNumber';
 
@@ -27,6 +32,21 @@ function animationDelayFromId(id) {
 
 export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick, passiveByInfluencerId }) => {
   const [viewOffset, setViewOffset] = useState(INITIAL_VIEW_OFFSET);
+
+  useEffect(() => {
+    const onKey = e => {
+      if (e.code !== 'Home' || e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+      const t = e.target;
+      if (t instanceof HTMLElement) {
+        const tag = t.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || t.isContentEditable) return;
+      }
+      e.preventDefault();
+      setViewOffset({ ...INITIAL_VIEW_OFFSET });
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
   const [hoveredCell, setHoveredCell] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const dragStateRef = useRef(null);
@@ -64,6 +84,12 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick, p
   }, [selectedTool]);
 
   const selectedPlacementSize = selectedBuildingType?.size ?? (selectedInfluencerType ? 1 : 0);
+
+  const placementToolHint = useMemo(() => {
+    if (selectedInfluencerType) return `${selectedInfluencerType.icon} ${selectedInfluencerType.name}`;
+    if (selectedBuildingType) return `${selectedBuildingType.icon} ${selectedBuildingType.name}`;
+    return '';
+  }, [selectedInfluencerType, selectedBuildingType]);
 
   const doesBuildingCoverTile = (building, tileX, tileY) => {
     const type = buildingTypes.find(t => t.id === building.typeId);
@@ -337,7 +363,7 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick, p
   };
 
   return (
-    <div className="game-world">
+    <main id="game-main" className="game-world" tabIndex={-1} aria-label="Agency grid">
       <div className="world-grid-wrap">
         <div
           className={`world-grid ${isDragging ? 'dragging' : ''}`}
@@ -512,7 +538,8 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick, p
                   <strong>{formatRate(passiveByInfluencerId?.[hoveredTalentOnly.id] ?? 0)}</strong> Clout/s
                 </div>
                 <div className="entity-hover-line">
-                  Base on tile <strong>{tt.baseCloutPerSecond.toFixed(2)}</strong> Clout/s (before grid buffs).
+                  Tuned base on tile <strong>{formatRate(passiveCatalogTunedCps(tt.baseCloutPerSecond))}</strong> Clout/s
+                  (passive balance ×{PASSIVE_GLOBAL_MULT}; no grid buffs).
                 </div>
                 <div className="entity-hover-line talent-hover-buff">
                   Grid buff (structures + pairings){' '}
@@ -527,9 +554,15 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick, p
             );
           })()}
 
-        <div className="camera-hint">Drag / swipe to pan · infinite grid</div>
+        <div className="camera-hint">
+          {selectedTool
+            ? placementToolHint
+              ? `Placing ${placementToolHint} — valid tiles cyan, blocked red · tap to confirm · Esc clears · Home recenters · drag to pan`
+              : 'Placement mode — tap the grid · Esc clears tool · Home recenters · drag to pan'
+            : 'Drag / swipe to pan · Home recenters camera · infinite grid'}
+        </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 };

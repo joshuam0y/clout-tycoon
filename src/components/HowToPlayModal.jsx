@@ -6,7 +6,8 @@ import {
   BRAND_DEALS_SOLO_MIN_INFLUENCERS,
   BRAND_DEALS_SOLO_MIN_BUILDINGS,
   BRAND_DEALS_SOLO_MIN_LIFETIME_CLOUT,
-  PRESTIGE_RUN_CLOUT_MULT_PER_STEP
+  PRESTIGE_RUN_CLOUT_MULT_PER_STEP,
+  PASSIVE_GLOBAL_MULT
 } from '../data/gameData';
 
 const PAGES = [
@@ -38,8 +39,11 @@ const PAGES = [
             <strong>staff</strong> (automation). Pick placement tools, then click an empty tile on the grid.
           </li>
           <li>
-            Creators earn passive Clout. <strong>Buildings multiply</strong> anyone in range (hover while
-            placing to see the footprint and buff area).
+            Creators earn passive Clout. Shop talent rates show the <strong>tuned</strong> per-tile amount (includes a{' '}
+            <strong>×{PASSIVE_GLOBAL_MULT} passive balance</strong> before structures; prestige, followers, reputation,
+            staff, and gems still scale the HUD). <strong>Buildings multiply</strong> anyone in range (hover while placing
+            to see the footprint and buff area). Several of the <strong>same structure</strong> on one creator stack
+            with diminishing strength; later-era builds cost more to duplicate.
           </li>
           <li>
             <strong>Pairing bonuses:</strong> certain talent + structure combos grant an extra multiplier when the
@@ -51,7 +55,17 @@ const PAGES = [
           </li>
           <li>
             <strong>Space</strong> or <strong>Enter</strong> posts when no text field is focused.{' '}
-            <strong>P</strong> prestiges when your run bar is full (same rules as the button).
+            <strong>P</strong> prestiges when your run bar is full.             <strong>G</strong> opens the Premium shop.{' '}
+            <strong>Esc</strong> closes the save manager when it is open, otherwise the Premium shop or a selected grid
+            tool; during a brand deal, Esc declines (unless the save manager is on top).{' '}
+            <strong>1</strong>–<strong>4</strong> switch Agency Shop tabs (Posts / Talent / Builds / Staff) when not typing.{' '}
+            <strong>Home</strong> recenters the map camera on the starting view. <strong>I</strong> toggles How to
+            play (when not in a text field and no deal / Premium overlay).
+          </li>
+          <li>
+            <strong>Saves:</strong> <strong>/</strong> (outside text fields) or <strong>Manage saves…</strong> in the
+            left panel — slot cards with previews, JSON copy/paste or file import, confirm before load.{' '}
+            <strong>Esc</strong> closes the save manager.
           </li>
         </ol>
       </>
@@ -91,7 +105,8 @@ const PAGES = [
           Sometimes a <strong>brand deal</strong> pops up. Payouts are a <strong>percentage of your current
           Clout and follower banks</strong> (and scale up with lifetime Clout). Big paydays often cost many
           <strong>reputation points</strong> — spam risky deals and you can land in{' '}
-          <strong>bad rep</strong>, which hurts income until you recover.
+          <strong>bad rep</strong>, which hurts income until you recover. <strong>Enter</strong> accepts (when the deal
+          allows it); <strong>Esc</strong> declines.
         </p>
         <p>
           The game rotates a <strong>weekly sponsor meta</strong> (UTC): certain contract flavors spawn more often

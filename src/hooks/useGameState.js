@@ -17,6 +17,7 @@ import {
   getPrestigeRunCloutRequired,
   PRESTIGE_GEMS_BASE,
   brandDealsMaySpawn,
+  brandDealOfferableAtReputation,
   reputationIncomeMultiplierFromRep,
   computeBrandDealPayouts,
   getBrandDealSeasonalWeightMult,
@@ -33,6 +34,7 @@ import {
 } from '../data/gameData';
 import {
   scaledUnitCost,
+  scaledBuildingPlacementCost,
   clickUpgradeNextCost,
   getFollowerCloutMult,
   getFollowerCostMult
@@ -50,10 +52,12 @@ import {
   sanitizeNamedSaveLabel,
   getActiveNamedSlot,
   setActiveNamedSlot,
-  clearActiveNamedSlot
+  clearActiveNamedSlot,
+  importNamedSaveFromExportJson
 } from '../utils/persistence';
-import { playPrestigeChime } from '../utils/sound';
+import { playPrestigeChime, playAchievementPing, playBrandDealAcceptChime } from '../utils/sound';
 import { computePassiveIncomeSnapshot } from '../utils/computePassiveIncomeSnapshot';
+import { formatNumber } from '../utils/formatNumber';
 
 const TICK_INTERVAL = 100;
 /** Backup active named slot on this interval while playing */
@@ -207,7 +211,10 @@ export const useGameState = () => {
 
   const prestigeRunCloutRequired = getPrestigeRunCloutRequired(prestigeCount);
 
-  const addNotification = useCallback((message, type = 'info') => {
+  const addNotification = useCallback((message, type = 'info', durationMs) => {
+    const defaultMs =
+      type === 'warning' ? 5200 : type === 'prestige' ? 5600 : type === 'success' ? 3800 : 3400;
+    const ms = durationMs ?? defaultMs;
     const notification = {
       id: Date.now() + Math.random(),
       message,
@@ -219,7 +226,7 @@ export const useGameState = () => {
 
     setTimeout(() => {
       setNotifications(prev => prev.filter(n => n.id !== notification.id));
-    }, 3200);
+    }, ms);
   }, []);
 
   const getGemCloutMult = useCallback(
@@ -345,17 +352,29 @@ export const useGameState = () => {
       const owned = influencers.filter(i => i.typeId === typeId).length;
       const rawCost = scaledUnitCost(type.cost, owned);
       const cost = Math.ceil(rawCost * getFollowerCostMult(followers));
-      if (clout < cost) return false;
+      if (clout < cost) {
+        addNotification(
+          `Need ${formatNumber(cost)} Clout to hire (you have ${formatNumber(clout)}).`,
+          'warning'
+        );
+        return false;
+      }
 
       const influencerOccupied = influencers.some(
         influencer => influencer.position.x === position.x && influencer.position.y === position.y
       );
-      if (influencerOccupied) return false;
+      if (influencerOccupied) {
+        addNotification('That tile already has talent on it.', 'warning');
+        return false;
+      }
 
       const buildingOccupied = buildings.some(building =>
         doesBuildingCoverTile(building, position.x, position.y)
       );
-      if (buildingOccupied) return false;
+      if (buildingOccupied) {
+        addNotification('That tile is covered by a structure.', 'warning');
+        return false;
+      }
 
       const newInfluencer = {
         id: Date.now() + Math.random(),
@@ -385,19 +404,31 @@ export const useGameState = () => {
         return false;
       }
       const owned = buildings.filter(b => b.typeId === typeId).length;
-      const rawCost = scaledUnitCost(type.cost, owned);
+      const rawCost = scaledBuildingPlacementCost(type.cost, owned, type.requiredEra ?? 0);
       const cost = Math.ceil(rawCost * getFollowerCostMult(followers));
-      if (clout < cost) return false;
+      if (clout < cost) {
+        addNotification(
+          `Need ${formatNumber(cost)} Clout to build (you have ${formatNumber(clout)}).`,
+          'warning'
+        );
+        return false;
+      }
 
       for (let y = position.y; y < position.y + type.size; y++) {
         for (let x = position.x; x < position.x + type.size; x++) {
           const buildingOccupied = buildings.some(building => doesBuildingCoverTile(building, x, y));
-          if (buildingOccupied) return false;
+          if (buildingOccupied) {
+            addNotification('Footprint overlaps another structure.', 'warning');
+            return false;
+          }
 
           const influencerOccupied = influencers.some(
             influencer => influencer.position.x === x && influencer.position.y === y
           );
-          if (influencerOccupied) return false;
+          if (influencerOccupied) {
+            addNotification('Footprint overlaps talent — move them first.', 'warning');
+            return false;
+          }
         }
       }
 
@@ -430,7 +461,13 @@ export const useGameState = () => {
       const owned = managers.filter(m => m.typeId === typeId).length;
       const rawCost = scaledUnitCost(def.cost, owned);
       const cost = Math.ceil(rawCost * getFollowerCostMult(followers));
-      if (clout < cost) return false;
+      if (clout < cost) {
+        addNotification(
+          `Need ${formatNumber(cost)} Clout to hire (you have ${formatNumber(clout)}).`,
+          'warning'
+        );
+        return false;
+      }
       setClout(c => c - cost);
       setManagers(prev => [...prev, { id: Date.now() + Math.random(), typeId }]);
       addNotification(`Hired ${def.name}!`, 'success');
@@ -444,6 +481,13 @@ export const useGameState = () => {
 
     const deal = brandDealTypes.find(d => d.id === activeBrandDeal.typeId);
     if (!deal) return;
+
+    if (!brandDealOfferableAtReputation(deal, reputation)) {
+      addNotification('At 100% reputation, image-only sponsor deals are unavailable.', 'warning');
+      setActiveBrandDeal(null);
+      setBrandDealCooldown(BRAND_DEAL_COOLDOWN_DECLINE_MS);
+      return;
+    }
 
     const { earnedClout, followerGain, reputationDelta } = computeBrandDealPayouts(deal, {
       clout,
@@ -459,9 +503,10 @@ export const useGameState = () => {
     setBrandDealsAccepted(prev => prev + 1);
 
     addNotification(
-      `Completed ${deal.name}! +${Math.floor(earnedClout)} Clout · +${Math.floor(followerGain)} followers`,
+      `Completed ${deal.name}! +${formatNumber(Math.floor(earnedClout))} Clout · +${formatNumber(Math.floor(followerGain))} followers`,
       'success'
     );
+    playBrandDealAcceptChime();
     setActiveBrandDeal(null);
     setBrandDealCooldown(BRAND_DEAL_COOLDOWN_ACCEPT_MS);
   }, [
@@ -472,12 +517,31 @@ export const useGameState = () => {
     prestigeMultiplier,
     getGemCloutMult,
     addCloutEarned,
-    addNotification
+    addNotification,
+    reputation
   ]);
+
+  useEffect(() => {
+    const onOffline = () =>
+      addNotification('Browser went offline — saves may not sync until you reconnect.', 'warning');
+    const onOnline = () => addNotification('Back online.', 'success');
+    window.addEventListener('offline', onOffline);
+    window.addEventListener('online', onOnline);
+    return () => {
+      window.removeEventListener('offline', onOffline);
+      window.removeEventListener('online', onOnline);
+    };
+  }, [addNotification]);
 
   const prestige = useCallback(() => {
     const required = getPrestigeRunCloutRequired(prestigeCount);
-    if (runCloutEarned < required) return false;
+    if (runCloutEarned < required) {
+      addNotification(
+        `Need ${formatNumber(required)} run Clout to prestige (have ${formatNumber(Math.floor(runCloutEarned))}).`,
+        'info'
+      );
+      return false;
+    }
 
     const newPrestigeCount = prestigeCount + 1;
     const newMultiplier = 1 + newPrestigeCount * PRESTIGE_MULT_PER_LEVEL;
@@ -533,7 +597,13 @@ export const useGameState = () => {
 
       const level = clickUpgradeLevels[upgradeId] ?? 0;
       const cost = clickUpgradeNextCost(def, level);
-      if (clout < cost) return false;
+      if (clout < cost) {
+        addNotification(
+          `Need ${formatNumber(cost)} Clout for this upgrade (you have ${formatNumber(clout)}).`,
+          'warning'
+        );
+        return false;
+      }
 
       setClout(prev => prev - cost);
       setClickUpgradeLevels(prev => ({ ...prev, [upgradeId]: level + 1 }));
@@ -550,7 +620,7 @@ export const useGameState = () => {
     }
     const cost = GEM_STACK_COST_BASE + gemCloutMultStacks * GEM_STACK_COST_PER_OWNED;
     if (gems < cost) {
-      addNotification(`Need ${cost} 💎`, 'warning');
+      addNotification(`Need ${formatNumber(cost)} 💎`, 'warning');
       return false;
     }
     setGems(g => g - cost);
@@ -566,7 +636,7 @@ export const useGameState = () => {
     }
     const cost = GEM_CLICK_COST_BASE + gemClickMultStacks * GEM_CLICK_COST_PER_OWNED;
     if (gems < cost) {
-      addNotification(`Need ${cost} 💎`, 'warning');
+      addNotification(`Need ${formatNumber(cost)} 💎`, 'warning');
       return false;
     }
     setGems(g => g - cost);
@@ -582,7 +652,7 @@ export const useGameState = () => {
     }
     const cost = GEM_PASSIVE_COST_BASE + gemPassiveMultStacks * GEM_PASSIVE_COST_PER_OWNED;
     if (gems < cost) {
-      addNotification(`Need ${cost} 💎`, 'warning');
+      addNotification(`Need ${formatNumber(cost)} 💎`, 'warning');
       return false;
     }
     setGems(g => g - cost);
@@ -598,7 +668,7 @@ export const useGameState = () => {
       return false;
     }
     if (gems < CLOUT_SURGE_COST) {
-      addNotification(`Need ${CLOUT_SURGE_COST} 💎`, 'warning');
+      addNotification(`Need ${formatNumber(CLOUT_SURGE_COST)} 💎`, 'warning');
       return false;
     }
     const burst = rate * CLOUT_SURGE_SECONDS;
@@ -612,7 +682,7 @@ export const useGameState = () => {
     (multi = false) => {
       const cost = multi ? GACHA_MULTI_COST : GACHA_SINGLE_COST;
       if (gems < cost) {
-        addNotification(`Need ${cost} 💎`, 'warning');
+        addNotification(`Need ${formatNumber(cost)} 💎`, 'warning');
         return;
       }
       const rate = calculatePassiveIncome();
@@ -626,8 +696,8 @@ export const useGameState = () => {
       addCloutEarned(total);
       addNotification(
         multi
-          ? `10× Viral Drop: +${Math.floor(total)} Clout`
-          : `Viral Drop: +${Math.floor(total)} Clout`,
+          ? `10× Viral Drop (−${formatNumber(cost)} 💎): +${formatNumber(Math.floor(total))} Clout`
+          : `Viral Drop (−${formatNumber(cost)} 💎): +${formatNumber(Math.floor(total))} Clout`,
         'success'
       );
     },
@@ -642,7 +712,7 @@ export const useGameState = () => {
   const marketCloutInjection = useCallback(
     (gemCost, label) => {
       if (gems < gemCost) {
-        addNotification(`Need ${gemCost} 💎`, 'warning');
+        addNotification(`Need ${formatNumber(gemCost)} 💎`, 'warning');
         return;
       }
       const rate = calculatePassiveIncome();
@@ -719,7 +789,8 @@ export const useGameState = () => {
       if (!achievementMet(def.id, snap)) return;
       setAchievementsUnlocked(prev => ({ ...prev, [def.id]: true }));
       setGems(prev => prev + def.gemReward);
-      addNotification(`Achievement: ${def.name} (+${def.gemReward} 💎)`, 'success');
+      addNotification(`Achievement: ${def.name} (+${formatNumber(def.gemReward)} 💎)`, 'success');
+      playAchievementPing();
     });
   }, [
     totalClicks,
@@ -777,11 +848,13 @@ export const useGameState = () => {
         const startedAt = activeBrandDeal.startedAt ?? now - BRAND_DEAL_DURATION_MS;
         if (now - startedAt >= AGENT_AUTO_ACCEPT_DELAY_MS) {
           const dealType = brandDealTypes.find(d => d.id === activeBrandDeal.typeId);
-          const repDelta = dealType?.reputationDelta ?? 0;
-          const projectedRep = Math.max(0, Math.min(100, reputation + repDelta));
-          if (projectedRep >= AGENT_MIN_REP_AFTER_DEAL) {
-            const fn = acceptBrandDealRef.current;
-            if (typeof fn === 'function') fn();
+          if (dealType && brandDealOfferableAtReputation(dealType, reputation)) {
+            const repDelta = dealType.reputationDelta ?? 0;
+            const projectedRep = Math.max(0, Math.min(100, reputation + repDelta));
+            if (projectedRep >= AGENT_MIN_REP_AFTER_DEAL) {
+              const fn = acceptBrandDealRef.current;
+              if (typeof fn === 'function') fn();
+            }
           }
         }
       }
@@ -819,7 +892,7 @@ export const useGameState = () => {
         brandDealsMaySpawn(lifetimeClout, influencers.length, buildings.length) &&
         Math.random() < BRAND_DEAL_SPAWN_CHANCE_PER_TICK * (0.28 + (reputation / 100) * 0.85)
       ) {
-        const availableDeals = brandDealTypes;
+        const availableDeals = brandDealTypes.filter(d => brandDealOfferableAtReputation(d, reputation));
 
         if (availableDeals.length > 0) {
           const scoutN = managers.filter(m => m.typeId === 'scout').length;
@@ -1038,6 +1111,20 @@ export const useGameState = () => {
     [addNotification, activeProfileName]
   );
 
+  const importNamedSaveJson = useCallback(
+    text => {
+      const result = importNamedSaveFromExportJson(text);
+      if (!result.ok) {
+        addNotification(result.error ?? 'Import failed.', 'warning');
+        return false;
+      }
+      addNotification(`Imported profile “${result.name}”. Load it from Manage saves when ready.`, 'success');
+      setNamedSaveListTick(t => t + 1);
+      return true;
+    },
+    [addNotification]
+  );
+
   const resetAllLocalProgress = useCallback(() => {
     markResetSaveGuard();
     clearActiveNamedSlot();
@@ -1155,6 +1242,7 @@ export const useGameState = () => {
     saveGameNamed,
     loadGameNamed,
     deleteNamedSaveSlot,
+    importNamedSaveJson,
     clearProfileBackup,
     resetAllLocalProgress
   };

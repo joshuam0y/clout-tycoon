@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './MonetizationPanel.css';
 import { formatNumber } from '../utils/formatNumber';
 
 export const MonetizationPanel = ({
   onClose,
+  deferEscapeClose = false,
   gems,
   gemCloutMultStacks,
   gemClickMultStacks = 0,
@@ -26,6 +27,7 @@ export const MonetizationPanel = ({
 }) => {
   const [activeTab, setActiveTab] = useState('gems');
   const [isPulling, setIsPulling] = useState(false);
+  const closeButtonRef = useRef(null);
 
   const handleGacha = multi => {
     if (gems < (multi ? gachaCosts.multi : gachaCosts.single)) return;
@@ -52,12 +54,33 @@ export const MonetizationPanel = ({
       ? null
       : gemEconomy.passiveCostBase + gemPassiveMultStacks * gemEconomy.passiveCostPerOwned;
 
+  useEffect(() => {
+    const onKey = e => {
+      if (e.code !== 'Escape' || e.repeat) return;
+      if (deferEscapeClose) return;
+      e.preventDefault();
+      onClose();
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [onClose, deferEscapeClose]);
+
+  useEffect(() => {
+    closeButtonRef.current?.focus();
+  }, []);
+
   return (
     <div className="monetization-overlay" role="dialog" aria-labelledby="premium-shop-title">
       <div className="monetization-panel panel-purple">
         <div className="monetization-header">
           <h2 id="premium-shop-title">Premium Shop</h2>
-          <button type="button" className="close-button" onClick={onClose} aria-label="Close">
+          <button
+            ref={closeButtonRef}
+            type="button"
+            className="close-button"
+            onClick={onClose}
+            aria-label="Close Premium Shop"
+          >
             ✕
           </button>
         </div>

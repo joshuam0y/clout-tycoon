@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import './BrandDealPopup.css';
-import { brandDealTypes, computeBrandDealPayouts } from '../data/gameData';
+import {
+  brandDealTypes,
+  brandDealOfferableAtReputation,
+  computeBrandDealPayouts
+} from '../data/gameData';
 import { formatNumber } from '../utils/formatNumber';
 
 export const BrandDealPopup = ({
@@ -12,7 +16,8 @@ export const BrandDealPopup = ({
   prestigeMultiplier,
   gemCloutMult,
   onAccept,
-  onDecline
+  onDecline,
+  deferEscapeDecline = false
 }) => {
   /** Re-render cadence while the modal is open (deal countdown reads wall clock below). */
   const [, bumpTimer] = useState(0);
@@ -22,6 +27,18 @@ export const BrandDealPopup = ({
     const id = setInterval(() => bumpTimer(n => n + 1), 100);
     return () => clearInterval(id);
   }, [activeBrandDeal]);
+
+  useEffect(() => {
+    if (!activeBrandDeal) return undefined;
+    const onKey = e => {
+      if (e.code !== 'Escape' || e.repeat) return;
+      if (deferEscapeDecline) return;
+      e.preventDefault();
+      onDecline();
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [activeBrandDeal, onDecline, deferEscapeDecline]);
 
   /* eslint-disable react-hooks/purity -- live countdown needs Date.now vs expiresAt */
   const timeLeft = activeBrandDeal
@@ -44,6 +61,24 @@ export const BrandDealPopup = ({
       gemCloutMult
     });
   }, [deal, clout, followers, lifetimeClout, prestigeMultiplier, gemCloutMult]);
+
+  const canAccept = useMemo(
+    () => !!(deal && payouts && brandDealOfferableAtReputation(deal, reputation)),
+    [deal, payouts, reputation]
+  );
+
+  useEffect(() => {
+    if (!activeBrandDeal || !deal || !payouts || !canAccept) return undefined;
+    const onKey = e => {
+      if (e.code !== 'Enter' || e.repeat) return;
+      const el = e.target;
+      if (el instanceof HTMLElement && (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT')) return;
+      e.preventDefault();
+      onAccept();
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [activeBrandDeal, deal, payouts, canAccept, onAccept]);
 
   if (!activeBrandDeal || !deal || !payouts) return null;
 
@@ -81,6 +116,12 @@ export const BrandDealPopup = ({
             (both scale up as lifetime Clout grows), before prestige / 💎 multipliers on Clout.
           </div>
 
+          {!canAccept && (
+            <p className="deal-max-rep-note">
+              At 100% reputation, sponsors that only boost image are unavailable — decline or let the timer expire.
+            </p>
+          )}
+
           <div className="deal-rewards">
             <div className="reward-item">
               <span className="reward-label">Clout (this accept)</span>
@@ -116,6 +157,14 @@ export const BrandDealPopup = ({
           />
         </div>
 
+        <p className="deal-key-hint">
+          {canAccept ? (
+            <>
+              <kbd className="deal-kbd">Enter</kbd> accepts ·{' '}
+            </>
+          ) : null}
+          <kbd className="deal-kbd">Esc</kbd> declines
+        </p>
         <div className="deal-actions">
           <button type="button" className="decline-deal-button" onClick={onDecline}>
             Decline
@@ -124,9 +173,11 @@ export const BrandDealPopup = ({
             type="button"
             className="accept-deal-button primary"
             onClick={onAccept}
+            disabled={!canAccept}
             style={{
               borderColor: deal.color,
-              boxShadow: `0 0 20px ${deal.color}`
+              boxShadow: canAccept ? `0 0 20px ${deal.color}` : 'none',
+              opacity: canAccept ? 1 : 0.45
             }}
           >
             Accept Deal

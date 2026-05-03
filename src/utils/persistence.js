@@ -49,6 +49,21 @@ export function clearActiveNamedSlot() {
   }
 }
 
+/** Compact stats for save-vault cards (from stored snapshot). */
+export function summarizeSnapshotForNamedList(rawSnapshot) {
+  const snap = normalizeSnapshot(rawSnapshot);
+  if (!snap) return null;
+  return {
+    prestigeCount: snap.prestigeCount,
+    lifetimeClout: snap.lifetimeClout,
+    gems: snap.gems,
+    clout: snap.clout,
+    influencerCount: snap.influencers.length,
+    buildingCount: snap.buildings.length,
+    runCloutEarned: snap.runCloutEarned
+  };
+}
+
 export function listNamedSaves() {
   try {
     const raw = localStorage.getItem(NAMED_SAVES_KEY);
@@ -58,12 +73,77 @@ export function listNamedSaves() {
     return Object.entries(data)
       .map(([name, entry]) => ({
         name,
-        savedAt: typeof entry?.savedAt === 'number' ? entry.savedAt : 0
+        savedAt: typeof entry?.savedAt === 'number' ? entry.savedAt : 0,
+        preview: summarizeSnapshotForNamedList(entry?.snapshot)
       }))
       .sort((a, b) => b.savedAt - a.savedAt);
   } catch {
     return [];
   }
+}
+
+export const NAMED_SAVE_EXPORT_VERSION = 1;
+
+/**
+ * JSON string for backup / share. Returns null if slot missing.
+ */
+export function serializeNamedSaveForExport(label) {
+  const name = sanitizeNamedSaveLabel(label);
+  if (!name) return null;
+  try {
+    const raw = localStorage.getItem(NAMED_SAVES_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (!data || typeof data !== 'object') return null;
+    const entry = data[name];
+    if (!entry?.snapshot) return null;
+    const normalized = normalizeSnapshot(entry.snapshot);
+    if (!normalized) return null;
+    return JSON.stringify(
+      {
+        exportVersion: NAMED_SAVE_EXPORT_VERSION,
+        app: 'clout-tycoon',
+        label: name,
+        savedAt: typeof entry.savedAt === 'number' ? entry.savedAt : Date.now(),
+        saveVersion: SAVE_VERSION,
+        snapshot: normalized
+      },
+      null,
+      2
+    );
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Import from clipboard or file text. Overwrites same label if present.
+ */
+export function importNamedSaveFromExportJson(text) {
+  let parsed;
+  try {
+    parsed = JSON.parse(String(text ?? ''));
+  } catch {
+    return { ok: false, error: 'Not valid JSON.' };
+  }
+  if (!parsed || typeof parsed !== 'object') {
+    return { ok: false, error: 'Invalid payload.' };
+  }
+  if (parsed.app !== 'clout-tycoon' || parsed.exportVersion == null || !parsed.snapshot) {
+    return { ok: false, error: 'Unrecognized file (need a Clout Tycoon export).' };
+  }
+  const snap = normalizeSnapshot(parsed.snapshot);
+  if (!snap) {
+    return { ok: false, error: 'Snapshot missing or corrupt.' };
+  }
+  const name = sanitizeNamedSaveLabel(parsed.label ?? parsed.name ?? '');
+  if (!name) {
+    return { ok: false, error: 'Save is missing a profile name.' };
+  }
+  if (!putNamedSave(name, snap)) {
+    return { ok: false, error: 'Could not write to browser storage.' };
+  }
+  return { ok: true, name };
 }
 
 export function putNamedSave(label, payload) {
