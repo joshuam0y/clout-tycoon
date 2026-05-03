@@ -30,7 +30,8 @@ export const ControlPanel = ({
   onOpenShop,
   onOpenHowToPlay,
   onExportSave,
-  onImportSave
+  onImportSave,
+  onResetLocalSave
 }) => {
   const [isClicking, setIsClicking] = useState(false);
   const [floaters, setFloaters] = useState([]);
@@ -106,6 +107,24 @@ export const ControlPanel = ({
         />
         <button type="button" className="save-data-btn sfx-toggle" onClick={toggleSfx} title="Mute prestige chime">
           SFX {sfxMuted ? 'off' : 'on'}
+        </button>
+      </div>
+      <div className="save-data-row save-reset-row">
+        <button
+          type="button"
+          className="save-data-btn save-reset-btn"
+          title="Deletes save file + SFX preference in this browser only"
+          onClick={() => {
+            if (
+              window.confirm(
+                'Erase all local progress and settings (save + SFX mute) on this device? This cannot be undone.'
+              )
+            ) {
+              onResetLocalSave();
+            }
+          }}
+        >
+          Reset local save
         </button>
       </div>
       {/* Theme label (cosmetic — scales with prestige depth; shop has no era locks) */}

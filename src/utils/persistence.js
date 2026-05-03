@@ -1,5 +1,17 @@
+import { SFX_MUTE_STORAGE_KEY } from './sound';
+
 export const SAVE_VERSION = 3;
 export const SAVE_KEY = 'clout-tycoon-save';
+
+/** Removes main save + local preferences (SFX mute). Reload after calling for a clean session. */
+export function clearAllLocalGameData() {
+  try {
+    localStorage.removeItem(SAVE_KEY);
+    localStorage.removeItem(SFX_MUTE_STORAGE_KEY);
+  } catch {
+    /* private mode / quota */
+  }
+}
 
 /**
  * Normalize persisted snapshot (forward-compatible defaults).

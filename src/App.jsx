@@ -86,6 +86,7 @@ function App() {
           onOpenHowToPlay={() => setHowToPlayOpen(true)}
           onExportSave={gameState.exportSaveToFile}
           onImportSave={gameState.importSaveFromFileText}
+          onResetLocalSave={gameState.resetAllLocalProgress}
         />
 
         {/* Center - Game world */}

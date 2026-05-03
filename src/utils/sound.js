@@ -1,8 +1,8 @@
-const MUTE_KEY = 'clout-tycoon-sfx-muted';
+export const SFX_MUTE_STORAGE_KEY = 'clout-tycoon-sfx-muted';
 
 export function isSfxMuted() {
   try {
-    return localStorage.getItem(MUTE_KEY) === '1';
+    return localStorage.getItem(SFX_MUTE_STORAGE_KEY) === '1';
   } catch {
     return false;
   }
@@ -10,8 +10,8 @@ export function isSfxMuted() {
 
 export function setSfxMuted(muted) {
   try {
-    if (muted) localStorage.setItem(MUTE_KEY, '1');
-    else localStorage.removeItem(MUTE_KEY);
+    if (muted) localStorage.setItem(SFX_MUTE_STORAGE_KEY, '1');
+    else localStorage.removeItem(SFX_MUTE_STORAGE_KEY);
   } catch {
     /* ignore */
   }

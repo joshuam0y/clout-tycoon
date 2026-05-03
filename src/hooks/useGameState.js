@@ -33,7 +33,8 @@ import {
   loadGameSnapshot,
   writeGameSnapshot,
   downloadSaveFile,
-  importSaveFromJsonText
+  importSaveFromJsonText,
+  clearAllLocalGameData
 } from '../utils/persistence';
 import { playPrestigeChime } from '../utils/sound';
 
@@ -927,6 +928,11 @@ export const useGameState = () => {
     brandDealsAccepted
   ]);
 
+  const resetAllLocalProgress = useCallback(() => {
+    clearAllLocalGameData();
+    window.location.reload();
+  }, []);
+
   useLayoutEffect(() => {
     acceptBrandDealRef.current = acceptBrandDeal;
   }, [acceptBrandDeal]);
@@ -995,6 +1001,7 @@ export const useGameState = () => {
     gemClickMult: getGemClickMult(),
     gemPassiveMult: getGemPassiveMult(),
     exportSaveToFile,
-    importSaveFromFileText
+    importSaveFromFileText,
+    resetAllLocalProgress
   };
 };

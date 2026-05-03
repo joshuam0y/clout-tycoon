@@ -152,7 +152,8 @@ const PAGES = [
         </p>
         <p>
           Use <strong>Export save</strong> / <strong>Import save</strong> in the left panel to back up or move your
-          progress (JSON file). <strong>SFX</strong> toggles the prestige sound only.
+          progress (JSON file). <strong>Reset local save</strong> wipes browser storage for this game (progress + SFX
+          toggle). <strong>SFX</strong> toggles the prestige sound only.
         </p>
       </>
     )
