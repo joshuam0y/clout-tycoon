@@ -247,7 +247,7 @@ export const ControlPanel = ({
           This run needs {formatNumber(required)} Clout to prestige. After you prestige, the <strong>next</strong>{' '}
           run’s bar is <strong>~{PRESTIGE_RUN_CLOUT_MULT_PER_STEP}×</strong> this run’s requirement (next:{' '}
           {formatNumber(nextRunReq)}). Resets this run (Clout, roster, builds, post upgrades, rep, clicks…). Keeps{' '}
-          <strong>gems</strong> and <strong>Premium Shop 💎 upgrades</strong>, lifetime Clout, achievements. +45%
+          <strong>gems</strong> and <strong>Premium Shop 💎 upgrades</strong>, lifetime Clout, achievements. +20%
           permanent mult per prestige. +1 💎 per prestige, +1 extra every 4th.
         </div>
       </div>

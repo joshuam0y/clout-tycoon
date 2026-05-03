@@ -148,9 +148,9 @@ export const ShopPanel = ({
                     : m.effect === 'autodeals'
                       ? 'Accepts brand deals automatically'
                       : m.effect === 'globalboost'
-                        ? `×${m.multiplier ?? 1.5} passive each (stacks)`
+                        ? 'Passive lift per hire (diminishing, capped — not exponential)'
                         : m.effect === 'brandseason'
-                          ? 'Favored deals this week spawn heavier (+6% each on-meta)'
+                          ? 'Favored meta deals spawn heavier this week (each scout adds weight)'
                           : '';
 
                 return (

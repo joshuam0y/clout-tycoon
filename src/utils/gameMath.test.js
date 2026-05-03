@@ -5,25 +5,30 @@ import {
   getFollowerCostMult,
   clickUpgradeNextCost
 } from './gameMath';
-import { getPrestigeRunCloutRequired, PRESTIGE_RUN_CLOUT_BASE } from '../data/gameData';
+import {
+  getPrestigeRunCloutRequired,
+  PRESTIGE_RUN_CLOUT_BASE,
+  PRESTIGE_RUN_CLOUT_MULT_PER_STEP,
+  UNIT_PRICE_GROWTH
+} from '../data/gameData';
 
 describe('scaledUnitCost', () => {
   it('returns base for zero owned', () => {
     expect(scaledUnitCost(100, 0)).toBe(100);
   });
   it('scales with growth', () => {
-    expect(scaledUnitCost(100, 1)).toBe(Math.ceil(100 * 1.215));
+    expect(scaledUnitCost(100, 1)).toBe(Math.ceil(100 * UNIT_PRICE_GROWTH));
   });
 });
 
 describe('followers', () => {
   it('clout mult caps', () => {
     expect(getFollowerCloutMult(0)).toBe(1);
-    expect(getFollowerCloutMult(1_000_000)).toBeCloseTo(1 + 3.5, 5);
+    expect(getFollowerCloutMult(1_000_000)).toBeCloseTo(1 + 2.2, 5);
   });
   it('cost mult floors at discount cap', () => {
     expect(getFollowerCostMult(0)).toBe(1);
-    expect(getFollowerCostMult(10_000_000)).toBe(0.78);
+    expect(getFollowerCostMult(10_000_000)).toBeCloseTo(0.85, 10);
   });
 });
 
@@ -32,7 +37,9 @@ describe('getPrestigeRunCloutRequired', () => {
     expect(getPrestigeRunCloutRequired(0)).toBe(PRESTIGE_RUN_CLOUT_BASE);
   });
   it('multiplies each prestige step', () => {
-    expect(getPrestigeRunCloutRequired(1)).toBe(PRESTIGE_RUN_CLOUT_BASE * 10);
+    expect(getPrestigeRunCloutRequired(1)).toBe(
+      PRESTIGE_RUN_CLOUT_BASE * PRESTIGE_RUN_CLOUT_MULT_PER_STEP
+    );
   });
 });
 
@@ -45,7 +52,9 @@ describe('clickUpgradeNextCost', () => {
 });
 
 describe('getPrestigeRunCloutRequired scaling', () => {
-  it('steps by 10× each prestige', () => {
-    expect(getPrestigeRunCloutRequired(2)).toBe(getPrestigeRunCloutRequired(1) * 10);
+  it('steps by PRESTIGE_RUN_CLOUT_MULT_PER_STEP each prestige', () => {
+    expect(getPrestigeRunCloutRequired(2)).toBe(
+      getPrestigeRunCloutRequired(1) * PRESTIGE_RUN_CLOUT_MULT_PER_STEP
+    );
   });
 });

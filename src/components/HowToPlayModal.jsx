@@ -5,7 +5,8 @@ import {
   BRAND_DEALS_MIN_INFLUENCERS,
   BRAND_DEALS_SOLO_MIN_INFLUENCERS,
   BRAND_DEALS_SOLO_MIN_BUILDINGS,
-  BRAND_DEALS_SOLO_MIN_LIFETIME_CLOUT
+  BRAND_DEALS_SOLO_MIN_LIFETIME_CLOUT,
+  PRESTIGE_RUN_CLOUT_MULT_PER_STEP
 } from '../data/gameData';
 
 const PAGES = [
@@ -120,8 +121,8 @@ const PAGES = [
           resets (Clout, roster, buildings, post upgrades, reputation for that run, etc.).{' '}
           <strong>Gems</strong> and <strong>Premium Shop 💎 upgrades</strong> persist; lifetime Clout and achievements
           stay too. The left panel “era” name is only cosmetic theme vs prestige depth — shop content is never locked.
-          Each prestige makes the <strong>next</strong> run’s bar about <strong>10×</strong> the Clout you needed
-          for the previous tier.
+          Each prestige makes the <strong>next</strong> run’s bar about <strong>{PRESTIGE_RUN_CLOUT_MULT_PER_STEP}×</strong>{' '}
+          the Clout you needed for the previous tier.
         </p>
         <p>
           <strong>Frenzy events</strong> can fire after a cooldown: <strong>Viral frenzy</strong> boosts post
@@ -144,9 +145,10 @@ const PAGES = [
     body: (
       <>
         <p>
-          <strong>Staff</strong> (shop tab) spends Clout like other hires: interns auto-post, agents auto-accept brand
-          deals, executive producers boost passive, brand scouts tilt the <strong>weekly sponsor meta</strong> toward
-          favored contracts — duplicates stack with rising prices.
+          <strong>Staff</strong> (shop tab) spends Clout like other hires: interns run scheduled posts (no viral click
+          frenzy on those), agents wait a moment then sign deals that keep rep above a floor, executive producers
+          boost passive (compounding but softer than before), and brand scouts nudge the <strong>weekly sponsor meta</strong>{' '}
+          — duplicates stack with rising prices.
         </p>
         <p>
           Use <strong>Export save</strong> / <strong>Import save</strong> in the left panel to back up or move your

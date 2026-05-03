@@ -13,7 +13,14 @@ import {
   reputationIncomeMultiplierFromRep,
   getSynergyMultiplierFromBuildingTypes,
   computeBrandDealPayouts,
-  getBrandDealSeasonalWeightMult
+  getBrandDealSeasonalWeightMult,
+  AGENT_AUTO_ACCEPT_DELAY_MS,
+  AGENT_MIN_REP_AFTER_DEAL,
+  PASSIVE_GLOBAL_MULT,
+  CLICK_OUTPUT_GLOBAL_MULT,
+  PRESTIGE_MULT_PER_LEVEL,
+  getProducerPassiveMult,
+  CLICK_UPGRADE_MULT_SOFTEN
 } from '../data/gameData';
 import {
   scaledUnitCost,
@@ -31,7 +38,7 @@ import {
 import { playPrestigeChime } from '../utils/sound';
 
 const TICK_INTERVAL = 100;
-const BRAND_DEAL_SPAWN_CHANCE_PER_TICK = 0.00065;
+const BRAND_DEAL_SPAWN_CHANCE_PER_TICK = 0.00052;
 const BRAND_DEAL_COOLDOWN_ACCEPT_MS = 32000;
 const BRAND_DEAL_COOLDOWN_DECLINE_MS = 22000;
 const BRAND_DEAL_COOLDOWN_EXPIRE_MS = 20000;
@@ -57,7 +64,7 @@ const GACHA_MULTI_PULLS = 10;
 const FRENZY_COOLDOWN_MS = 72_000;
 const FRENZY_DURATION_MIN_MS = 12_000;
 const FRENZY_DURATION_MAX_MS = 22_000;
-const FRENZY_SPAWN_CHANCE_PER_TICK = 0.00038;
+const FRENZY_SPAWN_CHANCE_PER_TICK = 0.0003;
 
 const savedGame = loadGameSnapshot();
 
@@ -246,10 +253,8 @@ export const useGameState = () => {
         ? activeFrenzy.multiplier
         : 1;
 
-    const producerDef = managerTypes.find(m => m.id === 'producer');
-    const baseProducerMult = producerDef?.multiplier ?? 1.5;
     const producerCount = managers.filter(m => m.typeId === 'producer').length;
-    const producerMult = Math.pow(baseProducerMult, producerCount);
+    const producerMult = getProducerPassiveMult(producerCount);
 
     return (
       totalCloutPerSecond *
@@ -259,7 +264,8 @@ export const useGameState = () => {
       getReputationIncomeMultiplier() *
       getGemCloutMult() *
       getGemPassiveMult() *
-      frenzyPassiveMult
+      frenzyPassiveMult *
+      PASSIVE_GLOBAL_MULT
     );
   }, [
     influencers,
@@ -273,35 +279,48 @@ export const useGameState = () => {
     activeFrenzy
   ]);
 
-  const getClickClout = useCallback(() => {
-    let flat = 1;
-    let mult =
-      prestigeMultiplier *
-      getFollowerCloutMult(followers) *
-      getReputationIncomeMultiplier() *
-      getGemCloutMult() *
-      getGemClickMult();
-    const frenzyClickMult =
-      activeFrenzy?.kind === 'click_frenzy' && Date.now() < activeFrenzy.endsAt
-        ? activeFrenzy.multiplier
-        : 1;
-    mult *= frenzyClickMult;
-    clickUpgradeTypes.forEach(u => {
-      const level = clickUpgradeLevels[u.id] ?? 0;
-      if (level === 0) return;
-      if (u.kind === 'flat') flat += level * u.perLevel;
-      else mult *= Math.pow(1 + u.perLevel, level);
-    });
-    return flat * mult;
-  }, [
-    prestigeMultiplier,
-    followers,
-    clickUpgradeLevels,
-    getReputationIncomeMultiplier,
-    getGemCloutMult,
-    getGemClickMult,
-    activeFrenzy
-  ]);
+  const computePostClout = useCallback(
+    applyClickFrenzy => {
+      let flat = 1;
+      let mult =
+        prestigeMultiplier *
+        getFollowerCloutMult(followers) *
+        getReputationIncomeMultiplier() *
+        getGemCloutMult() *
+        getGemClickMult();
+      if (applyClickFrenzy) {
+        const frenzyClickMult =
+          activeFrenzy?.kind === 'click_frenzy' && Date.now() < activeFrenzy.endsAt
+            ? activeFrenzy.multiplier
+            : 1;
+        mult *= frenzyClickMult;
+      }
+      clickUpgradeTypes.forEach(u => {
+        const level = clickUpgradeLevels[u.id] ?? 0;
+        if (level === 0) return;
+        if (u.kind === 'flat') flat += level * u.perLevel;
+        else {
+          const eff = u.perLevel * CLICK_UPGRADE_MULT_SOFTEN;
+          mult *= Math.pow(1 + eff, level);
+        }
+      });
+      return flat * mult * CLICK_OUTPUT_GLOBAL_MULT;
+    },
+    [
+      prestigeMultiplier,
+      followers,
+      clickUpgradeLevels,
+      getReputationIncomeMultiplier,
+      getGemCloutMult,
+      getGemClickMult,
+      activeFrenzy
+    ]
+  );
+
+  const getClickClout = useCallback(() => computePostClout(true), [computePostClout]);
+
+  /** Interns automate posting — does not stack viral click frenzy (you still spike harder manually). */
+  const getInternAutoClickClout = useCallback(() => computePostClout(false), [computePostClout]);
 
   const addCloutEarned = useCallback(delta => {
     if (delta <= 0) return;
@@ -452,7 +471,7 @@ export const useGameState = () => {
     if (runCloutEarned < required) return false;
 
     const newPrestigeCount = prestigeCount + 1;
-    const newMultiplier = 1 + newPrestigeCount * 0.45;
+    const newMultiplier = 1 + newPrestigeCount * PRESTIGE_MULT_PER_LEVEL;
     const themeEra = Math.min(2, Math.floor(newPrestigeCount / 3));
     const prestigeGems = PRESTIGE_GEMS_BASE + Math.floor(newPrestigeCount / 4);
 
@@ -722,7 +741,7 @@ export const useGameState = () => {
       }
 
       if (influencers.length > 0) {
-        const followerGrowth = (influencers.length * 0.0085 * TICK_INTERVAL) / 1000;
+        const followerGrowth = (influencers.length * 0.0062 * TICK_INTERVAL) / 1000;
         setFollowers(prev => prev + followerGrowth);
       }
 
@@ -732,7 +751,7 @@ export const useGameState = () => {
         internClickRemainderRef.current += (cps * TICK_INTERVAL) / 1000;
         while (internClickRemainderRef.current >= 1) {
           internClickRemainderRef.current -= 1;
-          const earned = getClickClout();
+          const earned = getInternAutoClickClout();
           addCloutEarned(earned);
           setTotalClicks(tc => tc + 1);
           if (Math.random() < 0.07) {
@@ -742,8 +761,16 @@ export const useGameState = () => {
       }
 
       if (activeBrandDeal && managers.some(m => m.typeId === 'agent')) {
-        const fn = acceptBrandDealRef.current;
-        if (typeof fn === 'function') fn();
+        const startedAt = activeBrandDeal.startedAt ?? now - BRAND_DEAL_DURATION_MS;
+        if (now - startedAt >= AGENT_AUTO_ACCEPT_DELAY_MS) {
+          const dealType = brandDealTypes.find(d => d.id === activeBrandDeal.typeId);
+          const repDelta = dealType?.reputationDelta ?? 0;
+          const projectedRep = Math.max(0, Math.min(100, reputation + repDelta));
+          if (projectedRep >= AGENT_MIN_REP_AFTER_DEAL) {
+            const fn = acceptBrandDealRef.current;
+            if (typeof fn === 'function') fn();
+          }
+        }
       }
 
       if (brandDealCooldown > 0) {
@@ -837,7 +864,8 @@ export const useGameState = () => {
     addCloutEarned,
     addNotification,
     managers,
-    getClickClout
+    getClickClout,
+    getInternAutoClickClout
   ]);
 
   const importSaveFromFileText = useCallback(

@@ -1,13 +1,13 @@
 /** Per-unit price scaling (Cookie Clicker–style): each copy costs this much more */
-export const UNIT_PRICE_GROWTH = 1.215;
+export const UNIT_PRICE_GROWTH = 1.248;
 
 /**
  * This-run Clout needed to prestige — base for first run; multiplies by STEP each completed prestige.
  * completedPrestigeCount = current prestigeCount (0 before first prestige, 1 after first, …).
  */
-export const PRESTIGE_RUN_CLOUT_BASE = 560000;
-/** Next run’s prestige bar is this × the previous tier’s requirement (~10× harder per prestige). */
-export const PRESTIGE_RUN_CLOUT_MULT_PER_STEP = 10;
+export const PRESTIGE_RUN_CLOUT_BASE = 800000;
+/** Next run’s prestige bar is this × the previous tier’s requirement. */
+export const PRESTIGE_RUN_CLOUT_MULT_PER_STEP = 14;
 
 export function getPrestigeRunCloutRequired(completedPrestigeCount) {
   const n = Math.max(0, Math.floor(completedPrestigeCount ?? 0));
@@ -50,8 +50,20 @@ export function brandDealsMaySpawn(lifetimeClout, influencerCount, buildingCount
 export const PRESTIGE_GEMS_BASE = 1;
 
 /** Scales passive + “Post Content” output. At 100% reputation this is ×1 (HUD reads 100%). */
-export const REPUTATION_INCOME_MULT_MIN = 0.55;
+export const REPUTATION_INCOME_MULT_MIN = 0.4;
 export const REPUTATION_INCOME_MULT_MAX = 1.0;
+
+/** Applied to passive Clout/s after all other passive math (anti-runaway). */
+export const PASSIVE_GLOBAL_MULT = 0.42;
+
+/** Applied to manual + intern post Clout after upgrades (anti-runaway). */
+export const CLICK_OUTPUT_GLOBAL_MULT = 0.48;
+
+/** Permanent prestige mult: 1 + prestigeLevel × this (linear, gentler than old curves). */
+export const PRESTIGE_MULT_PER_LEVEL = 0.2;
+
+/** Softens % post-upgrade stacking so levels aren’t pure exponentials */
+export const CLICK_UPGRADE_MULT_SOFTEN = 0.76;
 
 export function reputationIncomeMultiplierFromRep(reputation) {
   const rep = Math.max(0, Math.min(100, reputation));
@@ -927,25 +939,25 @@ export const brandDealSeasonPhases = [
     id: 'clean',
     label: 'Clean partnerships',
     favoredDealIds: ['sponsored', 'partnership', 'merch_drop', 'exclusive', 'creator_fund'],
-    weightMult: 1.38
+    weightMult: 1.22
   },
   {
     id: 'momentum',
     label: 'Momentum pushes',
     favoredDealIds: ['viral_push', 'aipartner', 'merch_drop'],
-    weightMult: 1.34
+    weightMult: 1.2
   },
   {
     id: 'risk',
     label: 'High-risk season',
     favoredDealIds: ['controversy', 'viral_push', 'scorched_earth'],
-    weightMult: 1.4
+    weightMult: 1.24
   },
   {
     id: 'arena',
     label: 'Arena & whale deals',
     favoredDealIds: ['stadium', 'exclusive', 'creator_fund', 'scorched_earth', 'aipartner'],
-    weightMult: 1.33
+    weightMult: 1.2
   }
 ];
 
@@ -958,15 +970,24 @@ export function getActiveBrandDealSeasonPhase(nowMs = Date.now()) {
   return brandDealSeasonPhases[i % brandDealSeasonPhases.length];
 }
 
+/** Bonus spawn weight per Brand Scout copy on meta-aligned deals (multiplicative). */
+export const BRAND_SCOUT_WEIGHT_PER_COPY = 0.035;
+
 /**
- * Extra weight on favored deals this week. Brand Scouts stack: +6% each on favored picks only.
+ * Extra weight on favored deals this week. Brand Scouts stack modestly on favored picks only.
  */
 export function getBrandDealSeasonalWeightMult(dealId, nowMs = Date.now(), brandScoutCount = 0) {
   const phase = getActiveBrandDealSeasonPhase(nowMs);
   if (!phase.favoredDealIds.includes(dealId)) return 1;
-  const scoutMult = 1 + 0.06 * Math.max(0, brandScoutCount);
+  const scoutMult = 1 + BRAND_SCOUT_WEIGHT_PER_COPY * Math.max(0, brandScoutCount);
   return phase.weightMult * scoutMult;
 }
+
+/** Agent waits this long before auto-accept so you can decline ugly deals first */
+export const AGENT_AUTO_ACCEPT_DELAY_MS = 2800;
+
+/** Skip auto-accept when reputation would fall below this (agent protects the brand) */
+export const AGENT_MIN_REP_AFTER_DEAL = 22;
 
 // Prestige eras
 export const prestigeEras = [
@@ -1005,30 +1026,43 @@ export const prestigeEras = [
   }
 ];
 
+/**
+ * Executive producers: diminishing multiplicative steps + hard cap (no 1.18^n explosion).
+ */
+export function getProducerPassiveMult(producerCount) {
+  const n = Math.max(0, Math.floor(producerCount ?? 0));
+  if (n === 0) return 1;
+  let m = 1;
+  for (let i = 0; i < n; i++) {
+    m *= 1 + 0.055 / (1 + i * 0.32);
+  }
+  return Math.min(1.95, m);
+}
+
 // Manager types (for future automation)
 export const managerTypes = [
   {
     id: 'intern',
     name: 'Social Media Intern',
-    description: 'Auto-clicks for you',
-    cost: 5000,
+    description: 'Scheduled posts — no viral frenzy bonus (manual posts still spike harder)',
+    cost: 5200,
     effect: 'autoclick',
-    clicksPerSecond: 10
+    clicksPerSecond: 6
   },
   {
     id: 'agent',
     name: 'Talent Agent',
-    description: 'Auto-accepts brand deals',
-    cost: 15000,
+    description: 'After a short beat, auto-accepts deals that won’t trash rep past your floor',
+    cost: 16500,
     effect: 'autodeals'
   },
   {
     id: 'producer',
     name: 'Executive Producer',
-    description: 'Boosts all influencer output',
-    cost: 50000,
+    description: 'Raises agency passive with diminishing returns (capped team bonus, not exponential)',
+    cost: 52000,
     effect: 'globalboost',
-    multiplier: 1.5
+    multiplier: 1
   },
   {
     id: 'scout',

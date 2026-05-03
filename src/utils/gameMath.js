@@ -44,13 +44,13 @@ export function getLocalGridBuffMultiplier(influencer, buildings) {
 /** Followers scale all clout sources (meaningful but capped) */
 export const getFollowerCloutMult = followers => {
   const f = Number(followers) || 0;
-  return 1 + Math.min(3.5, f / 2200);
+  return 1 + Math.min(2.2, f / 2750);
 };
 
-/** Hiring/building gets cheaper as audience grows (max ~22% off) */
+/** Hiring/building gets cheaper as audience grows (max ~15% off) */
 export const getFollowerCostMult = followers => {
   const f = Number(followers) || 0;
-  return Math.max(0.78, 1 - Math.min(0.22, f / 420000));
+  return Math.max(0.85, 1 - Math.min(0.15, f / 480000));
 };
 
 /** Whole-number % for HUD copy */
