@@ -84,8 +84,10 @@ function App() {
           onPrestige={gameState.prestige}
           onOpenShop={() => setShowMonetizationPanel(true)}
           onOpenHowToPlay={() => setHowToPlayOpen(true)}
-          onExportSave={gameState.exportSaveToFile}
-          onImportSave={gameState.importSaveFromFileText}
+          namedSaveSlots={gameState.namedSaveSlots}
+          onSaveNamed={gameState.saveGameNamed}
+          onLoadNamed={gameState.loadGameNamed}
+          onDeleteNamedSave={gameState.deleteNamedSaveSlot}
           onResetLocalSave={gameState.resetAllLocalProgress}
         />
 

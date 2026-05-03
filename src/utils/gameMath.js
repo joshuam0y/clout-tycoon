@@ -49,10 +49,14 @@ export const getFollowerCloutMult = followers => {
   return 1 + Math.min(2.2, f / 2750);
 };
 
-/** Hiring/building gets cheaper as audience grows (max ~15% off) */
+/**
+ * Hiring / builds / staff get cheaper as audience grows (max ~15% off).
+ * Linear to the cap so discounts are felt well before late game (full discount ≈12k followers).
+ */
 export const getFollowerCostMult = followers => {
   const f = Number(followers) || 0;
-  return Math.max(0.85, 1 - Math.min(0.15, f / 480000));
+  const discount = Math.min(0.15, f / 80000);
+  return Math.max(0.85, 1 - discount);
 };
 
 /** Whole-number % for HUD copy */

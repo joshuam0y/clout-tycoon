@@ -15,12 +15,13 @@ import {
   getBrandDealSeasonalWeightMult,
   AGENT_AUTO_ACCEPT_DELAY_MS,
   AGENT_MIN_REP_AFTER_DEAL,
-  PASSIVE_GLOBAL_MULT,
   CLICK_OUTPUT_GLOBAL_MULT,
+  INTERN_AUTO_POST_OUTPUT_MULT,
+  INTERN_BASE_POSTS_PER_SEC,
+  INTERN_STACKING_EXP,
   BASE_POST_CLOUT,
   CLOUT_PRICE_MULTIPLIER,
   PRESTIGE_MULT_PER_LEVEL,
-  getProducerPassiveMult,
   CLICK_UPGRADE_MULT_SOFTEN,
   getMinPrestige
 } from '../data/gameData';
@@ -28,19 +29,22 @@ import {
   scaledUnitCost,
   clickUpgradeNextCost,
   getFollowerCloutMult,
-  getFollowerCostMult,
-  getLocalGridBuffMultiplier
+  getFollowerCostMult
 } from '../utils/gameMath';
 import {
   loadGameSnapshot,
   writeGameSnapshot,
-  downloadSaveFile,
-  importSaveFromJsonText,
   clearAllLocalGameData,
   markResetSaveGuard,
-  clearResetSaveGuard
+  clearResetSaveGuard,
+  putNamedSave,
+  getNamedSave,
+  listNamedSaves,
+  deleteNamedSave,
+  sanitizeNamedSaveLabel
 } from '../utils/persistence';
 import { playPrestigeChime } from '../utils/sound';
+import { computePassiveIncomeSnapshot } from '../utils/computePassiveIncomeSnapshot';
 
 const TICK_INTERVAL = 100;
 const BRAND_DEAL_SPAWN_CHANCE_PER_TICK = 0.00052;
@@ -156,6 +160,7 @@ export const useGameState = () => {
 
   const [selectedTool, setSelectedTool] = useState(null);
   const [notifications, setNotifications] = useState([]);
+  const [namedSaveListTick, setNamedSaveListTick] = useState(0);
 
   const [totalClicks, setTotalClicks] = useState(() => savedGame?.totalClicks ?? 0);
   const [lifetimeClout, setLifetimeClout] = useState(() => savedGame?.lifetimeClout ?? 0);
@@ -224,67 +229,32 @@ export const useGameState = () => {
     [reputation]
   );
 
-  const passiveIncomeSnapshot = useMemo(() => {
-    let totalRaw = 0;
-    const rawByTalentType = {};
-    const rawByInfluencerId = {};
-
-    influencers.forEach(inf => {
-      const type = influencerTypes.find(t => t.id === inf.typeId);
-      if (!type) return;
-      const raw = type.baseCloutPerSecond * getLocalGridBuffMultiplier(inf, buildings);
-      totalRaw += raw;
-      rawByTalentType[type.id] = (rawByTalentType[type.id] ?? 0) + raw;
-      rawByInfluencerId[inf.id] = raw;
-    });
-
-    const frenzyPassiveMult =
-      activeFrenzy?.kind === 'passive_frenzy' && Date.now() < activeFrenzy.endsAt
-        ? activeFrenzy.multiplier
-        : 1;
-
-    const producerMult = getProducerPassiveMult(
-      managers.filter(m => m.typeId === 'producer').length
-    );
-
-    const globalMult =
-      producerMult *
-      prestigeMultiplier *
-      getFollowerCloutMult(followers) *
-      reputationIncomeMultiplierFromRep(reputation) *
-      (1 + gemCloutMultStacks * GEM_STACK_BONUS) *
-      (1 + gemPassiveMultStacks * GEM_PASSIVE_BONUS) *
-      frenzyPassiveMult *
-      PASSIVE_GLOBAL_MULT;
-
-    const total = totalRaw * globalMult;
-    const passiveByTalentType = {};
-    for (const k of Object.keys(rawByTalentType)) {
-      passiveByTalentType[k] = rawByTalentType[k] * globalMult;
-    }
-    const passiveByInfluencerId = {};
-    for (const k of Object.keys(rawByInfluencerId)) {
-      passiveByInfluencerId[k] = rawByInfluencerId[k] * globalMult;
-    }
-
-    return {
-      total,
-      passiveByTalentType,
-      passiveByInfluencerId,
-      totalRaw,
-      globalMult
-    };
-  }, [
-    influencers,
-    buildings,
-    managers,
-    prestigeMultiplier,
-    followers,
-    reputation,
-    gemCloutMultStacks,
-    gemPassiveMultStacks,
-    activeFrenzy
-  ]);
+  const passiveIncomeSnapshot = useMemo(
+    () =>
+      computePassiveIncomeSnapshot({
+        influencers,
+        buildings,
+        managers,
+        prestigeMultiplier,
+        followers,
+        reputation,
+        gemCloutMult: 1 + gemCloutMultStacks * GEM_STACK_BONUS,
+        gemPassiveMult: 1 + gemPassiveMultStacks * GEM_PASSIVE_BONUS,
+        activeFrenzy,
+        nowMs: Date.now()
+      }),
+    [
+      influencers,
+      buildings,
+      managers,
+      prestigeMultiplier,
+      followers,
+      reputation,
+      gemCloutMultStacks,
+      gemPassiveMultStacks,
+      activeFrenzy
+    ]
+  );
 
   const calculatePassiveIncome = useCallback(
     () => passiveIncomeSnapshot.total,
@@ -779,13 +749,12 @@ export const useGameState = () => {
 
       const internN = managers.filter(m => m.typeId === 'intern').length;
       if (internN > 0) {
-        const cps = internN * (managerTypes.find(m => m.id === 'intern')?.clicksPerSecond ?? 10);
+        const cps = INTERN_BASE_POSTS_PER_SEC * Math.pow(internN, INTERN_STACKING_EXP);
         internClickRemainderRef.current += (cps * TICK_INTERVAL) / 1000;
         while (internClickRemainderRef.current >= 1) {
           internClickRemainderRef.current -= 1;
           const earned = getInternAutoClickClout();
           addCloutEarned(earned);
-          setTotalClicks(tc => tc + 1);
           if (Math.random() < 0.07) {
             setFollowers(f => f + 1);
           }
@@ -900,24 +869,10 @@ export const useGameState = () => {
     getInternAutoClickClout
   ]);
 
-  const importSaveFromFileText = useCallback(
-    text => {
-      const snap = importSaveFromJsonText(text);
-      if (!snap) {
-        addNotification('Could not read that save file.', 'warning');
-        return false;
-      }
-      writeGameSnapshot(snap);
-      markResetSaveGuard();
-      addNotification('Save imported — reloading…', 'success');
-      window.setTimeout(() => window.location.reload(), 120);
-      return true;
-    },
-    [addNotification]
-  );
+  const namedSaveSlots = useMemo(() => listNamedSaves(), [namedSaveListTick]);
 
-  const exportSaveToFile = useCallback(() => {
-    downloadSaveFile({
+  const buildCurrentSnapshot = useCallback(
+    () => ({
       clout,
       followers,
       reputation,
@@ -937,28 +892,83 @@ export const useGameState = () => {
       gemPassiveMultStacks,
       achievementsUnlocked,
       brandDealsAccepted
-    });
-  }, [
-    clout,
-    followers,
-    reputation,
-    prestigeCount,
-    prestigeMultiplier,
-    influencers,
-    buildings,
-    managers,
-    totalClicks,
-    lifetimeClout,
-    runCloutEarned,
-    clickUpgradeLevels,
-    brandDealCooldown,
-    gems,
-    gemCloutMultStacks,
-    gemClickMultStacks,
-    gemPassiveMultStacks,
-    achievementsUnlocked,
-    brandDealsAccepted
-  ]);
+    }),
+    [
+      clout,
+      followers,
+      reputation,
+      prestigeCount,
+      prestigeMultiplier,
+      influencers,
+      buildings,
+      managers,
+      totalClicks,
+      lifetimeClout,
+      runCloutEarned,
+      clickUpgradeLevels,
+      brandDealCooldown,
+      gems,
+      gemCloutMultStacks,
+      gemClickMultStacks,
+      gemPassiveMultStacks,
+      achievementsUnlocked,
+      brandDealsAccepted
+    ]
+  );
+
+  const saveGameNamed = useCallback(
+    label => {
+      const name = sanitizeNamedSaveLabel(label);
+      if (!name) {
+        addNotification('Type a name for this save first.', 'warning');
+        return false;
+      }
+      if (!putNamedSave(name, buildCurrentSnapshot())) {
+        addNotification('Could not save (browser storage full or blocked).', 'warning');
+        return false;
+      }
+      addNotification(`Saved “${name}” in this browser.`, 'success');
+      setNamedSaveListTick(t => t + 1);
+      return true;
+    },
+    [buildCurrentSnapshot, addNotification]
+  );
+
+  const loadGameNamed = useCallback(
+    label => {
+      const name = sanitizeNamedSaveLabel(label);
+      if (!name) {
+        addNotification('Pick a saved game name to load.', 'warning');
+        return false;
+      }
+      const snap = getNamedSave(name);
+      if (!snap) {
+        addNotification(`No save named “${name}” found.`, 'warning');
+        return false;
+      }
+      writeGameSnapshot(snap);
+      markResetSaveGuard();
+      addNotification('Loading save…', 'success');
+      window.setTimeout(() => window.location.reload(), 100);
+      return true;
+    },
+    [addNotification]
+  );
+
+  const deleteNamedSaveSlot = useCallback(
+    label => {
+      const name = sanitizeNamedSaveLabel(label);
+      if (!name) return false;
+      if (!deleteNamedSave(name)) {
+        addNotification('Could not delete that save.', 'warning');
+        return false;
+      }
+      addNotification(`Deleted “${name}”.`, 'success');
+      setNamedSaveListTick(t => t + 1);
+      return true;
+    },
+    [addNotification]
+  );
 
   const resetAllLocalProgress = useCallback(() => {
     markResetSaveGuard();
@@ -1039,8 +1049,10 @@ export const useGameState = () => {
     gemCloutMult: getGemCloutMult(),
     gemClickMult: getGemClickMult(),
     gemPassiveMult: getGemPassiveMult(),
-    exportSaveToFile,
-    importSaveFromFileText,
+    namedSaveSlots,
+    saveGameNamed,
+    loadGameNamed,
+    deleteNamedSaveSlot,
     resetAllLocalProgress
   };
 };

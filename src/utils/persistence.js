@@ -3,6 +3,97 @@ import { SFX_MUTE_STORAGE_KEY } from './sound';
 export const SAVE_VERSION = 3;
 export const SAVE_KEY = 'clout-tycoon-save';
 
+/** Multiple named snapshots stored in-browser (same origin); keys are user-chosen labels. */
+export const NAMED_SAVES_KEY = 'clout-tycoon-named-saves';
+
+const MAX_NAMED_SAVE_LABEL_LENGTH = 80;
+
+export function sanitizeNamedSaveLabel(raw) {
+  if (typeof raw !== 'string') return '';
+  const t = raw.trim().slice(0, MAX_NAMED_SAVE_LABEL_LENGTH);
+  return t;
+}
+
+export function listNamedSaves() {
+  try {
+    const raw = localStorage.getItem(NAMED_SAVES_KEY);
+    if (!raw) return [];
+    const data = JSON.parse(raw);
+    if (!data || typeof data !== 'object') return [];
+    return Object.entries(data)
+      .map(([name, entry]) => ({
+        name,
+        savedAt: typeof entry?.savedAt === 'number' ? entry.savedAt : 0
+      }))
+      .sort((a, b) => b.savedAt - a.savedAt);
+  } catch {
+    return [];
+  }
+}
+
+export function putNamedSave(label, payload) {
+  const name = sanitizeNamedSaveLabel(label);
+  if (!name) return false;
+  const normalized = normalizeSnapshot(payload);
+  if (!normalized) return false;
+  let bucket = {};
+  try {
+    const raw = localStorage.getItem(NAMED_SAVES_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') bucket = parsed;
+    }
+  } catch {
+    bucket = {};
+  }
+  bucket[name] = {
+    version: SAVE_VERSION,
+    savedAt: Date.now(),
+    snapshot: normalized
+  };
+  try {
+    localStorage.setItem(NAMED_SAVES_KEY, JSON.stringify(bucket));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function getNamedSave(label) {
+  const name = sanitizeNamedSaveLabel(label);
+  if (!name) return null;
+  try {
+    const raw = localStorage.getItem(NAMED_SAVES_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    const entry = data?.[name];
+    if (!entry?.snapshot) return null;
+    return normalizeSnapshot(entry.snapshot);
+  } catch {
+    return null;
+  }
+}
+
+export function deleteNamedSave(label) {
+  const name = sanitizeNamedSaveLabel(label);
+  if (!name) return false;
+  try {
+    const raw = localStorage.getItem(NAMED_SAVES_KEY);
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    if (!data || typeof data !== 'object' || !(name in data)) return false;
+    delete data[name];
+    if (Object.keys(data).length === 0) {
+      localStorage.removeItem(NAMED_SAVES_KEY);
+    } else {
+      localStorage.setItem(NAMED_SAVES_KEY, JSON.stringify(data));
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Blocks autosave while reset runs (debounced writes could otherwise fire after clear() and repopulate localStorage).
  * Same-origin sessionStorage survives navigation within the tab.
@@ -120,33 +211,3 @@ export function writeGameSnapshot(payload) {
   }
 }
 
-/** Browser download of full save file (backup / transfer). */
-export function downloadSaveFile(payload) {
-  const normalized = normalizeSnapshot(payload);
-  if (!normalized) return;
-  const body = JSON.stringify(
-    { version: SAVE_VERSION, exportedAt: Date.now(), snapshot: normalized },
-    null,
-    2
-  );
-  const blob = new Blob([body], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `clout-tycoon-save-${Date.now()}.json`;
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
-
-/**
- * Parse exported JSON; returns normalized snapshot or null.
- * On success, caller may writeGameSnapshot + reload.
- */
-export function importSaveFromJsonText(text) {
-  try {
-    const data = JSON.parse(text);
-    const snap = data.snapshot ?? data;
-    return normalizeSnapshot(snap);
-  } catch {
-    return null;
-  }
-}

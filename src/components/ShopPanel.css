@@ -130,6 +130,13 @@
   font-weight: 800;
 }
 
+.item-stats-primary {
+  display: block;
+  font-weight: 800;
+  color: var(--neon-green);
+  line-height: 1.35;
+}
+
 .item-stats-base {
   font-size: 10px;
   color: var(--text-muted);

@@ -83,6 +83,16 @@ export const BASE_POST_CLOUT = 1;
 /** Applied to manual + intern post Clout after upgrades; keep at 1 so an undressed post = BASE_POST_CLOUT at ×1 mults. */
 export const CLICK_OUTPUT_GLOBAL_MULT = 1;
 
+/**
+ * Intern “scheduled posts” use a slice of your post-math so they stay a convenience, not the main engine.
+ * (Still scales a bit with upgrades — just much weaker than manual.)
+ */
+export const INTERN_AUTO_POST_OUTPUT_MULT = 0.18;
+/** First intern’s baseline rate; extra interns add sublinear speed (see INTERN_STACKING_EXP). */
+export const INTERN_BASE_POSTS_PER_SEC = 0.38;
+/** Total auto-post rate ∝ (intern count) ** this — stacks softer than linear. */
+export const INTERN_STACKING_EXP = 0.58;
+
 /** Permanent prestige mult: 1 + prestigeLevel × this (linear, gentler than old curves). */
 export const PRESTIGE_MULT_PER_LEVEL = 0.24;
 
@@ -128,7 +138,7 @@ export const achievementDefs = [
     id: 'click_machine',
     name: 'Thumb Legend',
     gemReward: 6,
-    description: 'Reach 100,000 total posts (all-time).'
+    description: 'Reach 100,000 manual posts (all-time; intern auto-posts do not count).'
   },
   {
     id: 'deal_century',
@@ -413,7 +423,7 @@ export const buildingTypes = [
     id: 'ringlight',
     name: 'Ring Light Bay',
     description:
-      'Soft light — wider reach. Synergy: extra ×1.09 with Food Reviewer in range.',
+      'Soft light — wider reach. Synergy: extra ×1.09 with Food Reviewer, ×1.06 with Lifestyle Blogger in range.',
     cost: 310,
     effect: 'multiply',
     multiplier: 1.36,
@@ -483,7 +493,7 @@ export const buildingTypes = [
     id: 'podcast_nook',
     name: 'Podcast Nook',
     description:
-      'Sound-treated corner. Synergy: extra ×1.17 with Podcast Host in range.',
+      'Sound-treated corner. Synergy: extra ×1.17 with Podcast Host, ×1.05 with Micro Influencer in range.',
     cost: 920,
     effect: 'multiply',
     multiplier: 1.44,
@@ -511,7 +521,7 @@ export const buildingTypes = [
     id: 'warroom',
     name: 'PR War Room',
     description:
-      'Crisis cell — boosts viral plays. Synergy: extra ×1.15 with Viral Sensations in range.',
+      'Crisis cell — boosts viral plays. Synergy: extra ×1.15 with Viral Sensations, ×1.08 with AI Influencer in range.',
     cost: 14500,
     effect: 'multiply',
     multiplier: 2.88,
@@ -525,7 +535,7 @@ export const buildingTypes = [
     id: 'drone_bay',
     name: 'Drone Bay',
     description:
-      'Launch dock for aerial B-roll — synergy ×1.13 with Travel Vlogger in range.',
+      'Launch dock for aerial B-roll. Synergy: extra ×1.13 with Travel Vlogger, ×1.05 with Food Reviewer in range.',
     cost: 23500,
     effect: 'multiply',
     multiplier: 2.18,
@@ -597,7 +607,7 @@ export const buildingTypes = [
     id: 'satellite_relay',
     name: 'Satellite Relay',
     description:
-      'Orbital uplink — continent-wide buffs. Synergy: extra ×1.21 with VTuber Star in range.',
+      'Orbital uplink — continent-wide buffs. Synergy: extra ×1.21 with VTuber Star, ×1.06 with Red Carpet Talent in range.',
     cost: 2650000,
     effect: 'multiply',
     multiplier: 4.15,
@@ -728,7 +738,7 @@ export const clickUpgradeTypes = [
   {
     id: 'thumbnail',
     name: 'Thumbnail Science',
-    description: '+4% post power per level (multiplies)',
+    description: '+4% Clout per post per level',
     baseCost: 420,
     growth: 1.16,
     kind: 'mult',
@@ -737,7 +747,7 @@ export const clickUpgradeTypes = [
   {
     id: 'schedule',
     name: 'Content Calendar',
-    description: '+5% post power per level (multiplies)',
+    description: '+5% Clout per post per level',
     baseCost: 1100,
     growth: 1.16,
     kind: 'mult',
@@ -746,7 +756,7 @@ export const clickUpgradeTypes = [
   {
     id: 'collab',
     name: 'Collab Engine',
-    description: '+6% post power per level (multiplies)',
+    description: '+6% Clout per post per level',
     baseCost: 4200,
     growth: 1.17,
     kind: 'mult',
@@ -755,7 +765,7 @@ export const clickUpgradeTypes = [
   {
     id: 'drama',
     name: 'Strategic Drama',
-    description: '+8% post power per level (multiplies)',
+    description: '+8% Clout per post per level',
     baseCost: 9500,
     growth: 1.18,
     kind: 'mult',
@@ -764,7 +774,7 @@ export const clickUpgradeTypes = [
   {
     id: 'brand_kit',
     name: 'Brand Kit',
-    description: '+10% post power per level (multiplies)',
+    description: '+10% Clout per post per level',
     baseCost: 24000,
     growth: 1.18,
     kind: 'mult',
@@ -773,7 +783,7 @@ export const clickUpgradeTypes = [
   {
     id: 'talk_show',
     name: 'Talk Show Slot',
-    description: '+12% post power per level (multiplies)',
+    description: '+12% Clout per post per level',
     baseCost: 88000,
     growth: 1.19,
     kind: 'mult',
@@ -783,7 +793,7 @@ export const clickUpgradeTypes = [
   {
     id: 'superbowl',
     name: 'Halftime Bid',
-    description: '+15% post power per level (multiplies)',
+    description: '+15% Clout per post per level',
     baseCost: 520000,
     growth: 1.2,
     kind: 'mult',
@@ -793,7 +803,7 @@ export const clickUpgradeTypes = [
   {
     id: 'matrix_pr',
     name: 'Matrix PR Blitz',
-    description: '+22% post power per level (multiplies)',
+    description: '+22% Clout per post per level',
     baseCost: 6200000,
     growth: 1.21,
     kind: 'mult',
@@ -803,7 +813,7 @@ export const clickUpgradeTypes = [
   {
     id: 'singularity_feed',
     name: 'Singularity Feed',
-    description: '+28% post power per level (multiplies)',
+    description: '+28% Clout per post per level',
     baseCost: 52000000,
     growth: 1.22,
     kind: 'mult',
@@ -813,7 +823,7 @@ export const clickUpgradeTypes = [
   {
     id: 'omni_waves',
     name: 'Omnichannel Waves',
-    description: '+32% post power per level (multiplies)',
+    description: '+32% Clout per post per level',
     baseCost: 380000000,
     growth: 1.23,
     kind: 'mult',
@@ -1084,10 +1094,10 @@ export const managerTypes = [
   {
     id: 'intern',
     name: 'Social Media Intern',
-    description: 'Scheduled posts — no viral frenzy bonus (manual posts still spike harder)',
+    description:
+      'Light scheduled posting — small Clout drip, no viral frenzy; extra interns stack gently (not ×speed each)',
     cost: 5200,
     effect: 'autoclick',
-    clicksPerSecond: 6,
     minPrestige: 0
   },
   {

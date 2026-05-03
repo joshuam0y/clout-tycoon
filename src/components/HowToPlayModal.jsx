@@ -145,15 +145,17 @@ const PAGES = [
     body: (
       <>
         <p>
-          <strong>Staff</strong> (shop tab) spends Clout like other hires: interns run scheduled posts (no viral click
-          frenzy on those), agents wait a moment then sign deals that keep rep above a floor, executive producers
+          <strong>Staff</strong> (shop tab) spends Clout like other hires: interns drip a little scheduled posting (much
+          weaker than tapping Post Content; no viral frenzy; doesn’t add to <strong>manual posts</strong>), agents wait a
+          moment then sign deals that keep rep above a floor, executive producers
           boost passive (compounding but softer than before), and brand scouts nudge the <strong>weekly sponsor meta</strong>{' '}
           — each extra copy of the same role costs more on an accelerating curve.
         </p>
         <p>
-          Use <strong>Export save</strong> / <strong>Import save</strong> in the left panel to back up or move your
-          progress (JSON file). <strong>Reset local save</strong> wipes browser storage for this game (progress + SFX
-          toggle). <strong>SFX</strong> toggles the prestige sound only.
+          Use <strong>Save in browser</strong> / <strong>Load from browser</strong> in the left panel: pick a name,
+          store snapshots in this browser only (no download files). <strong>Reset local save</strong> clears your live
+          autosave and SFX toggle — named slots you saved stay until you delete them. <strong>SFX</strong> toggles the
+          prestige sound only.
         </p>
       </>
     )

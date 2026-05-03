@@ -119,8 +119,9 @@ export const ShopPanel = ({
           {shopTab === 'influencers' && (
             <div className="shop-items">
               <p className="shop-passive-hint">
-                HUD passive <strong>{formatRate(passiveCloutPerSecond)}</strong>/s — sum of each owned talent line
-                below (grid buffs + agency-wide × included).
+                HUD passive <strong>{formatRate(passiveCloutPerSecond)}</strong> Clout/s — add up each talent row
+                below; that sum matches the HUD (each row is <strong>all copies</strong> of that type, with structure
+                buffs + prestige/followers/rep/gems/producer/feed surge + passive balance ×).
               </p>
               {availableInfluencers.map(influencer => {
                 const owned = influencers.filter(i => i.typeId === influencer.id).length;
@@ -155,16 +156,18 @@ export const ShopPanel = ({
                         <div className="item-stats">
                           {owned > 0 ? (
                             <>
-                              {formatRate(agencySlice)}/s to agency
-                              <span className="item-stats-base">
-                                {' '}
-                                · base {formatRate(influencer.baseCloutPerSecond)}/s on tile
+                              <span className="item-stats-primary">
+                                {formatRate(agencySlice)} Clout/s — all {owned} on grid → HUD
                               </span>
+                              <div className="item-stats-base">
+                                Catalog tile base: {formatRate(influencer.baseCloutPerSecond)} Clout/s each (no
+                                structures; real tiles multiply this before agency-wide ×).
+                              </div>
                             </>
                           ) : (
                             <>
-                              {formatRate(influencer.baseCloutPerSecond)}/s base on tile
-                              <span className="item-stats-base"> · grid &amp; agency × on hire</span>
+                              {formatRate(influencer.baseCloutPerSecond)} Clout/s catalog base per tile
+                              <span className="item-stats-base"> · structures + agency × after hire</span>
                             </>
                           )}
                         </div>
@@ -197,7 +200,9 @@ export const ShopPanel = ({
                 const locked = minP > 0 && prestigeCount < minP;
                 const detail =
                   m.effect === 'autoclick'
-                    ? `${m.clicksPerSecond ?? 10} posts/s each`
+                    ? m.id === 'intern'
+                      ? 'Weak auto-posts · extra hires stack gently'
+                      : `${m.clicksPerSecond ?? 10} posts/s each`
                     : m.effect === 'autodeals'
                       ? 'Accepts brand deals automatically'
                       : m.effect === 'globalboost'

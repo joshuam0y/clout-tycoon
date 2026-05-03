@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import './ControlPanel.css';
 import { isSfxMuted, setSfxMuted } from '../utils/sound';
 import {
@@ -29,15 +29,18 @@ export const ControlPanel = ({
   onPrestige,
   onOpenShop,
   onOpenHowToPlay,
-  onExportSave,
-  onImportSave,
+  namedSaveSlots = [],
+  onSaveNamed,
+  onLoadNamed,
+  onDeleteNamedSave,
   onResetLocalSave
 }) => {
   const [isClicking, setIsClicking] = useState(false);
   const [floaters, setFloaters] = useState([]);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [sfxMuted, setSfxMutedState] = useState(() => isSfxMuted());
-  const importInputRef = useRef(null);
+  const [saveNameInput, setSaveNameInput] = useState('');
+  const [loadPick, setLoadPick] = useState('');
 
   useEffect(() => {
     if (!activeFrenzy) return;
@@ -82,29 +85,82 @@ export const ControlPanel = ({
         How to play
       </button>
 
-      <div className="save-data-row">
-        <button type="button" className="save-data-btn" onClick={onExportSave}>
-          Export save
-        </button>
-        <button type="button" className="save-data-btn" onClick={() => importInputRef.current?.click()}>
-          Import save
-        </button>
-        <input
-          ref={importInputRef}
-          type="file"
-          accept="application/json,.json"
-          className="save-file-input-hidden"
-          aria-hidden
-          tabIndex={-1}
-          onChange={e => {
-            const f = e.target.files?.[0];
-            e.target.value = '';
-            if (!f) return;
-            const reader = new FileReader();
-            reader.onload = () => onImportSave(String(reader.result ?? ''));
-            reader.readAsText(f);
-          }}
-        />
+      <div className="save-data-row save-named-tools">
+        <div className="save-named-block">
+          <label className="save-named-label" htmlFor="named-save-input">
+            Save in browser
+          </label>
+          <div className="save-named-row">
+            <input
+              id="named-save-input"
+              type="text"
+              className="save-named-input"
+              placeholder="Name this save…"
+              value={saveNameInput}
+              maxLength={80}
+              onChange={e => setSaveNameInput(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  if (onSaveNamed(saveNameInput)) setSaveNameInput('');
+                }
+              }}
+            />
+            <button
+              type="button"
+              className="save-data-btn"
+              onClick={() => {
+                if (onSaveNamed(saveNameInput)) setSaveNameInput('');
+              }}
+            >
+              Save
+            </button>
+          </div>
+        </div>
+        <div className="save-named-block">
+          <label className="save-named-label" htmlFor="named-load-select">
+            Load from browser
+          </label>
+          <div className="save-named-row">
+            <select
+              id="named-load-select"
+              className="save-named-select"
+              value={loadPick}
+              onChange={e => setLoadPick(e.target.value)}
+              aria-label="Choose a saved game name"
+            >
+              <option value="">— choose a save —</option>
+              {namedSaveSlots.map(s => (
+                <option key={s.name} value={s.name}>
+                  {s.name} ({new Date(s.savedAt).toLocaleString()})
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              className="save-data-btn"
+              disabled={!loadPick}
+              onClick={() => onLoadNamed(loadPick)}
+            >
+              Load
+            </button>
+            <button
+              type="button"
+              className="save-data-btn save-delete-btn"
+              disabled={!loadPick}
+              title="Remove this named slot only"
+              onClick={() => {
+                if (!loadPick) return;
+                if (window.confirm(`Delete saved game “${loadPick}” from this browser?`)) {
+                  onDeleteNamedSave(loadPick);
+                  setLoadPick('');
+                }
+              }}
+            >
+              Delete
+            </button>
+          </div>
+        </div>
         <button type="button" className="save-data-btn sfx-toggle" onClick={toggleSfx} title="Mute prestige chime">
           SFX {sfxMuted ? 'off' : 'on'}
         </button>
@@ -113,11 +169,11 @@ export const ControlPanel = ({
         <button
           type="button"
           className="save-data-btn save-reset-btn"
-          title="Deletes save file + SFX preference in this browser only"
+          title="Clears live autosave + SFX toggle; named browser slots below are kept until you delete them"
           onClick={() => {
             if (
               window.confirm(
-                'Erase all local progress and settings (save + SFX mute) on this device? This cannot be undone.'
+                'Reset your live game and SFX toggle? Named saves you created below stay in the browser until you delete them. This cannot be undone.'
               )
             ) {
               onResetLocalSave();
@@ -214,8 +270,8 @@ export const ControlPanel = ({
 
       {/* Secondary stats */}
       <div className="secondary-stats">
-        <div className="stat-row">
-          <span>Total Clicks:</span>
+        <div className="stat-row" title="Post Content &amp; shortcuts only — staff auto-posts excluded">
+          <span>Manual posts:</span>
           <span>{totalClicks.toLocaleString()}</span>
         </div>
         <div className="stat-row">

@@ -9,6 +9,12 @@ export function formatRate(num) {
   if (!Number.isFinite(num) || num === 0) return '0';
   const abs = Math.abs(num);
   if (abs >= 1000) return Math.round(num).toLocaleString();
-  const s = (Math.round(num * 10) / 10).toFixed(1);
-  return s.endsWith('.0') ? s.slice(0, -2) : s;
+  if (abs >= 10) {
+    const s = (Math.round(num * 10) / 10).toFixed(1);
+    return s.endsWith('.0') ? s.slice(0, -2) : s;
+  }
+  const s = (Math.round(num * 100) / 100).toFixed(2);
+  if (s.endsWith('.00')) return s.slice(0, -3);
+  if (s.endsWith('0')) return s.slice(0, -1);
+  return s;
 }

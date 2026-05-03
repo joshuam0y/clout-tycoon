@@ -36,8 +36,15 @@ describe('followers', () => {
     expect(getFollowerCloutMult(0)).toBe(1);
     expect(getFollowerCloutMult(1_000_000)).toBeCloseTo(1 + 2.2, 5);
   });
-  it('cost mult floors at discount cap', () => {
+  it('cost mult: no followers = full price', () => {
     expect(getFollowerCostMult(0)).toBe(1);
+  });
+  it('cost mult: mid followers meaningfully discounts hires/builds', () => {
+    expect(getFollowerCostMult(4_000)).toBeCloseTo(1 - 4000 / 80000, 10);
+    expect(getFollowerCostMult(12_000)).toBeCloseTo(0.85, 10);
+  });
+  it('cost mult floors at 15% discount', () => {
+    expect(getFollowerCostMult(100_000)).toBeCloseTo(0.85, 10);
     expect(getFollowerCostMult(10_000_000)).toBeCloseTo(0.85, 10);
   });
 });
