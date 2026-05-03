@@ -130,6 +130,18 @@
   font-weight: 800;
 }
 
+.shop-posts-hint {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin: 0 0 10px;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.shop-posts-hint strong {
+  color: var(--neon-cyan);
+}
+
 .item-stats-primary {
   display: block;
   font-weight: 800;

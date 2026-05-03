@@ -706,129 +706,184 @@ export function getSynergyMultiplierFromBuildingTypes(influencerTypeId, uniqueBu
   return m;
 }
 
-// Manual click upgrades — stack forever with rising costs
+/**
+ * Maps old post-upgrade ids → new ladder ids so saves keep earned levels after the Posts revamp.
+ */
+export const LEGACY_CLICK_UPGRADE_IDS = {
+  grip: 'post_t01',
+  hook: 'post_t02',
+  trend: 'post_t03',
+  thumbnail: 'post_t04',
+  schedule: 'post_t05',
+  collab: 'post_t06',
+  drama: 'post_t07',
+  brand_kit: 'post_t08',
+  talk_show: 'post_t09',
+  superbowl: 'post_t10',
+  matrix_pr: 'post_t11',
+  singularity_feed: 'post_t12',
+  omni_waves: 'post_t13'
+};
+
+export function migrateClickUpgradeLevels(raw) {
+  if (!raw || typeof raw !== 'object') return {};
+  const merged = {};
+  for (const [k, v] of Object.entries(raw)) {
+    const target = LEGACY_CLICK_UPGRADE_IDS[k] ?? k;
+    const lv = Math.max(0, Math.floor(Number(v) || 0));
+    merged[target] = Math.max(merged[target] ?? 0, lv);
+  }
+  return merged;
+}
+
+/**
+ * Post upgrades: single ladder — **listed worst → best**, matching **ascending base price** (same row is always weaker than the next).
+ * Four flat tiers, then twelve multiplicative tiers with strictly rising `perLevel`.
+ */
 export const clickUpgradeTypes = [
   {
-    id: 'grip',
-    name: 'Thumb Training',
+    id: 'post_t01',
+    name: 'Echo',
     description: '+1 Clout per post per level',
-    baseCost: 15,
-    growth: 1.15,
+    baseCost: 18,
+    growth: 1.142,
     kind: 'flat',
     perLevel: 1
   },
   {
-    id: 'hook',
-    name: 'Opening Hook',
+    id: 'post_t02',
+    name: 'Ripple',
     description: '+2 Clout per post per level',
-    baseCost: 55,
-    growth: 1.15,
+    baseCost: 42,
+    growth: 1.143,
     kind: 'flat',
     perLevel: 2
   },
   {
-    id: 'trend',
-    name: 'Trend Radar',
+    id: 'post_t03',
+    name: 'Pulse',
     description: '+3 Clout per post per level',
-    baseCost: 140,
-    growth: 1.15,
+    baseCost: 95,
+    growth: 1.144,
     kind: 'flat',
     perLevel: 3
   },
   {
-    id: 'thumbnail',
-    name: 'Thumbnail Science',
+    id: 'post_t04',
+    name: 'Surge',
+    description: '+4 Clout per post per level',
+    baseCost: 220,
+    growth: 1.145,
+    kind: 'flat',
+    perLevel: 4
+  },
+  {
+    id: 'post_t05',
+    name: 'Forge',
     description: '+4 payout boost per post per level',
-    baseCost: 420,
-    growth: 1.16,
+    baseCost: 500,
+    growth: 1.146,
     kind: 'mult',
     perLevel: 0.04
   },
   {
-    id: 'schedule',
-    name: 'Content Calendar',
+    id: 'post_t06',
+    name: 'Prism',
     description: '+5 payout boost per post per level',
-    baseCost: 1100,
-    growth: 1.16,
+    baseCost: 1150,
+    growth: 1.147,
     kind: 'mult',
     perLevel: 0.05
   },
   {
-    id: 'collab',
-    name: 'Collab Engine',
+    id: 'post_t07',
+    name: 'Vector',
     description: '+6 payout boost per post per level',
-    baseCost: 4200,
-    growth: 1.17,
+    baseCost: 2650,
+    growth: 1.148,
     kind: 'mult',
     perLevel: 0.06
   },
   {
-    id: 'drama',
-    name: 'Strategic Drama',
+    id: 'post_t08',
+    name: 'Apex',
+    description: '+7 payout boost per post per level',
+    baseCost: 6200,
+    growth: 1.149,
+    kind: 'mult',
+    perLevel: 0.07
+  },
+  {
+    id: 'post_t09',
+    name: 'Nova',
     description: '+8 payout boost per post per level',
-    baseCost: 9500,
-    growth: 1.18,
+    baseCost: 14500,
+    growth: 1.15,
     kind: 'mult',
     perLevel: 0.08
   },
   {
-    id: 'brand_kit',
-    name: 'Brand Kit',
+    id: 'post_t10',
+    name: 'Titan',
+    description: '+9 payout boost per post per level',
+    baseCost: 34000,
+    growth: 1.151,
+    kind: 'mult',
+    perLevel: 0.09
+  },
+  {
+    id: 'post_t11',
+    name: 'Vault',
     description: '+10 payout boost per post per level',
-    baseCost: 24000,
-    growth: 1.18,
+    baseCost: 80000,
+    growth: 1.152,
     kind: 'mult',
     perLevel: 0.1
   },
   {
-    id: 'talk_show',
-    name: 'Talk Show Slot',
-    description: '+12 payout boost per post per level',
-    baseCost: 88000,
-    growth: 1.19,
+    id: 'post_t12',
+    name: 'Crown',
+    description: '+11 payout boost per post per level',
+    baseCost: 190000,
+    growth: 1.153,
     kind: 'mult',
-    perLevel: 0.12,
-    minPrestige: 1
+    perLevel: 0.11
   },
   {
-    id: 'superbowl',
-    name: 'Halftime Bid',
+    id: 'post_t13',
+    name: 'Mythic',
+    description: '+13 payout boost per post per level',
+    baseCost: 450000,
+    growth: 1.154,
+    kind: 'mult',
+    perLevel: 0.13
+  },
+  {
+    id: 'post_t14',
+    name: 'Omega',
     description: '+15 payout boost per post per level',
-    baseCost: 520000,
-    growth: 1.2,
+    baseCost: 1100000,
+    growth: 1.155,
     kind: 'mult',
-    perLevel: 0.15,
-    minPrestige: 2
+    perLevel: 0.15
   },
   {
-    id: 'matrix_pr',
-    name: 'Matrix PR Blitz',
-    description: '+22 payout boost per post per level',
-    baseCost: 6200000,
-    growth: 1.21,
+    id: 'post_t15',
+    name: 'Singular',
+    description: '+17 payout boost per post per level',
+    baseCost: 2700000,
+    growth: 1.156,
     kind: 'mult',
-    perLevel: 0.22,
-    minPrestige: 3
+    perLevel: 0.17
   },
   {
-    id: 'singularity_feed',
-    name: 'Singularity Feed',
-    description: '+28 payout boost per post per level',
-    baseCost: 52000000,
-    growth: 1.22,
+    id: 'post_t16',
+    name: 'Infinite',
+    description: '+20 payout boost per post per level',
+    baseCost: 6500000,
+    growth: 1.157,
     kind: 'mult',
-    perLevel: 0.28,
-    minPrestige: 4
-  },
-  {
-    id: 'omni_waves',
-    name: 'Omnichannel Waves',
-    description: '+32 payout boost per post per level',
-    baseCost: 380000000,
-    growth: 1.23,
-    kind: 'mult',
-    perLevel: 0.32,
-    minPrestige: 5
+    perLevel: 0.2
   }
 ];
 

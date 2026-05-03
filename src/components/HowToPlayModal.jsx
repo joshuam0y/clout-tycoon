@@ -113,8 +113,9 @@ const PAGES = [
     body: (
       <>
         <p>
-          <strong>Post upgrades</strong> make each post stronger. Flat bonuses add raw power; percent bonuses
-          multiply. They reset when you prestige.
+          <strong>Post upgrades</strong> are a single list <strong>weakest → strongest</strong> (cheaper rows are
+          always weaker than the one below). Early tiers add flat Clout; later tiers multiply your whole post. They
+          reset when you prestige.
         </p>
         <p>
           When your <strong>this-run Clout</strong> bar fills, you can prestige: <strong>everything in the run</strong>{' '}

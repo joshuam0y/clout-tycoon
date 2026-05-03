@@ -11,6 +11,7 @@ import {
   setActiveNamedSlot,
   clearActiveNamedSlot
 } from './persistence';
+import { migrateClickUpgradeLevels } from '../data/gameData';
 
 const memoryStore = {};
 
@@ -82,5 +83,19 @@ describe('named browser saves', () => {
     expect(getActiveNamedSlot()).toBe('My Run');
     clearActiveNamedSlot();
     expect(getActiveNamedSlot()).toBe('');
+  });
+
+  it('migrates legacy post upgrade ids to ladder ids', () => {
+    expect(
+      migrateClickUpgradeLevels({
+        grip: 5,
+        hook: 3,
+        post_t05: 2
+      })
+    ).toEqual({
+      post_t01: 5,
+      post_t02: 3,
+      post_t05: 2
+    });
   });
 });

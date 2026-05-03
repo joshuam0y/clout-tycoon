@@ -84,6 +84,10 @@ export const ShopPanel = ({
         <div className="shop-tab-panel" role="tabpanel" aria-label={TABS.find(t => t.id === shopTab)?.label}>
           {shopTab === 'upgrades' && (
             <div className="shop-upgrades">
+              <p className="shop-posts-hint">
+                Post upgrades are listed <strong>weakest → strongest</strong>; base price rises each row (each tier is
+                stronger than the one above).
+              </p>
               {clickUpgradeTypes.map(upgrade => {
                 const level = clickUpgradeLevels[upgrade.id] ?? 0;
                 const cost = clickUpgradeNextCost(upgrade, level);

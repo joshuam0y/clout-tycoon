@@ -933,6 +933,23 @@ export const useGameState = () => {
   const buildCurrentSnapshotRef = useRef(buildCurrentSnapshot);
   buildCurrentSnapshotRef.current = buildCurrentSnapshot;
 
+  /** Tab close / switch — persist immediately (debounced save may not have fired yet). */
+  useEffect(() => {
+    const persistNow = () => {
+      const snap = buildCurrentSnapshotRef.current?.();
+      if (snap) writeGameSnapshot(snap);
+    };
+    const onVis = () => {
+      if (document.visibilityState === 'hidden') persistNow();
+    };
+    window.addEventListener('pagehide', persistNow);
+    document.addEventListener('visibilitychange', onVis);
+    return () => {
+      window.removeEventListener('pagehide', persistNow);
+      document.removeEventListener('visibilitychange', onVis);
+    };
+  }, []);
+
   useEffect(() => {
     if (!activeProfileName) return;
     const name = activeProfileName;
@@ -960,14 +977,21 @@ export const useGameState = () => {
         addNotification('Type a name for this save first.', 'warning');
         return false;
       }
-      if (!putNamedSave(name, buildCurrentSnapshot())) {
+      const snap = buildCurrentSnapshot();
+      if (!putNamedSave(name, snap)) {
         addNotification('Could not save (browser storage full or blocked).', 'warning');
         return false;
       }
+      const mainOk = writeGameSnapshot(snap);
       setActiveNamedSlot(name);
       setActiveProfileName(name);
       setLastProfileSyncAt(Date.now());
-      addNotification(`Profile “${name}” saved — will auto-backup every few seconds.`, 'success');
+      addNotification(
+        mainOk
+          ? `Profile “${name}” saved — session file updated; auto-backup every few seconds.`
+          : `Profile “${name}” stored, but this browser blocked updating the live session file (private mode or storage full).`,
+        mainOk ? 'success' : 'warning'
+      );
       setNamedSaveListTick(t => t + 1);
       return true;
     },

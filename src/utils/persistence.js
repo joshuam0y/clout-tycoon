@@ -1,4 +1,5 @@
 import { SFX_MUTE_STORAGE_KEY } from './sound';
+import { migrateClickUpgradeLevels } from '../data/gameData';
 
 export const SAVE_VERSION = 3;
 export const SAVE_KEY = 'clout-tycoon-save';
@@ -192,10 +193,9 @@ export function normalizeSnapshot(raw) {
     totalClicks: Math.max(0, Number(raw.totalClicks) || 0),
     lifetimeClout: Math.max(0, Number(raw.lifetimeClout) || 0),
     runCloutEarned: Math.max(0, Number(raw.runCloutEarned) || 0),
-    clickUpgradeLevels:
-      raw.clickUpgradeLevels && typeof raw.clickUpgradeLevels === 'object'
-        ? raw.clickUpgradeLevels
-        : {},
+    clickUpgradeLevels: migrateClickUpgradeLevels(
+      raw.clickUpgradeLevels && typeof raw.clickUpgradeLevels === 'object' ? raw.clickUpgradeLevels : {}
+    ),
     brandDealCooldown: Math.max(0, Number(raw.brandDealCooldown) || 0),
     gems: Math.max(0, Number(raw.gems) || 0),
     gemCloutMultStacks: Math.max(0, Number(raw.gemCloutMultStacks) || 0),
@@ -229,9 +229,9 @@ export function loadGameSnapshot() {
 
 export function writeGameSnapshot(payload) {
   try {
-    if (isResetSaveGuardActive()) return;
+    if (isResetSaveGuardActive()) return false;
     const normalized = normalizeSnapshot(payload);
-    if (!normalized) return;
+    if (!normalized) return false;
     localStorage.setItem(
       SAVE_KEY,
       JSON.stringify({
@@ -240,8 +240,10 @@ export function writeGameSnapshot(payload) {
         snapshot: normalized
       })
     );
+    return true;
   } catch {
     /* quota / private mode */
+    return false;
   }
 }
 
