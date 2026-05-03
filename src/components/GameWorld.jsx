@@ -7,21 +7,53 @@ const VIEW_COLS = 36;
 const VIEW_ROWS = 24;
 const DRAG_THRESHOLD_PX = 5;
 
-/** Viewport top-left in world px; no bounds — pan forever */
+/** Viewport top-left in world px; (0,0) is screen center — pads cluster on origin */
 const INITIAL_VIEW_OFFSET = { x: -18 * CELL_SIZE, y: -12 * CELL_SIZE };
-
-/** Decorative blueprint pads (world tiles) — pointer-events none; place anywhere on the grid */
-const BLUEPRINT_PADS = [
-  { key: 'talent', worldX: -2, worldY: -1, w: 1, h: 1, label: 'Talent', sym: '⬡' },
-  { key: 'desk', worldX: 1, worldY: -1, w: 1, h: 1, label: 'Desk', sym: '⌗' },
-  { key: 'studio', worldX: 3, worldY: -2, w: 2, h: 2, label: 'Studio pad', sym: '▦' }
-];
 
 export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick }) => {
   const [viewOffset, setViewOffset] = useState(INITIAL_VIEW_OFFSET);
   const [hoveredCell, setHoveredCell] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const dragStateRef = useRef(null);
+  const suppressPlacementClickRef = useRef(false);
+
+  const blueprintPads = useMemo(() => {
+    const nano = influencerTypes.find(i => i.id === 'nano');
+    const desk = buildingTypes.find(b => b.id === 'desk');
+    const studio = buildingTypes.find(b => b.id === 'studio');
+    return [
+      {
+        key: 'talent',
+        worldX: -3,
+        worldY: 0,
+        w: 1,
+        h: 1,
+        label: nano?.name ?? 'Talent',
+        sym: nano?.icon ?? '✨'
+      },
+      {
+        key: 'desk',
+        worldX: -1,
+        worldY: 0,
+        w: 1,
+        h: 1,
+        label: desk?.name ?? 'Desk',
+        sym: desk?.icon ?? '💻'
+      },
+      {
+        key: 'studio',
+        worldX: 1,
+        worldY: -1,
+        w: 2,
+        h: 2,
+        label: studio?.name ?? 'Studio',
+        sym: studio?.icon ?? '🎬'
+      }
+    ];
+  }, []);
+
+  const placementCount = influencers.length + buildings.length;
+  const showBlueprintPads = placementCount < 4;
 
   const viewportWorldBand = useMemo(() => {
     const ox = viewOffset.x;
@@ -38,6 +70,7 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick })
   }, [viewOffset]);
 
   const handleCellClick = (x, y) => {
+    if (suppressPlacementClickRef.current) return;
     if (selectedTool && !isDragging) {
       onCellClick({ x, y });
     }
@@ -213,6 +246,7 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick })
   });
 
   const handleMouseDown = event => {
+    suppressPlacementClickRef.current = false;
     dragStateRef.current = {
       startX: event.clientX,
       startY: event.clientY,
@@ -228,10 +262,9 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick })
     const dxPx = event.clientX - dragStateRef.current.startX;
     const dyPx = event.clientY - dragStateRef.current.startY;
     const movedEnough = Math.abs(dxPx) > DRAG_THRESHOLD_PX || Math.abs(dyPx) > DRAG_THRESHOLD_PX;
-    if (movedEnough) {
-      dragStateRef.current.moved = true;
-    }
+    if (!movedEnough) return;
 
+    dragStateRef.current.moved = true;
     setViewOffset({
       x: dragStateRef.current.offsetStartX - dxPx,
       y: dragStateRef.current.offsetStartY - dyPx
@@ -240,8 +273,13 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick })
   };
 
   const handleMouseUp = () => {
+    const moved = dragStateRef.current?.moved ?? false;
     dragStateRef.current = null;
-    setTimeout(() => setIsDragging(false), 0);
+    if (moved) suppressPlacementClickRef.current = true;
+    requestAnimationFrame(() => {
+      suppressPlacementClickRef.current = false;
+      setIsDragging(false);
+    });
   };
 
   return (
@@ -260,10 +298,10 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick })
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
       >
-        {influencers.length === 0 && buildings.length === 0 && (
+        {showBlueprintPads && (
           <>
             <div className="blueprint-layer" aria-hidden />
-            {BLUEPRINT_PADS.map(pad => (
+            {blueprintPads.map(pad => (
               <div
                 key={pad.key}
                 className="blueprint-pad"
@@ -279,10 +317,14 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick })
                 <span className="blueprint-pad-label">{pad.label}</span>
               </div>
             ))}
-            <div className="blueprint-ribbon">
-              Blueprint — earn Clout, open the shop, place anywhere on the grid
-            </div>
           </>
+        )}
+        {placementCount < 12 && (
+          <div className="blueprint-ribbon">
+            {placementCount === 0
+              ? 'Starter layout (suggested): hire Nano Creator on a tile, add Creator Desk in range, then Content Studio for a bigger buff radius.'
+              : 'Placements are fixed to the grid — drag only moves the camera. Keep stacking talent and buff buildings from the Agency Shop.'}
+          </div>
         )}
         {/* Grid cells */}
         {visibleCells.map(cell => (

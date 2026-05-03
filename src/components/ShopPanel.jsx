@@ -1,7 +1,7 @@
 import './ShopPanel.css';
 import { influencerTypes, buildingTypes, clickUpgradeTypes } from '../data/gameData';
 import { scaledUnitCost, clickUpgradeNextCost, getFollowerCostMult } from '../utils/gameMath';
-import { formatNumber } from '../utils/formatNumber';
+import { formatNumber, formatRate } from '../utils/formatNumber';
 
 export const ShopPanel = ({
   clout,
@@ -12,8 +12,7 @@ export const ShopPanel = ({
   influencers,
   buildings,
   clickUpgradeLevels,
-  onBuyClickUpgrade,
-  onOpenHowToPlay
+  onBuyClickUpgrade
 }) => {
   const costMult = getFollowerCostMult(followers);
   const discountPct = Math.round((1 - costMult) * 100);
@@ -26,11 +25,6 @@ export const ShopPanel = ({
       <div className="shop-scroll">
         <div className="shop-title-row">
           <h2 className="shop-title">Agency Shop</h2>
-          {onOpenHowToPlay && (
-            <button type="button" className="shop-how-to" onClick={onOpenHowToPlay}>
-              How to play
-            </button>
-          )}
         </div>
         <p className="shop-tagline">
           Prices rise 18% per copy — stack your empire.
@@ -99,9 +93,7 @@ export const ShopPanel = ({
                     </span>
                     <div className="item-info">
                       <div className="item-name">{influencer.name}</div>
-                      <div className="item-stats">
-                        {influencer.baseCloutPerSecond.toFixed(1)}/sec
-                      </div>
+                      <div className="item-stats">{formatRate(influencer.baseCloutPerSecond)}/s passive</div>
                     </div>
                   </div>
                   <div className="item-description">{influencer.description}</div>

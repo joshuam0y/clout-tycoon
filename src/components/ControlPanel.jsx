@@ -10,7 +10,6 @@ export const ControlPanel = ({
   currentEra,
   prestigeCount,
   prestigeMultiplier,
-  reputationIncomeMultiplier,
   passiveCloutPerSecond,
   clickCloutPerClick,
   lifetimeClout,
@@ -68,17 +67,14 @@ export const ControlPanel = ({
           <span className="stat-value">{formatNumber(followers)}</span>
         </div>
         <div className="stat-row follower-hint">
-          <span>Audience boosts clout & deal payouts; lowers hire/build cost.</span>
+          <span>
+            Audience speeds Clout, softens hire/build costs, and nudges deal followers. Reputation affects how
+            fast you earn; messy deals can drag it down.
+          </span>
         </div>
         <div className="stat">
           <span className="stat-label">Reputation</span>
           <span className="stat-value">{Math.floor(reputation)}%</span>
-        </div>
-        <div className="stat-row reputation-impact">
-          <span title="Applied to passive clout & each post. 100% = full baseline at maximum reputation score. Near 0% reputation you drop to ~55%.">
-            Rep multiplier
-          </span>
-          <span>{(reputationIncomeMultiplier * 100).toFixed(0)}%</span>
         </div>
       </div>
 

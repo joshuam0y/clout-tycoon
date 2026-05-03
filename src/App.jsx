@@ -50,7 +50,6 @@ function App() {
           currentEra={gameState.currentEra}
           prestigeCount={gameState.prestigeCount}
           prestigeMultiplier={gameState.prestigeMultiplier}
-          reputationIncomeMultiplier={gameState.reputationIncomeMultiplier}
           passiveCloutPerSecond={gameState.passiveCloutPerSecond}
           clickCloutPerClick={gameState.clickCloutPerClick}
           lifetimeClout={gameState.lifetimeClout}
@@ -60,6 +59,7 @@ function App() {
           onClickPostContent={gameState.clickPostContent}
           onPrestige={gameState.prestige}
           onOpenShop={() => setShowMonetizationPanel(true)}
+          onOpenHowToPlay={() => setHowToPlayOpen(true)}
         />
 
         {/* Center - Game world */}
@@ -81,7 +81,6 @@ function App() {
           buildings={gameState.buildings}
           clickUpgradeLevels={gameState.clickUpgradeLevels}
           onBuyClickUpgrade={gameState.buyClickUpgrade}
-          onOpenHowToPlay={() => setHowToPlayOpen(true)}
         />
       </div>
 
@@ -103,13 +102,19 @@ function App() {
           onClose={() => setShowMonetizationPanel(false)}
           gems={gameState.gems}
           gemCloutMultStacks={gameState.gemCloutMultStacks}
+          gemClickMultStacks={gameState.gemClickMultStacks}
+          gemPassiveMultStacks={gameState.gemPassiveMultStacks}
           maxGemCloutStacks={gameState.maxGemCloutStacks}
+          maxGemClickStacks={gameState.maxGemClickStacks}
+          maxGemPassiveStacks={gameState.maxGemPassiveStacks}
           passiveCloutPerSecond={gameState.passiveCloutPerSecond}
           achievementDefs={gameState.achievementDefs}
           achievementsUnlocked={gameState.achievementsUnlocked}
           gachaCosts={gameState.gachaCosts}
           gemEconomy={gameState.gemEconomy}
           onBuyGemStack={gameState.buyGemCloutStack}
+          onBuyGemClickStack={gameState.buyGemClickStack}
+          onBuyGemPassiveStack={gameState.buyGemPassiveStack}
           onCloutSurge={gameState.buyCloutSurge}
           onGachaPull={gameState.pullGacha}
           onGrantGemPack={gameState.grantGemsFromPack}

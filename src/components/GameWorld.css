@@ -125,16 +125,17 @@
 /* Building styles */
 .building {
   position: absolute;
-  z-index: 2;
+  z-index: 4;
   background: var(--bg-panel);
   border: 2px solid;
   border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s;
+  transition: border-color 0.2s, box-shadow 0.2s;
   animation: buildingAppear 0.5s ease-out;
   pointer-events: none;
+  outline: 1px solid rgba(0, 255, 255, 0.12);
 }
 
 @keyframes buildingAppear {
@@ -184,17 +185,18 @@
 /* Influencer styles */
 .influencer {
   position: absolute;
-  z-index: 2;
+  z-index: 4;
   background: var(--bg-dark);
   border: 2px solid;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s;
+  transition: border-color 0.2s, box-shadow 0.2s;
   animation: influencerAppear 0.5s ease-out;
   pointer-events: none;
   will-change: transform;
+  outline: 1px solid rgba(0, 255, 255, 0.1);
 }
 
 .influencer.boosted-preview {
@@ -336,20 +338,21 @@
 .blueprint-ribbon {
   position: absolute;
   left: 50%;
-  bottom: 44px;
+  bottom: 52px;
   transform: translateX(-50%);
   z-index: 5;
   pointer-events: none;
-  max-width: 92%;
-  padding: 8px 14px;
-  border-radius: 999px;
+  max-width: min(92%, 520px);
+  padding: 10px 16px;
+  border-radius: 12px;
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1.45;
+  text-transform: none;
   text-align: center;
   color: var(--neon-cyan);
-  background: rgba(5, 15, 25, 0.88);
+  background: rgba(5, 15, 25, 0.9);
   border: 1px solid rgba(0, 255, 255, 0.4);
   box-shadow: 0 0 16px rgba(0, 255, 255, 0.2);
 }

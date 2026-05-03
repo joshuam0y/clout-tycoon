@@ -13,6 +13,8 @@ export const MonetizationPanel = ({
   gachaCosts,
   gemEconomy,
   onBuyGemStack,
+  onBuyGemClickStack,
+  onBuyGemPassiveStack,
   onCloutSurge,
   onGachaPull,
   onGrantGemPack,
@@ -31,6 +33,20 @@ export const MonetizationPanel = ({
   };
 
   const syndicatePct = (gemCloutMultStacks * gemEconomy.stackBonus * 100).toFixed(0);
+  const creatorPct = (gemClickMultStacks * gemEconomy.clickBonus * 100).toFixed(0);
+  const spotlightPct = (gemPassiveMultStacks * gemEconomy.passiveBonus * 100).toFixed(0);
+  const syndicateNextCost =
+    gemCloutMultStacks >= maxGemCloutStacks
+      ? null
+      : gemEconomy.syndicateCostBase + gemCloutMultStacks * gemEconomy.syndicateCostPerOwned;
+  const clickNextCost =
+    gemClickMultStacks >= maxGemClickStacks
+      ? null
+      : gemEconomy.clickCostBase + gemClickMultStacks * gemEconomy.clickCostPerOwned;
+  const passiveNextCost =
+    gemPassiveMultStacks >= maxGemPassiveStacks
+      ? null
+      : gemEconomy.passiveCostBase + gemPassiveMultStacks * gemEconomy.passiveCostPerOwned;
 
   return (
     <div className="monetization-overlay" role="dialog" aria-labelledby="premium-shop-title">
@@ -96,9 +112,9 @@ export const MonetizationPanel = ({
                 </button>
               </div>
               <div className="gem-uses-hint">
-                <strong>What gems do:</strong> permanent +4% all clout per Syndicate stack (max {maxGemCloutStacks}
-                ), instant clout surges based on your passive rate, viral clout drops, and rival “noise
-                campaigns” that inject clout at scale.
+                <strong>What gems do:</strong> three permanent stack lines (all clout, post-only, passive-only),
+                instant surges, viral drops, and market injections. Stacks survive prestige and scale with your
+                account — meant for long runs across many resets.
               </div>
             </div>
           )}
@@ -107,8 +123,8 @@ export const MonetizationPanel = ({
             <div className="boosts-section">
               <h3>Spend Gems</h3>
               <p className="section-description">
-                Syndicate stacks multiply everything — posts, passive, and brand deals. Surge converts gems into
-                raw clout using your current passive DPS.
+                Permanent stacks never reset on prestige. Syndicate buffs everything; Creator and Spotlight split
+                power so you can specialize. Costs rise slightly per stack.
               </p>
 
               <div className="boost-items">
@@ -116,10 +132,9 @@ export const MonetizationPanel = ({
                   <div className="boost-header">
                     <span className="boost-icon">🏙️</span>
                     <div className="boost-info">
-                      <h4>Syndicate Kickback (+{gemEconomy.stackBonus * 100}% all Clout)</h4>
+                      <h4>Syndicate (+{gemEconomy.stackBonus * 100}% all Clout)</h4>
                       <p>
-                        Permanent. Owned: {gemCloutMultStacks}/{maxGemCloutStacks} (total +{syndicatePct}% from
-                        gems).
+                        Posts, passive, deals. {gemCloutMultStacks}/{maxGemCloutStacks} (+{syndicatePct}% total).
                       </p>
                     </div>
                   </div>
@@ -127,9 +142,53 @@ export const MonetizationPanel = ({
                     type="button"
                     className="boost-buy"
                     onClick={onBuyGemStack}
-                    disabled={gemCloutMultStacks >= maxGemCloutStacks || gems < gemEconomy.stackCost}
+                    disabled={gemCloutMultStacks >= maxGemCloutStacks || !syndicateNextCost || gems < syndicateNextCost}
                   >
-                    {gemEconomy.stackCost} 💎
+                    {syndicateNextCost ?? '—'} 💎
+                  </button>
+                </div>
+
+                <div className="boost-item">
+                  <div className="boost-header">
+                    <span className="boost-icon">📣</span>
+                    <div className="boost-info">
+                      <h4>Creator Kit (+{gemEconomy.clickBonus * 100}% post Clout)</h4>
+                      <p>
+                        Post Content only — great if you like active play. {gemClickMultStacks}/
+                        {maxGemClickStacks} (+{creatorPct}% total).
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="boost-buy"
+                    onClick={onBuyGemClickStack}
+                    disabled={gemClickMultStacks >= maxGemClickStacks || !clickNextCost || gems < clickNextCost}
+                  >
+                    {clickNextCost ?? '—'} 💎
+                  </button>
+                </div>
+
+                <div className="boost-item">
+                  <div className="boost-header">
+                    <span className="boost-icon">🎭</span>
+                    <div className="boost-info">
+                      <h4>Spotlight (+{gemEconomy.passiveBonus * 100}% passive Clout)</h4>
+                      <p>
+                        Talent on the grid only — stacks with buildings. {gemPassiveMultStacks}/
+                        {maxGemPassiveStacks} (+{spotlightPct}% total).
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="boost-buy"
+                    onClick={onBuyGemPassiveStack}
+                    disabled={
+                      gemPassiveMultStacks >= maxGemPassiveStacks || !passiveNextCost || gems < passiveNextCost
+                    }
+                  >
+                    {passiveNextCost ?? '—'} 💎
                   </button>
                 </div>
 

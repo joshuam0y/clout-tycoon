@@ -2,7 +2,7 @@
 export const UNIT_PRICE_GROWTH = 1.18;
 
 /** Clout earned this run required before prestige (lifetime clout is all-time and never resets) */
-export const PRESTIGE_RUN_CLOUT_THRESHOLD = 175000;
+export const PRESTIGE_RUN_CLOUT_THRESHOLD = 420000;
 
 /** Base gems awarded each prestige (bonus scales slightly with prestige depth) */
 export const PRESTIGE_GEMS_BASE = 1;
@@ -33,6 +33,16 @@ export const achievementDefs = [
 // Influencer types - at least 5 different types
 export const influencerTypes = [
   {
+    id: 'pet',
+    name: 'Petfluencer',
+    description: 'Short clips, huge heart — starter passive',
+    cost: 28,
+    baseCloutPerSecond: 0.22,
+    color: '#88ffcc',
+    icon: '🐾',
+    requiredEra: 0
+  },
+  {
     id: 'nano',
     name: 'Nano Creator',
     description: 'Hyper-local, hyper-loyal — slow but cheap',
@@ -53,6 +63,16 @@ export const influencerTypes = [
     requiredEra: 0
   },
   {
+    id: 'foodie',
+    name: 'Food Reviewer',
+    description: 'Local spots and reaction takes',
+    cost: 165,
+    baseCloutPerSecond: 0.72,
+    color: '#ffaa66',
+    icon: '🍜',
+    requiredEra: 0
+  },
+  {
     id: 'lifestyle',
     name: 'Lifestyle Blogger',
     description: 'Daily vlogs and aesthetic posts',
@@ -60,6 +80,16 @@ export const influencerTypes = [
     baseCloutPerSecond: 1.6,
     color: '#ff00ff',
     icon: '📸',
+    requiredEra: 0
+  },
+  {
+    id: 'coach',
+    name: 'Fitness Coach',
+    description: 'Programs, check-ins, steady audience',
+    cost: 520,
+    baseCloutPerSecond: 2.15,
+    color: '#66ff66',
+    icon: '💪',
     requiredEra: 0
   },
   {
@@ -119,7 +149,7 @@ export const buildingTypes = [
   {
     id: 'desk',
     name: 'Creator Desk',
-    description: 'Basic setup for content creation',
+    description: 'Basic setup — small buff to adjacent talent',
     cost: 130,
     effect: 'multiply',
     multiplier: 1.45,
@@ -132,13 +162,26 @@ export const buildingTypes = [
   {
     id: 'ringlight',
     name: 'Ring Light Bay',
-    description: 'Soft light — small reach, solid bump',
+    description: 'Soft light — wider reach, modest bump',
     cost: 280,
     effect: 'multiply',
     multiplier: 1.35,
     range: 2,
     color: '#ffee88',
     icon: '💡',
+    size: 1,
+    requiredEra: 0
+  },
+  {
+    id: 'greenscreen',
+    name: 'Green Screen Booth',
+    description: 'Cheap effects workflow — tight radius',
+    cost: 395,
+    effect: 'multiply',
+    multiplier: 1.28,
+    range: 1,
+    color: '#44ff99',
+    icon: '🟩',
     size: 1,
     requiredEra: 0
   },
@@ -153,6 +196,19 @@ export const buildingTypes = [
     color: '#ff0088',
     icon: '🎬',
     size: 2,
+    requiredEra: 0
+  },
+  {
+    id: 'podcast_nook',
+    name: 'Podcast Nook',
+    description: 'Sound-treated corner — mid-range synergy',
+    cost: 720,
+    effect: 'multiply',
+    multiplier: 1.42,
+    range: 2,
+    color: '#c9a0ff',
+    icon: '🎧',
+    size: 1,
     requiredEra: 0
   },
   {
@@ -213,7 +269,7 @@ export const buildingTypes = [
 export const clickUpgradeTypes = [
   {
     id: 'grip',
-    name: 'Scroll Endurance',
+    name: 'Thumb Training',
     description: '+1 Clout per post per level',
     baseCost: 15,
     growth: 1.15,
@@ -221,31 +277,67 @@ export const clickUpgradeTypes = [
     perLevel: 1
   },
   {
-    id: 'trend',
-    name: 'Trend Radar',
+    id: 'hook',
+    name: 'Opening Hook',
     description: '+2 Clout per post per level',
-    baseCost: 120,
+    baseCost: 55,
     growth: 1.15,
     kind: 'flat',
     perLevel: 2
   },
   {
+    id: 'trend',
+    name: 'Trend Radar',
+    description: '+3 Clout per post per level',
+    baseCost: 140,
+    growth: 1.15,
+    kind: 'flat',
+    perLevel: 3
+  },
+  {
     id: 'thumbnail',
     name: 'Thumbnail Science',
-    description: '+5% post power per level (multiplicative)',
-    baseCost: 600,
+    description: '+4% post power per level (multiplies)',
+    baseCost: 420,
+    growth: 1.16,
+    kind: 'mult',
+    perLevel: 0.04
+  },
+  {
+    id: 'schedule',
+    name: 'Content Calendar',
+    description: '+5% post power per level (multiplies)',
+    baseCost: 1100,
     growth: 1.16,
     kind: 'mult',
     perLevel: 0.05
   },
   {
+    id: 'collab',
+    name: 'Collab Engine',
+    description: '+6% post power per level (multiplies)',
+    baseCost: 4200,
+    growth: 1.17,
+    kind: 'mult',
+    perLevel: 0.06
+  },
+  {
     id: 'drama',
     name: 'Strategic Drama',
-    description: '+8% post power per level (multiplicative)',
-    baseCost: 3500,
+    description: '+8% post power per level (multiplies)',
+    baseCost: 9500,
     growth: 1.18,
     kind: 'mult',
     perLevel: 0.08
+  },
+  {
+    id: 'brand_kit',
+    name: 'Brand Kit',
+    description: '+10% post power per level (multiplies)',
+    baseCost: 24000,
+    growth: 1.18,
+    kind: 'mult',
+    perLevel: 0.1
   }
 ];
 
@@ -255,8 +347,8 @@ export const brandDealTypes = [
     id: 'sponsored',
     name: 'Sponsored Post',
     description: 'Quick sponsored content deal',
-    baseCloutReward: 100,
-    baseFollowersReward: 50,
+    baseCloutReward: 12,
+    baseFollowersReward: 5,
     reputationChange: -2,
     requiredEra: 0,
     color: '#00ddff'
@@ -265,8 +357,8 @@ export const brandDealTypes = [
     id: 'partnership',
     name: 'Brand Partnership',
     description: 'Ongoing brand collaboration',
-    baseCloutReward: 500,
-    baseFollowersReward: 200,
+    baseCloutReward: 32,
+    baseFollowersReward: 10,
     reputationChange: 5,
     requiredEra: 0,
     color: '#ff00dd'
@@ -275,8 +367,8 @@ export const brandDealTypes = [
     id: 'controversy',
     name: 'Controversy Fuel',
     description: 'Risky but profitable drama',
-    baseCloutReward: 1500,
-    baseFollowersReward: 500,
+    baseCloutReward: 95,
+    baseFollowersReward: 24,
     reputationChange: -15,
     requiredEra: 1,
     color: '#ff4400'
@@ -285,8 +377,8 @@ export const brandDealTypes = [
     id: 'exclusive',
     name: 'Exclusive Deal',
     description: 'Premium brand alignment',
-    baseCloutReward: 3000,
-    baseFollowersReward: 1000,
+    baseCloutReward: 210,
+    baseFollowersReward: 48,
     reputationChange: 10,
     requiredEra: 1,
     color: '#ffdd00'
@@ -295,8 +387,8 @@ export const brandDealTypes = [
     id: 'aipartner',
     name: 'AI Brand Synthesis',
     description: 'Automated brand integration',
-    baseCloutReward: 8000,
-    baseFollowersReward: 2000,
+    baseCloutReward: 820,
+    baseFollowersReward: 160,
     reputationChange: 0,
     requiredEra: 2,
     color: '#dd00ff'
@@ -305,8 +397,8 @@ export const brandDealTypes = [
     id: 'stadium',
     name: 'Stadium Naming Deal',
     description: 'Huge bag — reputation on the line',
-    baseCloutReward: 22000,
-    baseFollowersReward: 6000,
+    baseCloutReward: 2200,
+    baseFollowersReward: 420,
     reputationChange: -8,
     requiredEra: 2,
     color: '#00ffaa'

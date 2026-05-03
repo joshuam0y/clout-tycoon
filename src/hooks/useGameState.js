@@ -19,15 +19,25 @@ import {
 import { loadGameSnapshot, writeGameSnapshot } from '../utils/persistence';
 
 const TICK_INTERVAL = 100;
-const BRAND_DEAL_SPAWN_CHANCE_PER_TICK = 0.002;
-const BRAND_DEAL_COOLDOWN_ACCEPT_MS = 22000;
-const BRAND_DEAL_COOLDOWN_DECLINE_MS = 14000;
-const BRAND_DEAL_COOLDOWN_EXPIRE_MS = 14000;
+const BRAND_DEAL_SPAWN_CHANCE_PER_TICK = 0.00065;
+const BRAND_DEAL_COOLDOWN_ACCEPT_MS = 32000;
+const BRAND_DEAL_COOLDOWN_DECLINE_MS = 22000;
+const BRAND_DEAL_COOLDOWN_EXPIRE_MS = 20000;
+const BRAND_DEAL_DURATION_MS = 20000;
 const MIN_REPUTATION_INCOME_MULTIPLIER = 0.35;
 const MAX_REPUTATION_INCOME_MULTIPLIER = 1.65;
-const MAX_GEM_CLOUT_STACKS = 6;
-const GEM_STACK_COST = 50;
+const MAX_GEM_CLOUT_STACKS = 10;
+const GEM_STACK_COST_BASE = 48;
+const GEM_STACK_COST_PER_OWNED = 14;
 const GEM_STACK_BONUS = 0.04;
+const MAX_GEM_CLICK_STACKS = 12;
+const GEM_CLICK_BONUS = 0.045;
+const GEM_CLICK_COST_BASE = 38;
+const GEM_CLICK_COST_PER_OWNED = 12;
+const MAX_GEM_PASSIVE_STACKS = 12;
+const GEM_PASSIVE_BONUS = 0.05;
+const GEM_PASSIVE_COST_BASE = 44;
+const GEM_PASSIVE_COST_PER_OWNED = 11;
 const CLOUT_SURGE_COST = 25;
 const CLOUT_SURGE_SECONDS = 72;
 const GACHA_SINGLE_COST = 85;
@@ -121,6 +131,12 @@ export const useGameState = () => {
   const [gemCloutMultStacks, setGemCloutMultStacks] = useState(
     () => savedGame?.gemCloutMultStacks ?? 0
   );
+  const [gemClickMultStacks, setGemClickMultStacks] = useState(
+    () => savedGame?.gemClickMultStacks ?? 0
+  );
+  const [gemPassiveMultStacks, setGemPassiveMultStacks] = useState(
+    () => savedGame?.gemPassiveMultStacks ?? 0
+  );
   const [achievementsUnlocked, setAchievementsUnlocked] = useState(
     () => savedGame?.achievementsUnlocked ?? {}
   );
@@ -146,6 +162,16 @@ export const useGameState = () => {
   const getGemCloutMult = useCallback(
     () => 1 + gemCloutMultStacks * GEM_STACK_BONUS,
     [gemCloutMultStacks]
+  );
+
+  const getGemClickMult = useCallback(
+    () => 1 + gemClickMultStacks * GEM_CLICK_BONUS,
+    [gemClickMultStacks]
+  );
+
+  const getGemPassiveMult = useCallback(
+    () => 1 + gemPassiveMultStacks * GEM_PASSIVE_BONUS,
+    [gemPassiveMultStacks]
   );
 
   const getReputationIncomeMultiplier = useCallback(
@@ -182,7 +208,8 @@ export const useGameState = () => {
       prestigeMultiplier *
       getFollowerCloutMult(followers) *
       getReputationIncomeMultiplier() *
-      getGemCloutMult()
+      getGemCloutMult() *
+      getGemPassiveMult()
     );
   }, [
     influencers,
@@ -190,7 +217,8 @@ export const useGameState = () => {
     prestigeMultiplier,
     followers,
     getReputationIncomeMultiplier,
-    getGemCloutMult
+    getGemCloutMult,
+    getGemPassiveMult
   ]);
 
   const getClickClout = useCallback(() => {
@@ -199,7 +227,8 @@ export const useGameState = () => {
       prestigeMultiplier *
       getFollowerCloutMult(followers) *
       getReputationIncomeMultiplier() *
-      getGemCloutMult();
+      getGemCloutMult() *
+      getGemClickMult();
     clickUpgradeTypes.forEach(u => {
       const level = clickUpgradeLevels[u.id] ?? 0;
       if (level === 0) return;
@@ -212,7 +241,8 @@ export const useGameState = () => {
     followers,
     clickUpgradeLevels,
     getReputationIncomeMultiplier,
-    getGemCloutMult
+    getGemCloutMult,
+    getGemClickMult
   ]);
 
   const addCloutEarned = useCallback(delta => {
@@ -395,18 +425,51 @@ export const useGameState = () => {
 
   const buyGemCloutStack = useCallback(() => {
     if (gemCloutMultStacks >= MAX_GEM_CLOUT_STACKS) {
-      addNotification('Syndicate stacks maxed (6).', 'warning');
+      addNotification(`Syndicate stacks maxed (${MAX_GEM_CLOUT_STACKS}).`, 'warning');
       return false;
     }
-    if (gems < GEM_STACK_COST) {
-      addNotification(`Need ${GEM_STACK_COST} 💎`, 'warning');
+    const cost = GEM_STACK_COST_BASE + gemCloutMultStacks * GEM_STACK_COST_PER_OWNED;
+    if (gems < cost) {
+      addNotification(`Need ${cost} 💎`, 'warning');
       return false;
     }
-    setGems(g => g - GEM_STACK_COST);
+    setGems(g => g - cost);
     setGemCloutMultStacks(s => s + 1);
-    addNotification(`Syndicate deal: +${GEM_STACK_BONUS * 100}% all Clout (permanent)`, 'success');
+    addNotification(`Syndicate: +${GEM_STACK_BONUS * 100}% all Clout (permanent)`, 'success');
     return true;
-  }, [gems, gemCloutMultStacks]);
+  }, [gems, gemCloutMultStacks, addNotification]);
+
+  const buyGemClickStack = useCallback(() => {
+    if (gemClickMultStacks >= MAX_GEM_CLICK_STACKS) {
+      addNotification(`Creator stacks maxed (${MAX_GEM_CLICK_STACKS}).`, 'warning');
+      return false;
+    }
+    const cost = GEM_CLICK_COST_BASE + gemClickMultStacks * GEM_CLICK_COST_PER_OWNED;
+    if (gems < cost) {
+      addNotification(`Need ${cost} 💎`, 'warning');
+      return false;
+    }
+    setGems(g => g - cost);
+    setGemClickMultStacks(s => s + 1);
+    addNotification(`Creator Kit: +${GEM_CLICK_BONUS * 100}% post Clout (permanent)`, 'success');
+    return true;
+  }, [gems, gemClickMultStacks, addNotification]);
+
+  const buyGemPassiveStack = useCallback(() => {
+    if (gemPassiveMultStacks >= MAX_GEM_PASSIVE_STACKS) {
+      addNotification(`Spotlight stacks maxed (${MAX_GEM_PASSIVE_STACKS}).`, 'warning');
+      return false;
+    }
+    const cost = GEM_PASSIVE_COST_BASE + gemPassiveMultStacks * GEM_PASSIVE_COST_PER_OWNED;
+    if (gems < cost) {
+      addNotification(`Need ${cost} 💎`, 'warning');
+      return false;
+    }
+    setGems(g => g - cost);
+    setGemPassiveMultStacks(s => s + 1);
+    addNotification(`Spotlight: +${GEM_PASSIVE_BONUS * 100}% passive Clout (permanent)`, 'success');
+    return true;
+  }, [gems, gemPassiveMultStacks, addNotification]);
 
   const buyCloutSurge = useCallback(() => {
     const rate = calculatePassiveIncome();
@@ -490,6 +553,8 @@ export const useGameState = () => {
         brandDealCooldown,
         gems,
         gemCloutMultStacks,
+        gemClickMultStacks,
+        gemPassiveMultStacks,
         achievementsUnlocked,
         brandDealsAccepted
       });
@@ -512,6 +577,8 @@ export const useGameState = () => {
     brandDealCooldown,
     gems,
     gemCloutMultStacks,
+    gemClickMultStacks,
+    gemPassiveMultStacks,
     achievementsUnlocked,
     brandDealsAccepted
   ]);
@@ -567,14 +634,14 @@ export const useGameState = () => {
       if (
         !activeBrandDeal &&
         brandDealCooldown === 0 &&
-        Math.random() < BRAND_DEAL_SPAWN_CHANCE_PER_TICK * (0.4 + (reputation / 100) * 1.2)
+        Math.random() < BRAND_DEAL_SPAWN_CHANCE_PER_TICK * (0.28 + (reputation / 100) * 0.85)
       ) {
         const availableDeals = brandDealTypes.filter(deal => deal.requiredEra <= currentEra);
 
         if (availableDeals.length > 0) {
           const weightedDeals = availableDeals.map(deal => {
-            const positiveFactor = deal.reputationChange >= 0 ? 1 : 0.5;
-            const repQuality = 0.5 + (reputation / 100) * (deal.reputationChange >= 0 ? 1.0 : 0.32);
+            const positiveFactor = deal.reputationChange >= 0 ? 1 : 0.55;
+            const repQuality = 0.5 + (reputation / 100) * (deal.reputationChange >= 0 ? 0.95 : 0.3);
             return {
               deal,
               weight: Math.max(0.05, positiveFactor * repQuality)
@@ -592,17 +659,25 @@ export const useGameState = () => {
             }
           }
 
-          const rewardQuality = 0.42 + (reputation / 100) * 1.45;
-          const rewardVariance = 0.82 + Math.random() * 0.38;
-          const followerDealQuality = 1 + Math.min(0.65, followers / 280000);
-          const cloutMult = rewardQuality * rewardVariance * followerDealQuality;
+          const agencyPulse =
+            Math.max(0, clout) * 0.55 +
+            Math.max(0, runCloutEarned) * 0.2 +
+            Math.max(0, followers) * 0.06;
+          const payoutCurve = 0.12 + 0.88 * Math.pow(agencyPulse / (agencyPulse + 4200), 0.72);
+          const repTone = 0.52 + (reputation / 100) * 0.55;
+          const variance = 0.86 + Math.random() * 0.26;
+          const eraWeight = 0.62 + picked.requiredEra * 0.21;
+          const cloutMult = payoutCurve * repTone * variance * eraWeight;
+          const followerMult = cloutMult * (0.82 + Math.min(0.35, followers / 120000));
 
+          const now = Date.now();
           setActiveBrandDeal({
             typeId: picked.id,
-            cloutReward: picked.baseCloutReward * cloutMult,
-            followersReward: picked.baseFollowersReward * cloutMult * 0.95,
+            cloutReward: Math.max(1, picked.baseCloutReward * cloutMult),
+            followersReward: Math.max(1, picked.baseFollowersReward * followerMult),
             reputationChange: picked.reputationChange,
-            expiresAt: Date.now() + 15000
+            startedAt: now,
+            expiresAt: now + BRAND_DEAL_DURATION_MS
           });
         }
       }
@@ -623,6 +698,8 @@ export const useGameState = () => {
     influencers.length,
     reputation,
     followers,
+    clout,
+    runCloutEarned,
     addCloutEarned,
     addNotification
   ]);
@@ -650,7 +727,11 @@ export const useGameState = () => {
     reputationIncomeMultiplier: getReputationIncomeMultiplier(),
     gems,
     gemCloutMultStacks,
+    gemClickMultStacks,
+    gemPassiveMultStacks,
     maxGemCloutStacks: MAX_GEM_CLOUT_STACKS,
+    maxGemClickStacks: MAX_GEM_CLICK_STACKS,
+    maxGemPassiveStacks: MAX_GEM_PASSIVE_STACKS,
     achievementsUnlocked,
     achievementDefs,
     brandDealsAccepted,
@@ -662,16 +743,27 @@ export const useGameState = () => {
     declineBrandDeal,
     prestige,
     buyGemCloutStack,
+    buyGemClickStack,
+    buyGemPassiveStack,
     buyCloutSurge,
     pullGacha,
     grantGemsFromPack,
     marketCloutInjection,
     gachaCosts: { single: GACHA_SINGLE_COST, multi: GACHA_MULTI_COST },
     gemEconomy: {
-      stackCost: GEM_STACK_COST,
+      syndicateCostBase: GEM_STACK_COST_BASE,
+      syndicateCostPerOwned: GEM_STACK_COST_PER_OWNED,
+      clickCostBase: GEM_CLICK_COST_BASE,
+      clickCostPerOwned: GEM_CLICK_COST_PER_OWNED,
+      passiveCostBase: GEM_PASSIVE_COST_BASE,
+      passiveCostPerOwned: GEM_PASSIVE_COST_PER_OWNED,
       surgeCost: CLOUT_SURGE_COST,
-      stackBonus: GEM_STACK_BONUS
+      stackBonus: GEM_STACK_BONUS,
+      clickBonus: GEM_CLICK_BONUS,
+      passiveBonus: GEM_PASSIVE_BONUS
     },
-    gemCloutMult: getGemCloutMult()
+    gemCloutMult: getGemCloutMult(),
+    gemClickMult: getGemClickMult(),
+    gemPassiveMult: getGemPassiveMult()
   };
 };

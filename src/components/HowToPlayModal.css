@@ -9,6 +9,7 @@
   justify-content: center;
   padding: var(--spacing-md);
   animation: howToFade 0.25s ease-out;
+  overscroll-behavior: contain;
 }
 
 @keyframes howToFade {
@@ -21,13 +22,14 @@
 }
 
 .how-to-panel {
-  width: min(480px, 100%);
-  max-height: min(85vh, 640px);
+  width: min(520px, 100%);
+  max-height: min(85vh, 680px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   border-color: var(--neon-pink);
   box-shadow: var(--glow-pink), 0 24px 48px rgba(0, 0, 0, 0.5);
+  touch-action: pan-y;
 }
 
 .how-to-header {
@@ -64,10 +66,22 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   padding: var(--spacing-md) 0;
+  padding-right: 4px;
   font-size: 0.95rem;
   line-height: 1.5;
   color: var(--text-secondary);
+}
+
+.how-to-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
 }
 
 .how-to-body section {

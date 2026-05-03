@@ -25,7 +25,11 @@ export const BrandDealPopup = ({ activeBrandDeal, onAccept, onDecline }) => {
   if (!activeBrandDeal || !deal) return null;
 
   const timeLeftSeconds = Math.ceil(timeLeft / 1000);
-  const progress = (timeLeft / 15000) * 100;
+  const dealDuration = Math.max(
+    1,
+    activeBrandDeal.expiresAt - (activeBrandDeal.startedAt ?? activeBrandDeal.expiresAt - 20000)
+  );
+  const progress = (timeLeft / dealDuration) * 100;
 
   return (
     <div className="brand-deal-overlay">
@@ -48,13 +52,15 @@ export const BrandDealPopup = ({ activeBrandDeal, onAccept, onDecline }) => {
 
           <div className="deal-rewards">
             <div className="reward-item">
-              <span className="reward-label">Clout</span>
-              <span className="reward-value clout">+{formatNumber(activeBrandDeal.cloutReward)}</span>
+              <span className="reward-label">Clout (before rep)</span>
+              <span className="reward-value clout">
+                +{formatNumber(Math.floor(activeBrandDeal.cloutReward))}
+              </span>
             </div>
             <div className="reward-item">
               <span className="reward-label">Followers</span>
               <span className="reward-value followers">
-                +{formatNumber(activeBrandDeal.followersReward)}
+                +{formatNumber(Math.floor(activeBrandDeal.followersReward))}
               </span>
             </div>
             <div className="reward-item">
