@@ -13,7 +13,6 @@ const TABS = [
 export const ShopPanel = ({
   clout,
   followers,
-  currentEra,
   selectedTool,
   onSelectTool,
   influencers,
@@ -25,8 +24,8 @@ export const ShopPanel = ({
   const costMult = getFollowerCostMult(followers);
   const discountPct = Math.round((1 - costMult) * 100);
 
-  const availableInfluencers = influencerTypes.filter(i => i.requiredEra <= currentEra);
-  const availableBuildings = buildingTypes.filter(b => b.requiredEra <= currentEra);
+  const availableInfluencers = influencerTypes;
+  const availableBuildings = buildingTypes;
 
   return (
     <div className="shop-panel panel">
@@ -35,7 +34,7 @@ export const ShopPanel = ({
           <h2 className="shop-title">Agency Shop</h2>
         </div>
         <p className="shop-tagline">
-          ~21.5% cost per duplicate. Same item, pricier each time.
+          ~21.5% cost per duplicate; same item costs more each copy. Full catalog — afford what you can.
           {discountPct > 0 && (
             <span className="shop-follower-discount">
               {' '}

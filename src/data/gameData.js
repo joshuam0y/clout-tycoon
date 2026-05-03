@@ -134,6 +134,17 @@ export const influencerTypes = [
     requiredEra: 0
   },
   {
+    id: 'beauty_guru',
+    name: 'Beauty Guru',
+    description:
+      'Tutorials and GRWM — synergy ×1.11 near Vanity Set when in range.',
+    cost: 495,
+    baseCloutPerSecond: 2.05,
+    color: '#ff99cc',
+    icon: '💄',
+    requiredEra: 0
+  },
+  {
     id: 'coach',
     name: 'Fitness Coach',
     description:
@@ -167,6 +178,17 @@ export const influencerTypes = [
     requiredEra: 1
   },
   {
+    id: 'travel_vlog',
+    name: 'Travel Vlogger',
+    description:
+      'Drone shots and transit arcs — synergy ×1.13 near Drone Bay when in range.',
+    cost: 6950,
+    baseCloutPerSecond: 16,
+    color: '#66ccff',
+    icon: '✈️',
+    requiredEra: 1
+  },
+  {
     id: 'dj',
     name: 'DJ Creator',
     description:
@@ -186,6 +208,17 @@ export const influencerTypes = [
     baseCloutPerSecond: 32,
     color: '#cc88ff',
     icon: '🎙️',
+    requiredEra: 1
+  },
+  {
+    id: 'esports_pro',
+    name: 'Esports Pro',
+    description:
+      'Ranked sweat and LAN energy — synergy ×1.16 near LAN Arena when in range.',
+    cost: 29800,
+    baseCloutPerSecond: 65,
+    color: '#ff4444',
+    icon: '🏆',
     requiredEra: 1
   },
   {
@@ -221,6 +254,17 @@ export const influencerTypes = [
     requiredEra: 2
   },
   {
+    id: 'synth_idol',
+    name: 'Synth Idol',
+    description:
+      'Holographic arena tours — synergy ×1.24 near Holo Deck when in range.',
+    cost: 1850000,
+    baseCloutPerSecond: 4200,
+    color: '#ff66ee',
+    icon: '🎤',
+    requiredEra: 2
+  },
+  {
     id: 'mogul',
     name: 'Media Mogul',
     description:
@@ -240,6 +284,17 @@ export const influencerTypes = [
     baseCloutPerSecond: 85000,
     color: '#ffffff',
     icon: '🌍',
+    requiredEra: 2
+  },
+  {
+    id: 'galaxy_ambassador',
+    name: 'Galaxy Ambassador',
+    description:
+      'Off-planet reach — synergy ×1.34 near Orbital Set when in range.',
+    cost: 98000000,
+    baseCloutPerSecond: 155000,
+    color: '#e0e8ff',
+    icon: '🛸',
     requiredEra: 2
   }
 ];
@@ -271,6 +326,20 @@ export const buildingTypes = [
     range: 2,
     color: '#ffee88',
     icon: '💡',
+    size: 1,
+    requiredEra: 0
+  },
+  {
+    id: 'vanity_set',
+    name: 'Vanity Set',
+    description:
+      'Ring lights + glam mirrors — synergy ×1.11 with Beauty Guru in range.',
+    cost: 395,
+    effect: 'multiply',
+    multiplier: 1.34,
+    range: 2,
+    color: '#ffb7c8',
+    icon: '🪞',
     size: 1,
     requiredEra: 0
   },
@@ -345,6 +414,20 @@ export const buildingTypes = [
     requiredEra: 1
   },
   {
+    id: 'drone_bay',
+    name: 'Drone Bay',
+    description:
+      'Launch dock for aerial B-roll — synergy ×1.13 with Travel Vlogger in range.',
+    cost: 23500,
+    effect: 'multiply',
+    multiplier: 2.18,
+    range: 3,
+    color: '#88ddff',
+    icon: '🚁',
+    size: 1,
+    requiredEra: 1
+  },
+  {
     id: 'billboard',
     name: 'Digital Billboard',
     description:
@@ -359,6 +442,20 @@ export const buildingTypes = [
     requiredEra: 1
   },
   {
+    id: 'lan_arena',
+    name: 'LAN Arena',
+    description:
+      'Stage + spectator seating — synergy ×1.16 with Esports Pro in range.',
+    cost: 72000,
+    effect: 'multiply',
+    multiplier: 2.78,
+    range: 4,
+    color: '#cc3300',
+    icon: '🎯',
+    size: 2,
+    requiredEra: 1
+  },
+  {
     id: 'hq',
     name: 'Agency HQ Tower',
     description:
@@ -370,6 +467,20 @@ export const buildingTypes = [
     color: '#aa66ff',
     icon: '🏢',
     size: 3,
+    requiredEra: 2
+  },
+  {
+    id: 'holo_deck',
+    name: 'Holo Deck',
+    description:
+      'Arena-scale holographics — synergy ×1.24 with Synth Idol in range.',
+    cost: 385000,
+    effect: 'multiply',
+    multiplier: 3.95,
+    range: 5,
+    color: '#ff77ee',
+    icon: '🌐',
+    size: 2,
     requiredEra: 2
   },
   {
@@ -413,6 +524,20 @@ export const buildingTypes = [
     icon: '⚛️',
     size: 2,
     requiredEra: 2
+  },
+  {
+    id: 'orbital_set',
+    name: 'Orbital Set',
+    description:
+      'Shoot content from low orbit — synergy ×1.34 with Galaxy Ambassador in range.',
+    cost: 92000000,
+    effect: 'multiply',
+    multiplier: 10.5,
+    range: 10,
+    color: '#aabbff',
+    icon: '🛰️',
+    size: 2,
+    requiredEra: 2
   }
 ];
 
@@ -423,15 +548,20 @@ export const synergyRules = [
   { buildingTypeId: 'desk', influencerTypeIds: ['pet', 'nano'], bonusMultiplier: 1.06 },
   { buildingTypeId: 'ringlight', influencerTypeIds: ['foodie'], bonusMultiplier: 1.09 },
   { buildingTypeId: 'greenscreen', influencerTypeIds: ['coach'], bonusMultiplier: 1.08 },
+  { buildingTypeId: 'vanity_set', influencerTypeIds: ['beauty_guru'], bonusMultiplier: 1.11 },
   { buildingTypeId: 'studio', influencerTypeIds: ['dj'], bonusMultiplier: 1.22 },
   { buildingTypeId: 'podcast_nook', influencerTypeIds: ['podcast'], bonusMultiplier: 1.17 },
   { buildingTypeId: 'server', influencerTypeIds: ['gamer'], bonusMultiplier: 1.13 },
   { buildingTypeId: 'warroom', influencerTypeIds: ['viral'], bonusMultiplier: 1.15 },
+  { buildingTypeId: 'drone_bay', influencerTypeIds: ['travel_vlog'], bonusMultiplier: 1.13 },
   { buildingTypeId: 'billboard', influencerTypeIds: ['lifestyle'], bonusMultiplier: 1.11 },
+  { buildingTypeId: 'lan_arena', influencerTypeIds: ['esports_pro'], bonusMultiplier: 1.16 },
   { buildingTypeId: 'hq', influencerTypeIds: ['celebrity'], bonusMultiplier: 1.23 },
+  { buildingTypeId: 'holo_deck', influencerTypeIds: ['synth_idol'], bonusMultiplier: 1.24 },
   { buildingTypeId: 'satellite_relay', influencerTypeIds: ['vtuber'], bonusMultiplier: 1.21 },
   { buildingTypeId: 'fan_fest_arena', influencerTypeIds: ['mogul'], bonusMultiplier: 1.28 },
-  { buildingTypeId: 'quantum_stage', influencerTypeIds: ['world_icon'], bonusMultiplier: 1.35 }
+  { buildingTypeId: 'quantum_stage', influencerTypeIds: ['world_icon'], bonusMultiplier: 1.35 },
+  { buildingTypeId: 'orbital_set', influencerTypeIds: ['galaxy_ambassador'], bonusMultiplier: 1.34 }
 ];
 
 export function getSynergyMultiplierFromBuildingTypes(influencerTypeId, uniqueBuildingTypeIds) {
@@ -549,66 +679,127 @@ export const clickUpgradeTypes = [
 ];
 
 // Brand deal types - at least 3 different event types
+/**
+ * Brand deals scale with your current Clout / followers banks and lifetime career (log curve).
+ * Shares are of current banked values (not lifetime). reputationDelta is percentage points (−100…+100 scale).
+ */
+export function computeBrandDealPayouts(deal, ctx) {
+  const clout = Math.max(0, ctx.clout ?? 0);
+  const followers = Math.max(0, ctx.followers ?? 0);
+  const lifetimeClout = Math.max(0, ctx.lifetimeClout ?? 0);
+  const prestigeMultiplier = ctx.prestigeMultiplier ?? 1;
+  const gemCloutMult = ctx.gemCloutMult ?? 1;
+
+  const growth = 1 + Math.log10(1 + lifetimeClout / 3500) * 0.42;
+  const rawClout = Math.floor(clout * deal.cloutShare * growth);
+  const rawFollowers = Math.floor(followers * deal.followersShare * growth);
+  const cloutGain = Math.max(deal.minClout ?? 0, rawClout);
+  const followerGain = Math.max(deal.minFollowers ?? 0, rawFollowers);
+  const earnedClout = Math.floor(cloutGain * prestigeMultiplier * gemCloutMult);
+
+  return {
+    earnedClout,
+    followerGain,
+    reputationDelta: deal.reputationDelta
+  };
+}
+
 export const brandDealTypes = [
   {
     id: 'sponsored',
     name: 'Sponsored Post',
-    description: 'Quick sponsored content deal',
-    baseCloutReward: 12,
-    baseFollowersReward: 5,
-    reputationChange: -2,
+    description: 'Small sponsor — tiny audience fatigue.',
+    cloutShare: 0.045,
+    followersShare: 0.028,
+    reputationDelta: -3,
+    minClout: 14,
+    minFollowers: 2,
     requiredEra: 0,
     color: '#00ddff'
   },
   {
     id: 'partnership',
     name: 'Brand Partnership',
-    description: 'Ongoing brand collaboration',
-    baseCloutReward: 32,
-    baseFollowersReward: 10,
-    reputationChange: 5,
+    description: 'Steady partner — modest bags, modest rep gain.',
+    cloutShare: 0.085,
+    followersShare: 0.065,
+    reputationDelta: 5,
+    minClout: 28,
+    minFollowers: 5,
     requiredEra: 0,
     color: '#ff00dd'
   },
   {
+    id: 'viral_push',
+    name: 'Viral Push',
+    description: 'Trend hijack — chunky % of your bank, noticeable rep hit.',
+    cloutShare: 0.16,
+    followersShare: 0.12,
+    reputationDelta: -12,
+    minClout: 55,
+    minFollowers: 8,
+    requiredEra: 0,
+    color: '#ffaa00'
+  },
+  {
     id: 'controversy',
-    name: 'Controversy Fuel',
-    description: 'Risky but profitable drama',
-    baseCloutReward: 95,
-    baseFollowersReward: 24,
-    reputationChange: -15,
+    name: 'Controversy Drop',
+    description: 'Drama pays — big % clout & followers, reputation tanks.',
+    cloutShare: 0.25,
+    followersShare: 0.22,
+    reputationDelta: -25,
+    minClout: 120,
+    minFollowers: 18,
     requiredEra: 1,
     color: '#ff4400'
   },
   {
     id: 'exclusive',
     name: 'Exclusive Deal',
-    description: 'Premium brand alignment',
-    baseCloutReward: 210,
-    baseFollowersReward: 48,
-    reputationChange: 10,
+    description: 'Premium alignment — strong payout, builds reputation.',
+    cloutShare: 0.11,
+    followersShare: 0.095,
+    reputationDelta: 10,
+    minClout: 180,
+    minFollowers: 35,
     requiredEra: 1,
     color: '#ffdd00'
   },
   {
     id: 'aipartner',
     name: 'AI Brand Synthesis',
-    description: 'Automated brand integration',
-    baseCloutReward: 820,
-    baseFollowersReward: 160,
-    reputationChange: 0,
+    description: 'Automated integration — scales hard; slight sleaze factor.',
+    cloutShare: 0.14,
+    followersShare: 0.13,
+    reputationDelta: -6,
+    minClout: 420,
+    minFollowers: 70,
     requiredEra: 2,
     color: '#dd00ff'
   },
   {
     id: 'stadium',
     name: 'Stadium Naming Deal',
-    description: 'Huge bag — reputation on the line',
-    baseCloutReward: 2200,
-    baseFollowersReward: 420,
-    reputationChange: -8,
+    description: 'Banner placement — huge % payouts, very public risk.',
+    cloutShare: 0.22,
+    followersShare: 0.2,
+    reputationDelta: -20,
+    minClout: 900,
+    minFollowers: 140,
     requiredEra: 2,
     color: '#00ffaa'
+  },
+  {
+    id: 'scorched_earth',
+    name: 'Scorched-Earth Hype Tour',
+    description: 'Max bag: ~30% of banked Clout & followers — nukes reputation if you spam these.',
+    cloutShare: 0.3,
+    followersShare: 0.28,
+    reputationDelta: -30,
+    minClout: 2000,
+    minFollowers: 280,
+    requiredEra: 2,
+    color: '#ff2266'
   }
 ];
 

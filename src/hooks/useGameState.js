@@ -10,7 +10,8 @@ import {
   PRESTIGE_GEMS_BASE,
   brandDealsMaySpawn,
   reputationIncomeMultiplierFromRep,
-  getSynergyMultiplierFromBuildingTypes
+  getSynergyMultiplierFromBuildingTypes,
+  computeBrandDealPayouts
 } from '../data/gameData';
 import {
   scaledUnitCost,
@@ -98,7 +99,6 @@ export const useGameState = () => {
   const [followers, setFollowers] = useState(() => savedGame?.followers ?? 0);
   const [reputation, setReputation] = useState(() => savedGame?.reputation ?? 100);
 
-  const [currentEra, setCurrentEra] = useState(() => savedGame?.currentEra ?? 0);
   const [prestigeCount, setPrestigeCount] = useState(() => savedGame?.prestigeCount ?? 0);
   const [prestigeMultiplier, setPrestigeMultiplier] = useState(() => savedGame?.prestigeMultiplier ?? 1);
 
@@ -359,23 +359,32 @@ export const useGameState = () => {
     if (!activeBrandDeal) return;
 
     const deal = brandDealTypes.find(d => d.id === activeBrandDeal.typeId);
-    const reputationModifier = reputation / 100;
-    const earnedClout =
-      activeBrandDeal.cloutReward * reputationModifier * prestigeMultiplier * getGemCloutMult();
-    const earnedFollowers = activeBrandDeal.followersReward;
-    const reputationChange = activeBrandDeal.reputationChange;
+    if (!deal) return;
+
+    const { earnedClout, followerGain, reputationDelta } = computeBrandDealPayouts(deal, {
+      clout,
+      followers,
+      lifetimeClout,
+      prestigeMultiplier,
+      gemCloutMult: getGemCloutMult()
+    });
 
     addCloutEarned(earnedClout);
-    setFollowers(prev => prev + earnedFollowers);
-    setReputation(prev => Math.max(0, Math.min(100, prev + reputationChange)));
+    setFollowers(prev => prev + followerGain);
+    setReputation(prev => Math.max(0, Math.min(100, prev + reputationDelta)));
     setBrandDealsAccepted(prev => prev + 1);
 
-    addNotification(`Completed ${deal.name}! +${Math.floor(earnedClout)} Clout`, 'success');
+    addNotification(
+      `Completed ${deal.name}! +${Math.floor(earnedClout)} Clout · +${Math.floor(followerGain)} followers`,
+      'success'
+    );
     setActiveBrandDeal(null);
     setBrandDealCooldown(BRAND_DEAL_COOLDOWN_ACCEPT_MS);
   }, [
     activeBrandDeal,
-    reputation,
+    clout,
+    followers,
+    lifetimeClout,
     prestigeMultiplier,
     getGemCloutMult,
     addCloutEarned,
@@ -388,9 +397,10 @@ export const useGameState = () => {
 
     const newPrestigeCount = prestigeCount + 1;
     const newMultiplier = 1 + newPrestigeCount * 0.45;
-    const newEra = Math.min(2, Math.floor(newPrestigeCount / 3));
+    const themeEra = Math.min(2, Math.floor(newPrestigeCount / 3));
     const prestigeGems = PRESTIGE_GEMS_BASE + Math.floor(newPrestigeCount / 4);
 
+    /* Full run reset — gems & Premium Shop stacks persist (not touched here). */
     setClout(0);
     setFollowers(0);
     setReputation(100);
@@ -407,11 +417,10 @@ export const useGameState = () => {
 
     setPrestigeCount(newPrestigeCount);
     setPrestigeMultiplier(newMultiplier);
-    setCurrentEra(newEra);
     setGems(prev => prev + prestigeGems);
 
     addNotification(
-      `Prestige ${newPrestigeCount}! +${prestigeGems} 💎 · ${prestigeEras[newEra].name}`,
+      `Prestige ${newPrestigeCount}! +${prestigeGems} 💎 · ${prestigeEras[themeEra].name}`,
       'prestige'
     );
 
@@ -561,7 +570,6 @@ export const useGameState = () => {
         clout,
         followers,
         reputation,
-        currentEra,
         prestigeCount,
         prestigeMultiplier,
         influencers,
@@ -585,7 +593,6 @@ export const useGameState = () => {
     clout,
     followers,
     reputation,
-    currentEra,
     prestigeCount,
     prestigeMultiplier,
     influencers,
@@ -690,16 +697,16 @@ export const useGameState = () => {
         brandDealsMaySpawn(lifetimeClout, influencers.length, buildings.length) &&
         Math.random() < BRAND_DEAL_SPAWN_CHANCE_PER_TICK * (0.28 + (reputation / 100) * 0.85)
       ) {
-        const availableDeals = brandDealTypes.filter(deal => deal.requiredEra <= currentEra);
+        const availableDeals = brandDealTypes;
 
         if (availableDeals.length > 0) {
           const weightedDeals = availableDeals.map(deal => {
-            const positiveFactor = deal.reputationChange >= 0 ? 1 : 0.55;
-            const repQuality = 0.5 + (reputation / 100) * (deal.reputationChange >= 0 ? 0.95 : 0.3);
-            return {
-              deal,
-              weight: Math.max(0.05, positiveFactor * repQuality)
-            };
+            const risky = deal.reputationDelta < 0;
+            const repPct = reputation / 100;
+            let weight = risky ? 0.42 + (1 - repPct) * 0.85 : 0.65 + repPct * 0.55;
+            if (risky && reputation < 35) weight *= 1.35;
+            if (!risky && reputation < 25) weight *= 0.65;
+            return { deal, weight: Math.max(0.06, weight) };
           });
 
           const totalWeight = weightedDeals.reduce((sum, entry) => sum + entry.weight, 0);
@@ -713,23 +720,9 @@ export const useGameState = () => {
             }
           }
 
-          const agencyPulse =
-            Math.max(0, clout) * 0.55 +
-            Math.max(0, runCloutEarned) * 0.2 +
-            Math.max(0, followers) * 0.06;
-          const payoutCurve = 0.12 + 0.88 * Math.pow(agencyPulse / (agencyPulse + 4200), 0.72);
-          const repTone = 0.52 + (reputation / 100) * 0.55;
-          const variance = 0.86 + Math.random() * 0.26;
-          const eraWeight = 0.62 + picked.requiredEra * 0.21;
-          const cloutMult = payoutCurve * repTone * variance * eraWeight;
-          const followerMult = cloutMult * (0.82 + Math.min(0.35, followers / 120000));
-
           const now = Date.now();
           setActiveBrandDeal({
             typeId: picked.id,
-            cloutReward: Math.max(1, picked.baseCloutReward * cloutMult),
-            followersReward: Math.max(1, picked.baseFollowersReward * followerMult),
-            reputationChange: picked.reputationChange,
             startedAt: now,
             expiresAt: now + BRAND_DEAL_DURATION_MS
           });
@@ -748,7 +741,6 @@ export const useGameState = () => {
     calculatePassiveIncome,
     brandDealCooldown,
     activeBrandDeal,
-    currentEra,
     influencers.length,
     buildings.length,
     reputation,
@@ -767,7 +759,6 @@ export const useGameState = () => {
     clout,
     followers,
     reputation,
-    currentEra,
     prestigeCount,
     prestigeMultiplier,
     influencers,

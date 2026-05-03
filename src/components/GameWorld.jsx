@@ -1,7 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import './GameWorld.css';
-import { influencerTypes, buildingTypes, synergyRules } from '../data/gameData';
-import { distanceToBuildingFootprint } from '../utils/gameMath';
+import { influencerTypes, buildingTypes } from '../data/gameData';
 
 const CELL_SIZE = 36;
 const VIEW_COLS = 36;
@@ -170,6 +169,41 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick })
     return tiles;
   }, [selectedBuildingType, hoveredCell, viewportWorldBand]);
 
+  /** Inspect mode: show buff footprint + radius for a placed building (no text tooltip). */
+  const placedBuildingHoverTiles = useMemo(() => {
+    if (selectedTool || !hoveredPlacedBuilding) return [];
+    const ht = buildingTypes.find(t => t.id === hoveredPlacedBuilding.typeId);
+    if (!ht) return [];
+    const hb = hoveredPlacedBuilding;
+    const minX = hb.position.x;
+    const maxX = hb.position.x + ht.size - 1;
+    const minY = hb.position.y;
+    const maxY = hb.position.y + ht.size - 1;
+    const tiles = [];
+    const { minWX, maxWX, minWY, maxWY } = viewportWorldBand;
+
+    for (let y = minWY; y <= maxWY; y++) {
+      for (let x = minWX; x <= maxWX; x++) {
+        const dx = x < minX ? minX - x : x > maxX ? x - maxX : 0;
+        const dy = y < minY ? minY - y : y > maxY ? y - maxY : 0;
+        const distance = dx + dy;
+        if (distance <= ht.range) {
+          tiles.push({
+            x,
+            y,
+            isFootprint: x >= minX && x <= maxX && y >= minY && y <= maxY
+          });
+        }
+      }
+    }
+    return tiles;
+  }, [selectedTool, hoveredPlacedBuilding, viewportWorldBand]);
+
+  const hoveredPlacedBuildingType = useMemo(() => {
+    if (!hoveredPlacedBuilding) return null;
+    return buildingTypes.find(t => t.id === hoveredPlacedBuilding.typeId) ?? null;
+  }, [hoveredPlacedBuilding]);
+
   const boostedInfluencerIds = useMemo(() => {
     if (!selectedBuildingType || !hoveredCell) return new Set();
 
@@ -333,6 +367,20 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick })
           />
         ))}
 
+        {/* Placed building inspect: buff radius only (visual, no tooltip) */}
+        {placedBuildingHoverTiles.map(tile => (
+          <div
+            key={`placed-hover-${tile.x}-${tile.y}`}
+            className={`placed-building-hover-tile ${tile.isFootprint ? 'footprint' : 'in-range'}`}
+            style={{
+              ...toScreen(tile.x, tile.y),
+              width: CELL_SIZE,
+              height: CELL_SIZE,
+              borderColor: hoveredPlacedBuildingType?.color ?? 'var(--neon-cyan)'
+            }}
+          />
+        ))}
+
         {selectedBuildingType && hoveredCell && (
           <div className="range-preview-legend">
             <span className="legend-item footprint">Footprint</span>
@@ -397,70 +445,6 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick })
             </div>
           );
         })}
-
-        {hoveredPlacedBuilding &&
-          !selectedTool &&
-          (() => {
-            const hb = hoveredPlacedBuilding;
-            const ht = buildingTypes.find(t => t.id === hb.typeId);
-            if (!ht) return null;
-            const p = toScreen(hb.position.x, hb.position.y);
-            const minX = hb.position.x;
-            const maxX = hb.position.x + ht.size - 1;
-            const minY = hb.position.y;
-            const maxY = hb.position.y + ht.size - 1;
-            const pad = ht.range;
-            let tilesInBuff = 0;
-            for (let y = minY - pad; y <= maxY + pad; y++) {
-              for (let x = minX - pad; x <= maxX + pad; x++) {
-                const dx = x < minX ? minX - x : x > maxX ? x - maxX : 0;
-                const dy = y < minY ? minY - y : y > maxY ? y - maxY : 0;
-                if (dx + dy <= ht.range) tilesInBuff += 1;
-              }
-            }
-            const rulesHere = synergyRules.filter(r => r.buildingTypeId === ht.id);
-            return (
-              <div
-                className="entity-hover-tooltip"
-                style={{
-                  left: p.left,
-                  top: p.top,
-                  width: CELL_SIZE * ht.size
-                }}
-              >
-                <div className="entity-hover-title">
-                  {ht.icon} {ht.name}
-                </div>
-                <div className="entity-hover-line">
-                  Footprint <strong>{ht.size}×{ht.size}</strong> · Buff reach{' '}
-                  <strong>{ht.range}</strong> Manhattan steps from footprint edge
-                </div>
-                <div className="entity-hover-line">
-                  Grid tiles in buff zone: <strong>{tilesInBuff.toLocaleString()}</strong>
-                </div>
-                <div className="entity-hover-line">
-                  Base buff (this structure): <strong>×{ht.multiplier}</strong> passive Clout (multiplies per
-                  overlapping building)
-                </div>
-                {rulesHere.map(rule => {
-                  const names = rule.influencerTypeIds
-                    .map(id => influencerTypes.find(i => i.id === id)?.name ?? id)
-                    .join(', ');
-                  const pairingCount = influencers.filter(inf => {
-                    if (!rule.influencerTypeIds.includes(inf.typeId)) return false;
-                    const d = distanceToBuildingFootprint(hb, inf.position.x, inf.position.y);
-                    return d <= ht.range;
-                  }).length;
-                  return (
-                    <div className="entity-hover-line entity-hover-synergy" key={`${rule.buildingTypeId}-${rule.influencerTypeIds.join('|')}`}>
-                      Pairing bonus <strong>×{rule.bonusMultiplier}</strong> with {names} —{' '}
-                      <strong>{pairingCount.toLocaleString()}</strong> in range now
-                    </div>
-                  );
-                })}
-              </div>
-            );
-          })()}
 
         {hoveredTalentOnly &&
           !selectedTool &&

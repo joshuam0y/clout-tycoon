@@ -8,7 +8,6 @@ export const ControlPanel = ({
   clout,
   followers,
   reputation,
-  currentEra,
   prestigeCount,
   prestigeMultiplier,
   passiveCloutPerSecond,
@@ -39,7 +38,8 @@ export const ControlPanel = ({
   const required = prestigeRunCloutRequired ?? 1;
   const canPrestige = runCloutEarned >= required;
   const runProgress = Math.min(1, runCloutEarned / required);
-  const currentEraData = prestigeEras[currentEra];
+  const displayEra = Math.min(2, Math.floor(prestigeCount / 3));
+  const currentEraData = prestigeEras[displayEra];
   const followerBonuses = getFollowerBonusSummary(followers);
   const nextRunReq = getPrestigeRunCloutRequired(prestigeCount + 1);
   const prestigeStepPct = Math.round((nextRunReq / Math.max(1, required) - 1) * 100);
@@ -56,12 +56,13 @@ export const ControlPanel = ({
       <button type="button" className="how-to-side-link" onClick={onOpenHowToPlay}>
         How to play
       </button>
-      {/* Era display */}
+      {/* Theme label (cosmetic — scales with prestige depth; shop has no era locks) */}
       <div className="era-display" style={{ borderColor: currentEraData.theme.primary }}>
         <div className="era-name" style={{ color: currentEraData.theme.primary }}>
           {currentEraData.name}
         </div>
         <div className="era-description">{currentEraData.description}</div>
+        <div className="era-theme-hint">Agency theme by prestige depth · all hires always available</div>
         {prestigeCount > 0 && (
           <div className="prestige-info">
             Prestige Level: {prestigeCount} | Multiplier: {prestigeMultiplier.toFixed(1)}x
@@ -180,8 +181,9 @@ export const ControlPanel = ({
         <div className="prestige-hint">
           This run needs {formatNumber(required)} Clout to prestige. After your next prestige, the following run’s
           bar jumps ~{prestigeStepPct}% vs this run’s requirement (extra super-linear scaling at higher prestige
-          depth). Lifetime clout &amp; gems stay. +45% permanent mult per prestige. +1 💎 per prestige, +1 extra
-          every 4th.
+          depth). Resets this run (Clout, roster, builds, post upgrades, rep, clicks…). Keeps{' '}
+          <strong>gems</strong> and <strong>Premium Shop 💎 upgrades</strong>, lifetime Clout, achievements. +45%
+          permanent mult per prestige. +1 💎 per prestige, +1 extra every 4th.
         </div>
       </div>
     </div>

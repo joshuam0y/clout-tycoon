@@ -85,6 +85,24 @@
   border-style: solid;
 }
 
+/* Hover over placed building — same geometry as placement preview, no popup */
+.placed-building-hover-tile {
+  position: absolute;
+  pointer-events: none;
+  border: 1px dashed;
+  z-index: 3;
+}
+
+.placed-building-hover-tile.in-range {
+  background: rgba(0, 255, 255, 0.12);
+}
+
+.placed-building-hover-tile.footprint {
+  background: rgba(255, 0, 255, 0.14);
+  border-style: solid;
+  border-width: 2px;
+}
+
 .range-preview-legend {
   position: absolute;
   top: 8px;

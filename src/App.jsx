@@ -46,7 +46,6 @@ function App() {
           clout={gameState.clout}
           followers={gameState.followers}
           reputation={gameState.reputation}
-          currentEra={gameState.currentEra}
           prestigeCount={gameState.prestigeCount}
           prestigeMultiplier={gameState.prestigeMultiplier}
           passiveCloutPerSecond={gameState.passiveCloutPerSecond}
@@ -75,7 +74,6 @@ function App() {
         <ShopPanel
           clout={gameState.clout}
           followers={gameState.followers}
-          currentEra={gameState.currentEra}
           selectedTool={gameState.selectedTool}
           onSelectTool={gameState.setSelectedTool}
           influencers={gameState.influencers}
@@ -88,6 +86,12 @@ function App() {
       {/* Brand deal popup */}
       <BrandDealPopup
         activeBrandDeal={gameState.activeBrandDeal}
+        clout={gameState.clout}
+        followers={gameState.followers}
+        lifetimeClout={gameState.lifetimeClout}
+        reputation={gameState.reputation}
+        prestigeMultiplier={gameState.prestigeMultiplier}
+        gemCloutMult={gameState.gemCloutMult}
         onAccept={gameState.acceptBrandDeal}
         onDecline={gameState.declineBrandDeal}
       />

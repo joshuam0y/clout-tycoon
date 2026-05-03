@@ -18,8 +18,8 @@ const PAGES = [
           the grid, and push each run until you can <strong>Prestige</strong> for a permanent boost.
         </p>
         <p>
-          <strong>Gems</strong> stick around across prestiges and power the Premium Shop — optional, but
-          useful long-term.
+          <strong>Gems</strong> and <strong>Premium Shop 💎 upgrades</strong> stick around across prestiges
+          (everything else in a run resets when you prestige).
         </p>
       </>
     )
@@ -42,8 +42,8 @@ const PAGES = [
           </li>
           <li>
             <strong>Pairing bonuses:</strong> certain talent + structure combos grant an extra multiplier when the
-            talent is inside that building’s buff radius (listed on shop cards). Hover a placed building to see
-            radius, tile count, base buff, and which pairings are active.
+            talent is inside that building’s buff radius (listed on shop cards). Hover a placed building to see the
+            buff footprint and range drawn on the grid (no popup).
           </li>
           <li>
             <strong>Drag</strong> the map to pan. Your placements stay on the grid; only the camera moves.
@@ -68,6 +68,10 @@ const PAGES = [
           <li>
             <strong>Reputation</strong> nudges how fast you earn. Safer choices help; messy ones hurt.
           </li>
+          <li>
+            The <strong>full talent and build lists</strong> are always in the shop — no era gates; you’re only
+            limited by Clout and scaling duplicate prices.
+          </li>
         </ul>
       </>
     )
@@ -77,8 +81,10 @@ const PAGES = [
     body: (
       <>
         <p>
-          Sometimes a <strong>brand deal</strong> pops up: Clout and followers in exchange for a reputation
-          swing. You can accept or decline.
+          Sometimes a <strong>brand deal</strong> pops up. Payouts are a <strong>percentage of your current
+          Clout and follower banks</strong> (and scale up with lifetime Clout). Big paydays often cost many
+          <strong>reputation points</strong> — spam risky deals and you can land in{' '}
+          <strong>bad rep</strong>, which hurts income until you recover.
         </p>
         <p>
           Deals stay hidden until you have at least{' '}
@@ -100,10 +106,11 @@ const PAGES = [
           multiply. They reset when you prestige.
         </p>
         <p>
-          When your <strong>this-run Clout</strong> bar fills, you can prestige: the run resets, but lifetime
-          stats, gems, and gem upgrades stay. Eras unlock stronger shop items. Each prestige makes the{' '}
-          <strong>next</strong> prestige bar <strong>much taller</strong>: requirements compound per prestige and
-          accelerate further at high prestige counts (super-linear cost growth).
+          When your <strong>this-run Clout</strong> bar fills, you can prestige: <strong>everything in the run</strong>{' '}
+          resets (Clout, roster, buildings, post upgrades, reputation for that run, etc.).{' '}
+          <strong>Gems</strong> and <strong>Premium Shop 💎 upgrades</strong> persist; lifetime Clout and achievements
+          stay too. The left panel “era” name is only cosmetic theme vs prestige depth — shop content is never locked.
+          Each prestige makes the <strong>next</strong> prestige bar <strong>much taller</strong>.
         </p>
         <p>
           <strong>Frenzy events</strong> can fire after a cooldown: <strong>Viral frenzy</strong> boosts post
