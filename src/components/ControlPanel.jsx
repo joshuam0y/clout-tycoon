@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import './ControlPanel.css';
-import { prestigeEras, getPrestigeRunCloutRequired } from '../data/gameData';
+import {
+  prestigeEras,
+  getPrestigeRunCloutRequired,
+  PRESTIGE_RUN_CLOUT_MULT_PER_STEP
+} from '../data/gameData';
 import { formatNumber, formatRate } from '../utils/formatNumber';
 import { getFollowerBonusSummary } from '../utils/gameMath';
 
@@ -42,7 +46,6 @@ export const ControlPanel = ({
   const currentEraData = prestigeEras[displayEra];
   const followerBonuses = getFollowerBonusSummary(followers);
   const nextRunReq = getPrestigeRunCloutRequired(prestigeCount + 1);
-  const prestigeStepPct = Math.round((nextRunReq / Math.max(1, required) - 1) * 100);
   const frenzyLive =
     activeFrenzy && Date.now() < activeFrenzy.endsAt
       ? activeFrenzy
@@ -91,6 +94,10 @@ export const ControlPanel = ({
         <div className="stat">
           <span className="stat-label">Reputation</span>
           <span className="stat-value">{Math.floor(reputation)}%</span>
+        </div>
+        <div className="rep-hint">
+          Moves on <strong>brand deals</strong> only (+ clean partnerships, − risky ones). No separate Clout →
+          Rep trade.
         </div>
       </div>
 
@@ -179,9 +186,9 @@ export const ControlPanel = ({
             : `(${formatNumber(Math.max(0, required - runCloutEarned))} run clout)`}
         </button>
         <div className="prestige-hint">
-          This run needs {formatNumber(required)} Clout to prestige. After your next prestige, the following run’s
-          bar jumps ~{prestigeStepPct}% vs this run’s requirement (extra super-linear scaling at higher prestige
-          depth). Resets this run (Clout, roster, builds, post upgrades, rep, clicks…). Keeps{' '}
+          This run needs {formatNumber(required)} Clout to prestige. After you prestige, the <strong>next</strong>{' '}
+          run’s bar is <strong>~{PRESTIGE_RUN_CLOUT_MULT_PER_STEP}×</strong> this run’s requirement (next:{' '}
+          {formatNumber(nextRunReq)}). Resets this run (Clout, roster, builds, post upgrades, rep, clicks…). Keeps{' '}
           <strong>gems</strong> and <strong>Premium Shop 💎 upgrades</strong>, lifetime Clout, achievements. +45%
           permanent mult per prestige. +1 💎 per prestige, +1 extra every 4th.
         </div>

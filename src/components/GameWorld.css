@@ -339,6 +339,10 @@
   font-weight: 700;
 }
 
+.entity-hover-line.talent-hover-buff strong {
+  color: var(--neon-green);
+}
+
 .camera-hint {
   position: absolute;
   bottom: 10px;

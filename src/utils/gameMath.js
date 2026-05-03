@@ -1,4 +1,8 @@
-import { UNIT_PRICE_GROWTH, buildingTypes } from '../data/gameData';
+import {
+  UNIT_PRICE_GROWTH,
+  buildingTypes,
+  getSynergyMultiplierFromBuildingTypes
+} from '../data/gameData';
 
 /** Manhattan distance from tile to rectangular building footprint (0 = inside/on edge). */
 export function distanceToBuildingFootprint(building, tileX, tileY) {
@@ -14,6 +18,27 @@ export function distanceToBuildingFootprint(building, tileX, tileY) {
   const dy = tileY < minY ? minY - tileY : tileY > maxY ? tileY - maxY : 0;
 
   return dx + dy;
+}
+
+/**
+ * Buff from structures + pairings on the grid for one talent (matches passive math;
+ * excludes prestige, followers, reputation, gems).
+ */
+export function getLocalGridBuffMultiplier(influencer, buildings) {
+  if (!influencer) return 1;
+  const inRangeTypeIds = [];
+  let product = 1;
+  for (const building of buildings) {
+    const bt = buildingTypes.find(t => t.id === building.typeId);
+    if (!bt || bt.effect !== 'multiply') continue;
+    const d = distanceToBuildingFootprint(building, influencer.position.x, influencer.position.y);
+    if (d <= bt.range) {
+      product *= bt.multiplier;
+      inRangeTypeIds.push(bt.id);
+    }
+  }
+  const uniqueTypes = [...new Set(inRangeTypeIds)];
+  return product * getSynergyMultiplierFromBuildingTypes(influencer.typeId, uniqueTypes);
 }
 
 /** Followers scale all clout sources (meaningful but capped) */

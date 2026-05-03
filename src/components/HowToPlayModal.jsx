@@ -66,7 +66,9 @@ const PAGES = [
             discount hire/build prices.
           </li>
           <li>
-            <strong>Reputation</strong> nudges how fast you earn. Safer choices help; messy ones hurt.
+            <strong>Reputation</strong> nudges how fast you earn. It only changes when you accept{' '}
+            <strong>brand deals</strong> (some deals add rep, risky ones subtract). There’s no other Clout-for-rep
+            button — prestige resets rep for the new run.
           </li>
           <li>
             The <strong>full talent and build lists</strong> are always in the shop — no era gates; you’re only
@@ -110,7 +112,8 @@ const PAGES = [
           resets (Clout, roster, buildings, post upgrades, reputation for that run, etc.).{' '}
           <strong>Gems</strong> and <strong>Premium Shop 💎 upgrades</strong> persist; lifetime Clout and achievements
           stay too. The left panel “era” name is only cosmetic theme vs prestige depth — shop content is never locked.
-          Each prestige makes the <strong>next</strong> prestige bar <strong>much taller</strong>.
+          Each prestige makes the <strong>next</strong> run’s bar about <strong>10×</strong> the Clout you needed
+          for the previous tier.
         </p>
         <p>
           <strong>Frenzy events</strong> can fire after a cooldown: <strong>Viral frenzy</strong> boosts post

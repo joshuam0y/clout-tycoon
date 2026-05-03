@@ -2,21 +2,16 @@
 export const UNIT_PRICE_GROWTH = 1.215;
 
 /**
- * This-run Clout needed to prestige — base for first run; scales up each time you prestige.
+ * This-run Clout needed to prestige — base for first run; multiplies by STEP each completed prestige.
  * completedPrestigeCount = current prestigeCount (0 before first prestige, 1 after first, …).
  */
 export const PRESTIGE_RUN_CLOUT_BASE = 560000;
-/** Linear compound per prestige (multiplies per completed prestige index). */
-export const PRESTIGE_RUN_CLOUT_SCALE_PER_PRESTIGE = 1.24;
-/** Extra compounding on n² — makes late prestiges much more expensive. */
-export const PRESTIGE_RUN_CLOUT_SUPER_EXP = 1.017;
+/** Next run’s prestige bar is this × the previous tier’s requirement (~10× harder per prestige). */
+export const PRESTIGE_RUN_CLOUT_MULT_PER_STEP = 10;
 
 export function getPrestigeRunCloutRequired(completedPrestigeCount) {
   const n = Math.max(0, Math.floor(completedPrestigeCount ?? 0));
-  const raw =
-    PRESTIGE_RUN_CLOUT_BASE *
-    Math.pow(PRESTIGE_RUN_CLOUT_SCALE_PER_PRESTIGE, n) *
-    Math.pow(PRESTIGE_RUN_CLOUT_SUPER_EXP, n * n);
+  const raw = PRESTIGE_RUN_CLOUT_BASE * Math.pow(PRESTIGE_RUN_CLOUT_MULT_PER_STEP, n);
   return Math.min(Number.MAX_SAFE_INTEGER, Math.floor(raw));
 }
 

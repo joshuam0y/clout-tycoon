@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import './GameWorld.css';
 import { influencerTypes, buildingTypes } from '../data/gameData';
+import { getLocalGridBuffMultiplier } from '../utils/gameMath';
 
 const CELL_SIZE = 36;
 const VIEW_COLS = 36;
@@ -78,6 +79,11 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick })
       ) ?? null
     );
   }, [selectedTool, hoveredCell, hoveredPlacedBuilding, influencers]);
+
+  const hoveredTalentGridBuff = useMemo(() => {
+    if (!hoveredTalentOnly) return 1;
+    return getLocalGridBuffMultiplier(hoveredTalentOnly, buildings);
+  }, [hoveredTalentOnly, buildings]);
 
   const getPlacementState = anchor => {
     if (!selectedTool || !anchor || selectedPlacementSize <= 0) {
@@ -465,8 +471,11 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick })
                   {tt.icon} {tt.name}
                 </div>
                 <div className="entity-hover-line">
-                  Tile: <strong>1×1</strong> · Base passive <strong>{tt.baseCloutPerSecond.toFixed(2)}</strong>{' '}
-                  Clout/s (before buffs)
+                  Base on tile: <strong>{tt.baseCloutPerSecond.toFixed(2)}</strong> Clout/s before grid buffs
+                </div>
+                <div className="entity-hover-line talent-hover-buff">
+                  Grid buff (structures + pairings):{' '}
+                  <strong>×{hoveredTalentGridBuff >= 10 ? hoveredTalentGridBuff.toFixed(1) : hoveredTalentGridBuff.toFixed(2)}</strong>
                 </div>
               </div>
             );
