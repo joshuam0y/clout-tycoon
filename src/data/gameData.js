@@ -2,6 +2,12 @@
 export const UNIT_PRICE_GROWTH = 1.248;
 
 /**
+ * Legacy economy applied 0.48× to manual posts; baseline is now 1 Clout per post (before upgrades).
+ * Hire costs, click-upgrade prices, and prestige bars scale by this so pacing matches the old curve.
+ */
+export const CLOUT_PRICE_MULTIPLIER = 25 / 12;
+
+/**
  * This-run Clout needed to prestige — base for first run; multiplies by STEP each completed prestige.
  * completedPrestigeCount = current prestigeCount (0 before first prestige, 1 after first, …).
  */
@@ -11,7 +17,8 @@ export const PRESTIGE_RUN_CLOUT_MULT_PER_STEP = 14;
 
 export function getPrestigeRunCloutRequired(completedPrestigeCount) {
   const n = Math.max(0, Math.floor(completedPrestigeCount ?? 0));
-  const raw = PRESTIGE_RUN_CLOUT_BASE * Math.pow(PRESTIGE_RUN_CLOUT_MULT_PER_STEP, n);
+  const raw =
+    PRESTIGE_RUN_CLOUT_BASE * CLOUT_PRICE_MULTIPLIER * Math.pow(PRESTIGE_RUN_CLOUT_MULT_PER_STEP, n);
   return Math.min(Number.MAX_SAFE_INTEGER, Math.floor(raw));
 }
 
@@ -19,7 +26,7 @@ export function getPrestigeRunCloutRequired(completedPrestigeCount) {
 export const PRESTIGE_RUN_CLOUT_THRESHOLD = getPrestigeRunCloutRequired(0);
 
 /** Minimum lifetime Clout before brand deals can ever roll (proves basic engagement). */
-export const BRAND_DEALS_MIN_LIFETIME_CLOUT = 2200;
+export const BRAND_DEALS_MIN_LIFETIME_CLOUT = Math.ceil(2200 * CLOUT_PRICE_MULTIPLIER);
 
 /** Usually need this many influencers hired (deals = brand attention on a roster). */
 export const BRAND_DEALS_MIN_INFLUENCERS = 2;
@@ -27,7 +34,7 @@ export const BRAND_DEALS_MIN_INFLUENCERS = 2;
 /** Solo path: one creator + at least one building + higher lifetime Clout. */
 export const BRAND_DEALS_SOLO_MIN_INFLUENCERS = 1;
 export const BRAND_DEALS_SOLO_MIN_BUILDINGS = 1;
-export const BRAND_DEALS_SOLO_MIN_LIFETIME_CLOUT = 7800;
+export const BRAND_DEALS_SOLO_MIN_LIFETIME_CLOUT = Math.ceil(7800 * CLOUT_PRICE_MULTIPLIER);
 
 /**
  * Fair unlock: lifetime gate + (roster depth OR proven grid + higher lifetime).
@@ -56,8 +63,11 @@ export const REPUTATION_INCOME_MULT_MAX = 1.0;
 /** Applied to passive Clout/s after all other passive math (anti-runaway). */
 export const PASSIVE_GLOBAL_MULT = 0.42;
 
-/** Applied to manual + intern post Clout after upgrades (anti-runaway). */
-export const CLICK_OUTPUT_GLOBAL_MULT = 0.48;
+/** Flat Clout per manual post before upgrades (Thumb Training etc.) and reputation/gem/prestige mults. */
+export const BASE_POST_CLOUT = 1;
+
+/** Applied to manual + intern post Clout after upgrades; keep at 1 so an undressed post = BASE_POST_CLOUT at ×1 mults. */
+export const CLICK_OUTPUT_GLOBAL_MULT = 1;
 
 /** Permanent prestige mult: 1 + prestigeLevel × this (linear, gentler than old curves). */
 export const PRESTIGE_MULT_PER_LEVEL = 0.2;

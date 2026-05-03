@@ -1,7 +1,8 @@
 import {
   UNIT_PRICE_GROWTH,
   buildingTypes,
-  getSynergyMultiplierFromBuildingTypes
+  getSynergyMultiplierFromBuildingTypes,
+  CLOUT_PRICE_MULTIPLIER
 } from '../data/gameData';
 
 /** Manhattan distance from tile to rectangular building footprint (0 = inside/on edge). */
@@ -64,9 +65,11 @@ export function getFollowerBonusSummary(followers) {
 }
 
 export function scaledUnitCost(baseCost, owned, growth = UNIT_PRICE_GROWTH) {
-  return Math.ceil(baseCost * Math.pow(growth, owned));
+  return Math.ceil(baseCost * Math.pow(growth, owned) * CLOUT_PRICE_MULTIPLIER);
 }
 
 export function clickUpgradeNextCost(upgrade, currentLevel) {
-  return Math.ceil(upgrade.baseCost * Math.pow(upgrade.growth, currentLevel));
+  return Math.ceil(
+    upgrade.baseCost * Math.pow(upgrade.growth, currentLevel) * CLOUT_PRICE_MULTIPLIER
+  );
 }

@@ -9,15 +9,18 @@ import {
   getPrestigeRunCloutRequired,
   PRESTIGE_RUN_CLOUT_BASE,
   PRESTIGE_RUN_CLOUT_MULT_PER_STEP,
-  UNIT_PRICE_GROWTH
+  UNIT_PRICE_GROWTH,
+  CLOUT_PRICE_MULTIPLIER
 } from '../data/gameData';
 
 describe('scaledUnitCost', () => {
-  it('returns base for zero owned', () => {
-    expect(scaledUnitCost(100, 0)).toBe(100);
+  it('returns price-scaled base for zero owned', () => {
+    expect(scaledUnitCost(100, 0)).toBe(Math.ceil(100 * CLOUT_PRICE_MULTIPLIER));
   });
   it('scales with growth', () => {
-    expect(scaledUnitCost(100, 1)).toBe(Math.ceil(100 * UNIT_PRICE_GROWTH));
+    expect(scaledUnitCost(100, 1)).toBe(
+      Math.ceil(100 * UNIT_PRICE_GROWTH * CLOUT_PRICE_MULTIPLIER)
+    );
   });
 });
 
@@ -33,12 +36,14 @@ describe('followers', () => {
 });
 
 describe('getPrestigeRunCloutRequired', () => {
-  it('matches base at zero prestige', () => {
-    expect(getPrestigeRunCloutRequired(0)).toBe(PRESTIGE_RUN_CLOUT_BASE);
+  it('matches price-scaled base at zero prestige', () => {
+    expect(getPrestigeRunCloutRequired(0)).toBe(
+      Math.floor(PRESTIGE_RUN_CLOUT_BASE * CLOUT_PRICE_MULTIPLIER)
+    );
   });
   it('multiplies each prestige step', () => {
     expect(getPrestigeRunCloutRequired(1)).toBe(
-      PRESTIGE_RUN_CLOUT_BASE * PRESTIGE_RUN_CLOUT_MULT_PER_STEP
+      Math.floor(PRESTIGE_RUN_CLOUT_BASE * CLOUT_PRICE_MULTIPLIER * PRESTIGE_RUN_CLOUT_MULT_PER_STEP)
     );
   });
 });
@@ -46,15 +51,19 @@ describe('getPrestigeRunCloutRequired', () => {
 describe('clickUpgradeNextCost', () => {
   it('uses growth from level', () => {
     const u = { baseCost: 50, growth: 1.5 };
-    expect(clickUpgradeNextCost(u, 0)).toBe(50);
-    expect(clickUpgradeNextCost(u, 2)).toBe(Math.ceil(50 * 1.5 * 1.5));
+    expect(clickUpgradeNextCost(u, 0)).toBe(Math.ceil(50 * CLOUT_PRICE_MULTIPLIER));
+    expect(clickUpgradeNextCost(u, 2)).toBe(
+      Math.ceil(50 * 1.5 * 1.5 * CLOUT_PRICE_MULTIPLIER)
+    );
   });
 });
 
 describe('getPrestigeRunCloutRequired scaling', () => {
   it('steps by PRESTIGE_RUN_CLOUT_MULT_PER_STEP each prestige', () => {
     expect(getPrestigeRunCloutRequired(2)).toBe(
-      getPrestigeRunCloutRequired(1) * PRESTIGE_RUN_CLOUT_MULT_PER_STEP
+      Math.floor(
+        PRESTIGE_RUN_CLOUT_BASE * CLOUT_PRICE_MULTIPLIER * Math.pow(PRESTIGE_RUN_CLOUT_MULT_PER_STEP, 2)
+      )
     );
   });
 });
