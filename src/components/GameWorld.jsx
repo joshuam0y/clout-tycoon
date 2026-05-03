@@ -292,7 +292,11 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick })
       offsetStartY: viewOffset.y,
       moved: false
     };
-    event.currentTarget.setPointerCapture(event.pointerId);
+    /* Without capture, pointer events (and click) reach the grid cell under the cursor — required for placement.
+       With capture, the grid steals the event target and cell onClick never fires. */
+    if (!selectedTool) {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
   };
 
   const handlePointerMove = event => {
