@@ -1,5 +1,11 @@
-/** Per-unit price scaling (Cookie Clicker–style): each copy costs this much more */
+/** Base multiplier per duplicate tier before acceleration (see UNIT_PRICE_DUPLICATE_EXP). */
 export const UNIT_PRICE_GROWTH = 1.248;
+
+/**
+ * Duplicate Clout cost uses: base × growth^(owned ** DUPLICATE_EXP) × CLOUT_PRICE_MULTIPLIER.
+ * > 1 makes each extra copy of the same item ramp faster than fixed-% geometric stacking.
+ */
+export const UNIT_PRICE_DUPLICATE_EXP = 1.32;
 
 /**
  * Legacy economy applied 0.48× to manual posts; baseline is now 1 Clout per post (before upgrades).
@@ -20,6 +26,14 @@ export function getPrestigeRunCloutRequired(completedPrestigeCount) {
   const raw =
     PRESTIGE_RUN_CLOUT_BASE * CLOUT_PRICE_MULTIPLIER * Math.pow(PRESTIGE_RUN_CLOUT_MULT_PER_STEP, n);
   return Math.min(Number.MAX_SAFE_INTEGER, Math.floor(raw));
+}
+
+/**
+ * `prestigeCount` in save = completed prestiges. minPrestige 1 = need at least one prestige on the counter.
+ * Omit or 0 = always unlocked (aside from era/cost).
+ */
+export function getMinPrestige(def) {
+  return Math.max(0, Math.floor(def?.minPrestige ?? 0));
 }
 
 /** @deprecated use getPrestigeRunCloutRequired(0) */
@@ -70,7 +84,7 @@ export const BASE_POST_CLOUT = 1;
 export const CLICK_OUTPUT_GLOBAL_MULT = 1;
 
 /** Permanent prestige mult: 1 + prestigeLevel × this (linear, gentler than old curves). */
-export const PRESTIGE_MULT_PER_LEVEL = 0.2;
+export const PRESTIGE_MULT_PER_LEVEL = 0.24;
 
 /** Softens % post-upgrade stacking so levels aren’t pure exponentials */
 export const CLICK_UPGRADE_MULT_SOFTEN = 0.76;
@@ -157,7 +171,8 @@ export const influencerTypes = [
   {
     id: 'micro',
     name: 'Micro Influencer',
-    description: 'Just starting out, but authentic.',
+    description:
+      'Just starting out, but authentic. Synergy: ×1.05 near Podcast Nook when in range.',
     cost: 88,
     baseCloutPerSecond: 0.48,
     color: '#00ffff',
@@ -190,7 +205,7 @@ export const influencerTypes = [
     id: 'foodie',
     name: 'Food Reviewer',
     description:
-      'Local spots and reaction takes. Synergy: ×1.09 near Ring Light Bay.',
+      'Local spots and reaction takes. Synergy: ×1.09 near Ring Light Bay, ×1.05 near Drone Bay.',
     cost: 185,
     baseCloutPerSecond: 0.78,
     color: '#ffaa66',
@@ -201,7 +216,7 @@ export const influencerTypes = [
     id: 'lifestyle',
     name: 'Lifestyle Blogger',
     description:
-      'Daily vlogs and aesthetic posts. Synergy: ×1.11 near Digital Billboard.',
+      'Daily vlogs and aesthetic posts. Synergy: ×1.11 near Digital Billboard, ×1.06 near Ring Light Bay.',
     cost: 380,
     baseCloutPerSecond: 1.75,
     color: '#ff00ff',
@@ -310,8 +325,9 @@ export const influencerTypes = [
   {
     id: 'ai',
     name: 'AI Influencer',
-    description: 'Generated perfection, endless content.',
-    cost: 165000,
+    description:
+      'Generated perfection, endless content. Synergy: ×1.08 near PR War Room when in range.',
+    cost: 420000,
     baseCloutPerSecond: 420,
     color: '#ff0080',
     icon: '🤖',
@@ -321,8 +337,8 @@ export const influencerTypes = [
     id: 'celebrity',
     name: 'Red Carpet Talent',
     description:
-      'Agency rates go through the roof. Synergy: ×1.23 near Agency HQ Tower.',
-    cost: 620000,
+      'Agency rates go through the roof. Synergy: ×1.23 near Agency HQ Tower, ×1.06 near Satellite Relay.',
+    cost: 1650000,
     baseCloutPerSecond: 1650,
     color: '#ffd700',
     icon: '🌟',
@@ -333,7 +349,7 @@ export const influencerTypes = [
     name: 'Synth Idol',
     description:
       'Holographic arena tours — synergy ×1.24 near Holo Deck when in range.',
-    cost: 1850000,
+    cost: 9800000,
     baseCloutPerSecond: 4200,
     color: '#ff66ee',
     icon: '🎤',
@@ -344,33 +360,36 @@ export const influencerTypes = [
     name: 'Media Mogul',
     description:
       'Owns feeds and franchises. Synergy: ×1.28 near Fan Fest Arena.',
-    cost: 5200000,
+    cost: 42000000,
     baseCloutPerSecond: 12000,
     color: '#ffaa00',
     icon: '👑',
-    requiredEra: 2
+    requiredEra: 2,
+    minPrestige: 3
   },
   {
     id: 'world_icon',
     name: 'World Icon',
     description:
       'Planetary reach — absurd passive if you can afford them. Synergy: ×1.35 near Quantum Stage.',
-    cost: 42000000,
+    cost: 320000000,
     baseCloutPerSecond: 85000,
     color: '#ffffff',
     icon: '🌍',
-    requiredEra: 2
+    requiredEra: 2,
+    minPrestige: 4
   },
   {
     id: 'galaxy_ambassador',
     name: 'Galaxy Ambassador',
     description:
       'Off-planet reach — synergy ×1.34 near Orbital Set when in range.',
-    cost: 98000000,
+    cost: 820000000,
     baseCloutPerSecond: 155000,
     color: '#e0e8ff',
     icon: '🛸',
-    requiredEra: 2
+    requiredEra: 2,
+    minPrestige: 5
   }
 ];
 
@@ -549,84 +568,90 @@ export const buildingTypes = [
     name: 'Agency HQ Tower',
     description:
       'Glass tower — huge radius. Synergy: extra ×1.23 with Red Carpet Talent in range.',
-    cost: 118000,
+    cost: 275000,
     effect: 'multiply',
     multiplier: 3.55,
     range: 5,
     color: '#aa66ff',
     icon: '🏢',
     size: 3,
-    requiredEra: 2
+    requiredEra: 2,
+    minPrestige: 1
   },
   {
     id: 'holo_deck',
     name: 'Holo Deck',
     description:
       'Arena-scale holographics — synergy ×1.24 with Synth Idol in range.',
-    cost: 385000,
+    cost: 1150000,
     effect: 'multiply',
     multiplier: 3.95,
     range: 5,
     color: '#ff77ee',
     icon: '🌐',
     size: 2,
-    requiredEra: 2
+    requiredEra: 2,
+    minPrestige: 1
   },
   {
     id: 'satellite_relay',
     name: 'Satellite Relay',
     description:
       'Orbital uplink — continent-wide buffs. Synergy: extra ×1.21 with VTuber Star in range.',
-    cost: 880000,
+    cost: 2650000,
     effect: 'multiply',
     multiplier: 4.15,
     range: 6,
     color: '#66ddff',
     icon: '🛰️',
     size: 1,
-    requiredEra: 2
+    requiredEra: 2,
+    minPrestige: 2
   },
   {
     id: 'fan_fest_arena',
     name: 'Fan Fest Arena',
     description:
       'Tour-scale footprint — insane coverage. Synergy: extra ×1.28 with Media Mogul in range.',
-    cost: 6200000,
+    cost: 52000000,
     effect: 'multiply',
     multiplier: 5.2,
     range: 7,
     color: '#ff5599',
     icon: '🏟️',
     size: 3,
-    requiredEra: 2
+    requiredEra: 2,
+    minPrestige: 3
   },
   {
     id: 'quantum_stage',
     name: 'Quantum Stage',
     description:
       'Endgame structure — maximum radius and multiplier. Synergy: extra ×1.35 with World Icon in range.',
-    cost: 38000000,
+    cost: 310000000,
     effect: 'multiply',
     multiplier: 7.5,
     range: 8,
     color: '#ddff66',
     icon: '⚛️',
     size: 2,
-    requiredEra: 2
+    requiredEra: 2,
+    minPrestige: 4
   },
   {
     id: 'orbital_set',
     name: 'Orbital Set',
     description:
       'Shoot content from low orbit — synergy ×1.34 with Galaxy Ambassador in range.',
-    cost: 92000000,
+    cost: 780000000,
     effect: 'multiply',
     multiplier: 10.5,
     range: 10,
     color: '#aabbff',
     icon: '🛰️',
     size: 2,
-    requiredEra: 2
+    requiredEra: 2,
+    minPrestige: 5
   }
 ];
 
@@ -752,7 +777,8 @@ export const clickUpgradeTypes = [
     baseCost: 88000,
     growth: 1.19,
     kind: 'mult',
-    perLevel: 0.12
+    perLevel: 0.12,
+    minPrestige: 1
   },
   {
     id: 'superbowl',
@@ -761,7 +787,8 @@ export const clickUpgradeTypes = [
     baseCost: 520000,
     growth: 1.2,
     kind: 'mult',
-    perLevel: 0.15
+    perLevel: 0.15,
+    minPrestige: 2
   },
   {
     id: 'matrix_pr',
@@ -770,7 +797,8 @@ export const clickUpgradeTypes = [
     baseCost: 6200000,
     growth: 1.21,
     kind: 'mult',
-    perLevel: 0.22
+    perLevel: 0.22,
+    minPrestige: 3
   },
   {
     id: 'singularity_feed',
@@ -779,7 +807,8 @@ export const clickUpgradeTypes = [
     baseCost: 52000000,
     growth: 1.22,
     kind: 'mult',
-    perLevel: 0.28
+    perLevel: 0.28,
+    minPrestige: 4
   },
   {
     id: 'omni_waves',
@@ -788,7 +817,8 @@ export const clickUpgradeTypes = [
     baseCost: 380000000,
     growth: 1.23,
     kind: 'mult',
-    perLevel: 0.32
+    perLevel: 0.32,
+    minPrestige: 5
   }
 ];
 
@@ -1057,14 +1087,16 @@ export const managerTypes = [
     description: 'Scheduled posts — no viral frenzy bonus (manual posts still spike harder)',
     cost: 5200,
     effect: 'autoclick',
-    clicksPerSecond: 6
+    clicksPerSecond: 6,
+    minPrestige: 0
   },
   {
     id: 'agent',
     name: 'Talent Agent',
     description: 'After a short beat, auto-accepts deals that won’t trash rep past your floor',
     cost: 16500,
-    effect: 'autodeals'
+    effect: 'autodeals',
+    minPrestige: 1
   },
   {
     id: 'producer',
@@ -1072,13 +1104,15 @@ export const managerTypes = [
     description: 'Raises agency passive with diminishing returns (capped team bonus, not exponential)',
     cost: 52000,
     effect: 'globalboost',
-    multiplier: 1
+    multiplier: 1,
+    minPrestige: 2
   },
   {
     id: 'scout',
     name: 'Brand Scout',
     description: 'Reads sponsor cycles — boosts spawn odds for this week’s favored deal types (stackable).',
     cost: 120000,
-    effect: 'brandseason'
+    effect: 'brandseason',
+    minPrestige: 3
   }
 ];

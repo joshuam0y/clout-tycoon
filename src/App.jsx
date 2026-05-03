@@ -95,6 +95,7 @@ function App() {
           buildings={gameState.buildings}
           selectedTool={gameState.selectedTool}
           onCellClick={handleCellClick}
+          passiveByInfluencerId={gameState.passiveByInfluencerId}
         />
 
         {/* Right panel - Shop */}
@@ -109,6 +110,9 @@ function App() {
           onBuyClickUpgrade={gameState.buyClickUpgrade}
           managers={gameState.managers}
           onBuyManager={gameState.buyManager}
+          passiveCloutPerSecond={gameState.passiveCloutPerSecond}
+          passiveByTalentType={gameState.passiveByTalentType}
+          prestigeCount={gameState.prestigeCount}
         />
       </div>
 

@@ -117,6 +117,63 @@
   line-height: 1.4;
 }
 
+.shop-passive-hint {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin: 0 0 10px;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.shop-passive-hint strong {
+  color: var(--neon-green);
+  font-weight: 800;
+}
+
+.item-stats-base {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.shop-gated-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.shop-item.shop-item--gated {
+  position: relative;
+}
+
+.shop-prestige-lock-badge {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.58);
+  border-radius: inherit;
+  z-index: 3;
+  pointer-events: none;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #ffcc66;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.95);
+  gap: 4px;
+  padding: var(--spacing-xs);
+  text-align: center;
+  line-height: 1.25;
+}
+
+.shop-prestige-lock-icon {
+  font-size: 22px;
+  line-height: 1;
+  filter: drop-shadow(0 0 6px rgba(255, 200, 80, 0.5));
+}
+
 .shop-upgrades {
   display: flex;
   flex-direction: column;

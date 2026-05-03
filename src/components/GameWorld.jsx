@@ -2,6 +2,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import './GameWorld.css';
 import { influencerTypes, buildingTypes } from '../data/gameData';
 import { getLocalGridBuffMultiplier } from '../utils/gameMath';
+import { formatRate } from '../utils/formatNumber';
 
 const CELL_SIZE = 36;
 const VIEW_COLS = 36;
@@ -24,7 +25,7 @@ function animationDelayFromId(id) {
   return `${(Math.abs(h) % 3000) / 1000}s`;
 }
 
-export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick }) => {
+export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick, passiveByInfluencerId }) => {
   const [viewOffset, setViewOffset] = useState(INITIAL_VIEW_OFFSET);
   const [hoveredCell, setHoveredCell] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -505,6 +506,10 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick })
               >
                 <div className="entity-hover-title">
                   {tt.icon} {tt.name}
+                </div>
+                <div className="entity-hover-line">
+                  Agency (this tile){' '}
+                  <strong>{formatRate(passiveByInfluencerId?.[hoveredTalentOnly.id] ?? 0)}</strong> Clout/s
                 </div>
                 <div className="entity-hover-line">
                   Base on tile <strong>{tt.baseCloutPerSecond.toFixed(2)}</strong> Clout/s (before grid buffs).

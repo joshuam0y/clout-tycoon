@@ -1,8 +1,24 @@
 import { useState } from 'react';
 import './ShopPanel.css';
-import { influencerTypes, buildingTypes, clickUpgradeTypes, managerTypes } from '../data/gameData';
+import {
+  influencerTypes,
+  buildingTypes,
+  clickUpgradeTypes,
+  managerTypes,
+  getMinPrestige
+} from '../data/gameData';
 import { scaledUnitCost, clickUpgradeNextCost, getFollowerCostMult } from '../utils/gameMath';
 import { formatNumber, formatRate } from '../utils/formatNumber';
+
+function PrestigeLockBadge({ minPrestige: minP }) {
+  if (!minP || minP <= 0) return null;
+  return (
+    <div className="shop-prestige-lock-badge" aria-hidden="true">
+      <span className="shop-prestige-lock-icon">🔒</span>
+      <span>Prestige {minP}+</span>
+    </div>
+  );
+}
 
 const TABS = [
   { id: 'upgrades', label: 'Posts' },
@@ -21,7 +37,10 @@ export const ShopPanel = ({
   managers,
   clickUpgradeLevels,
   onBuyClickUpgrade,
-  onBuyManager
+  onBuyManager,
+  passiveCloutPerSecond = 0,
+  passiveByTalentType = {},
+  prestigeCount = 0
 }) => {
   const [shopTab, setShopTab] = useState('upgrades');
   const costMult = getFollowerCostMult(followers);
@@ -37,7 +56,8 @@ export const ShopPanel = ({
           <h2 className="shop-title">Agency Shop</h2>
         </div>
         <p className="shop-tagline">
-          ~21.5% cost per duplicate; same item costs more each copy. Full catalog — afford what you can.
+          Each extra copy of the same hire/build ramps up sharply (accelerating curve — not a flat %).
+          Full catalog — afford what you can.
           {discountPct > 0 && (
             <span className="shop-follower-discount">
               {' '}
@@ -68,22 +88,27 @@ export const ShopPanel = ({
                 const level = clickUpgradeLevels[upgrade.id] ?? 0;
                 const cost = clickUpgradeNextCost(upgrade, level);
                 const canAfford = clout >= cost;
+                const minP = getMinPrestige(upgrade);
+                const locked = minP > 0 && prestigeCount < minP;
 
                 return (
                   <button
                     key={upgrade.id}
                     type="button"
-                    className={`shop-upgrade ${!canAfford ? 'disabled' : ''}`}
+                    className={`shop-upgrade shop-item--gated ${!canAfford || locked ? 'disabled' : ''}`}
                     onClick={() => onBuyClickUpgrade(upgrade.id)}
-                    disabled={!canAfford}
+                    disabled={!canAfford || locked}
                   >
-                    <div className="upgrade-top">
-                      <span className="upgrade-name">{upgrade.name}</span>
-                      <span className="upgrade-level">Lv.{level}</span>
-                    </div>
-                    <div className="upgrade-desc">{upgrade.description}</div>
-                    <div className={`upgrade-cost ${canAfford ? 'afford' : ''}`}>
-                      {formatNumber(cost)} Clout
+                    <div className="shop-gated-wrap">
+                      <div className="upgrade-top">
+                        <span className="upgrade-name">{upgrade.name}</span>
+                        <span className="upgrade-level">Lv.{level}</span>
+                      </div>
+                      <div className="upgrade-desc">{upgrade.description}</div>
+                      <div className={`upgrade-cost ${canAfford && !locked ? 'afford' : ''}`}>
+                        {formatNumber(cost)} Clout
+                      </div>
+                      {locked && <PrestigeLockBadge minPrestige={minP} />}
                     </div>
                   </button>
                 );
@@ -93,32 +118,56 @@ export const ShopPanel = ({
 
           {shopTab === 'influencers' && (
             <div className="shop-items">
+              <p className="shop-passive-hint">
+                HUD passive <strong>{formatRate(passiveCloutPerSecond)}</strong>/s — sum of each owned talent line
+                below (grid buffs + agency-wide × included).
+              </p>
               {availableInfluencers.map(influencer => {
                 const owned = influencers.filter(i => i.typeId === influencer.id).length;
                 const raw = scaledUnitCost(influencer.cost, owned);
                 const nextCost = Math.ceil(raw * costMult);
                 const canAfford = clout >= nextCost;
                 const isSelected = selectedTool?.type === 'influencer' && selectedTool?.id === influencer.id;
+                const agencySlice =
+                  owned > 0 ? (passiveByTalentType[influencer.id] ?? 0) : null;
+                const minP = getMinPrestige(influencer);
+                const locked = minP > 0 && prestigeCount < minP;
 
                 return (
                   <button
                     key={influencer.id}
                     type="button"
-                    className={`shop-item ${isSelected ? 'selected' : ''} ${!canAfford ? 'disabled' : ''}`}
+                    className={`shop-item shop-item--gated ${isSelected ? 'selected' : ''} ${!canAfford || locked ? 'disabled' : ''}`}
                     onClick={() => onSelectTool({ type: 'influencer', id: influencer.id })}
-                    disabled={!canAfford}
+                    disabled={!canAfford || locked}
                     style={{
                       borderColor: influencer.color,
                       boxShadow: isSelected ? `0 0 20px ${influencer.color}` : 'none'
                     }}
                   >
+                    <div className="shop-gated-wrap">
                     <div className="item-header">
                       <span className="item-icon" style={{ textShadow: `0 0 10px ${influencer.color}` }}>
                         {influencer.icon}
                       </span>
                       <div className="item-info">
                         <div className="item-name">{influencer.name}</div>
-                        <div className="item-stats">{formatRate(influencer.baseCloutPerSecond)}/s passive</div>
+                        <div className="item-stats">
+                          {owned > 0 ? (
+                            <>
+                              {formatRate(agencySlice)}/s to agency
+                              <span className="item-stats-base">
+                                {' '}
+                                · base {formatRate(influencer.baseCloutPerSecond)}/s on tile
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              {formatRate(influencer.baseCloutPerSecond)}/s base on tile
+                              <span className="item-stats-base"> · grid &amp; agency × on hire</span>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <div className="item-description">{influencer.description}</div>
@@ -129,6 +178,8 @@ export const ShopPanel = ({
                       </span>
                     </div>
                     {isSelected && <div className="selected-indicator">Click grid to place</div>}
+                    {locked && <PrestigeLockBadge minPrestige={minP} />}
+                    </div>
                   </button>
                 );
               })}
@@ -142,6 +193,8 @@ export const ShopPanel = ({
                 const raw = scaledUnitCost(m.cost, owned);
                 const nextCost = Math.ceil(raw * costMult);
                 const canAfford = clout >= nextCost;
+                const minP = getMinPrestige(m);
+                const locked = minP > 0 && prestigeCount < minP;
                 const detail =
                   m.effect === 'autoclick'
                     ? `${m.clicksPerSecond ?? 10} posts/s each`
@@ -157,10 +210,11 @@ export const ShopPanel = ({
                   <button
                     key={m.id}
                     type="button"
-                    className={`shop-item ${!canAfford ? 'disabled' : ''}`}
+                    className={`shop-item shop-item--gated ${!canAfford || locked ? 'disabled' : ''}`}
                     onClick={() => onBuyManager(m.id)}
-                    disabled={!canAfford}
+                    disabled={!canAfford || locked}
                   >
+                    <div className="shop-gated-wrap">
                     <div className="item-header">
                       <span className="item-icon" style={{ textShadow: '0 0 10px #88ffee' }}>
                         {m.id === 'intern'
@@ -181,6 +235,8 @@ export const ShopPanel = ({
                       <span className="item-owned">×{owned} hired</span>
                       <span className="item-cost">{formatNumber(nextCost)} Clout</span>
                     </div>
+                    {locked && <PrestigeLockBadge minPrestige={minP} />}
+                    </div>
                   </button>
                 );
               })}
@@ -195,20 +251,23 @@ export const ShopPanel = ({
                 const nextCost = Math.ceil(raw * costMult);
                 const canAfford = clout >= nextCost;
                 const isSelected = selectedTool?.type === 'building' && selectedTool?.id === building.id;
+                const minP = getMinPrestige(building);
+                const locked = minP > 0 && prestigeCount < minP;
 
                 return (
                   <button
                     key={building.id}
                     type="button"
-                    className={`shop-item ${isSelected ? 'selected' : ''} ${!canAfford ? 'disabled' : ''}`}
+                    className={`shop-item shop-item--gated ${isSelected ? 'selected' : ''} ${!canAfford || locked ? 'disabled' : ''}`}
                     title={`Footprint ${building.size}×${building.size} tiles · Buff radius ${building.range} (Manhattan from edge) · ×${building.multiplier} talent in range`}
                     onClick={() => onSelectTool({ type: 'building', id: building.id })}
-                    disabled={!canAfford}
+                    disabled={!canAfford || locked}
                     style={{
                       borderColor: building.color,
                       boxShadow: isSelected ? `0 0 20px ${building.color}` : 'none'
                     }}
                   >
+                    <div className="shop-gated-wrap">
                     <div className="item-header">
                       <span className="item-icon" style={{ textShadow: `0 0 10px ${building.color}` }}>
                         {building.icon}
@@ -226,6 +285,8 @@ export const ShopPanel = ({
                       <span className="item-cost">{formatNumber(nextCost)} Clout</span>
                     </div>
                     {isSelected && <div className="selected-indicator">Click grid to place</div>}
+                    {locked && <PrestigeLockBadge minPrestige={minP} />}
+                    </div>
                   </button>
                 );
               })}

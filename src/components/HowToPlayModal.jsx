@@ -148,7 +148,7 @@ const PAGES = [
           <strong>Staff</strong> (shop tab) spends Clout like other hires: interns run scheduled posts (no viral click
           frenzy on those), agents wait a moment then sign deals that keep rep above a floor, executive producers
           boost passive (compounding but softer than before), and brand scouts nudge the <strong>weekly sponsor meta</strong>{' '}
-          — duplicates stack with rising prices.
+          — each extra copy of the same role costs more on an accelerating curve.
         </p>
         <p>
           Use <strong>Export save</strong> / <strong>Import save</strong> in the left panel to back up or move your

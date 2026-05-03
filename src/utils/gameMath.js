@@ -1,5 +1,6 @@
 import {
   UNIT_PRICE_GROWTH,
+  UNIT_PRICE_DUPLICATE_EXP,
   buildingTypes,
   getSynergyMultiplierFromBuildingTypes,
   CLOUT_PRICE_MULTIPLIER
@@ -65,7 +66,9 @@ export function getFollowerBonusSummary(followers) {
 }
 
 export function scaledUnitCost(baseCost, owned, growth = UNIT_PRICE_GROWTH) {
-  return Math.ceil(baseCost * Math.pow(growth, owned) * CLOUT_PRICE_MULTIPLIER);
+  const n = Math.max(0, Math.floor(owned));
+  const exponent = n === 0 ? 0 : Math.pow(n, UNIT_PRICE_DUPLICATE_EXP);
+  return Math.ceil(baseCost * Math.pow(growth, exponent) * CLOUT_PRICE_MULTIPLIER);
 }
 
 export function clickUpgradeNextCost(upgrade, currentLevel) {

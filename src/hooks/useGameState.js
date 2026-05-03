@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback, useRef, useMemo } from 'react';
 import {
   influencerTypes,
   buildingTypes,
@@ -11,7 +11,6 @@ import {
   PRESTIGE_GEMS_BASE,
   brandDealsMaySpawn,
   reputationIncomeMultiplierFromRep,
-  getSynergyMultiplierFromBuildingTypes,
   computeBrandDealPayouts,
   getBrandDealSeasonalWeightMult,
   AGENT_AUTO_ACCEPT_DELAY_MS,
@@ -22,14 +21,15 @@ import {
   CLOUT_PRICE_MULTIPLIER,
   PRESTIGE_MULT_PER_LEVEL,
   getProducerPassiveMult,
-  CLICK_UPGRADE_MULT_SOFTEN
+  CLICK_UPGRADE_MULT_SOFTEN,
+  getMinPrestige
 } from '../data/gameData';
 import {
   scaledUnitCost,
   clickUpgradeNextCost,
   getFollowerCloutMult,
   getFollowerCostMult,
-  distanceToBuildingFootprint
+  getLocalGridBuffMultiplier
 } from '../utils/gameMath';
 import {
   loadGameSnapshot,
@@ -222,33 +222,18 @@ export const useGameState = () => {
     [reputation]
   );
 
-  const calculatePassiveIncome = useCallback(() => {
-    let totalCloutPerSecond = 0;
+  const passiveIncomeSnapshot = useMemo(() => {
+    let totalRaw = 0;
+    const rawByTalentType = {};
+    const rawByInfluencerId = {};
 
-    influencers.forEach(influencer => {
-      const type = influencerTypes.find(t => t.id === influencer.typeId);
-      let cloutPerSecond = type.baseCloutPerSecond;
-      const buildingTypesInRange = [];
-
-      buildings.forEach(building => {
-        const buildingType = buildingTypes.find(t => t.id === building.typeId);
-        if (buildingType?.effect === 'multiply') {
-          const distance = distanceToBuildingFootprint(
-            building,
-            influencer.position.x,
-            influencer.position.y
-          );
-          if (distance <= buildingType.range) {
-            cloutPerSecond *= buildingType.multiplier;
-            buildingTypesInRange.push(buildingType.id);
-          }
-        }
-      });
-
-      const uniqueBuildingTypes = [...new Set(buildingTypesInRange)];
-      cloutPerSecond *= getSynergyMultiplierFromBuildingTypes(influencer.typeId, uniqueBuildingTypes);
-
-      totalCloutPerSecond += cloutPerSecond;
+    influencers.forEach(inf => {
+      const type = influencerTypes.find(t => t.id === inf.typeId);
+      if (!type) return;
+      const raw = type.baseCloutPerSecond * getLocalGridBuffMultiplier(inf, buildings);
+      totalRaw += raw;
+      rawByTalentType[type.id] = (rawByTalentType[type.id] ?? 0) + raw;
+      rawByInfluencerId[inf.id] = raw;
     });
 
     const frenzyPassiveMult =
@@ -256,31 +241,53 @@ export const useGameState = () => {
         ? activeFrenzy.multiplier
         : 1;
 
-    const producerCount = managers.filter(m => m.typeId === 'producer').length;
-    const producerMult = getProducerPassiveMult(producerCount);
+    const producerMult = getProducerPassiveMult(
+      managers.filter(m => m.typeId === 'producer').length
+    );
 
-    return (
-      totalCloutPerSecond *
+    const globalMult =
       producerMult *
       prestigeMultiplier *
       getFollowerCloutMult(followers) *
-      getReputationIncomeMultiplier() *
-      getGemCloutMult() *
-      getGemPassiveMult() *
+      reputationIncomeMultiplierFromRep(reputation) *
+      (1 + gemCloutMultStacks * GEM_STACK_BONUS) *
+      (1 + gemPassiveMultStacks * GEM_PASSIVE_BONUS) *
       frenzyPassiveMult *
-      PASSIVE_GLOBAL_MULT
-    );
+      PASSIVE_GLOBAL_MULT;
+
+    const total = totalRaw * globalMult;
+    const passiveByTalentType = {};
+    for (const k of Object.keys(rawByTalentType)) {
+      passiveByTalentType[k] = rawByTalentType[k] * globalMult;
+    }
+    const passiveByInfluencerId = {};
+    for (const k of Object.keys(rawByInfluencerId)) {
+      passiveByInfluencerId[k] = rawByInfluencerId[k] * globalMult;
+    }
+
+    return {
+      total,
+      passiveByTalentType,
+      passiveByInfluencerId,
+      totalRaw,
+      globalMult
+    };
   }, [
     influencers,
     buildings,
     managers,
     prestigeMultiplier,
     followers,
-    getReputationIncomeMultiplier,
-    getGemCloutMult,
-    getGemPassiveMult,
+    reputation,
+    gemCloutMultStacks,
+    gemPassiveMultStacks,
     activeFrenzy
   ]);
+
+  const calculatePassiveIncome = useCallback(
+    () => passiveIncomeSnapshot.total,
+    [passiveIncomeSnapshot]
+  );
 
   const computePostClout = useCallback(
     applyClickFrenzy => {
@@ -346,6 +353,11 @@ export const useGameState = () => {
     (typeId, position) => {
       const type = influencerTypes.find(t => t.id === typeId);
       if (!type) return false;
+      const minP = getMinPrestige(type);
+      if (prestigeCount < minP) {
+        addNotification(`Requires prestige ${minP}+ (currently ${prestigeCount}).`, 'warning');
+        return false;
+      }
       const owned = influencers.filter(i => i.typeId === typeId).length;
       const rawCost = scaledUnitCost(type.cost, owned);
       const cost = Math.ceil(rawCost * getFollowerCostMult(followers));
@@ -376,13 +388,18 @@ export const useGameState = () => {
 
       return true;
     },
-    [clout, influencers, buildings, followers, addNotification]
+    [clout, influencers, buildings, followers, prestigeCount, addNotification]
   );
 
   const placeBuilding = useCallback(
     (typeId, position) => {
       const type = buildingTypes.find(t => t.id === typeId);
       if (!type) return false;
+      const minP = getMinPrestige(type);
+      if (prestigeCount < minP) {
+        addNotification(`Requires prestige ${minP}+ (currently ${prestigeCount}).`, 'warning');
+        return false;
+      }
       const owned = buildings.filter(b => b.typeId === typeId).length;
       const rawCost = scaledUnitCost(type.cost, owned);
       const cost = Math.ceil(rawCost * getFollowerCostMult(followers));
@@ -414,13 +431,18 @@ export const useGameState = () => {
 
       return true;
     },
-    [clout, buildings, influencers, followers, addNotification]
+    [clout, buildings, influencers, followers, prestigeCount, addNotification]
   );
 
   const buyManager = useCallback(
     typeId => {
       const def = managerTypes.find(m => m.id === typeId);
       if (!def) return false;
+      const minP = getMinPrestige(def);
+      if (prestigeCount < minP) {
+        addNotification(`Requires prestige ${minP}+ (currently ${prestigeCount}).`, 'warning');
+        return false;
+      }
       const owned = managers.filter(m => m.typeId === typeId).length;
       const rawCost = scaledUnitCost(def.cost, owned);
       const cost = Math.ceil(rawCost * getFollowerCostMult(followers));
@@ -430,7 +452,7 @@ export const useGameState = () => {
       addNotification(`Hired ${def.name}!`, 'success');
       return true;
     },
-    [clout, managers, followers, addNotification]
+    [clout, managers, followers, prestigeCount, addNotification]
   );
 
   const acceptBrandDeal = useCallback(() => {
@@ -519,6 +541,11 @@ export const useGameState = () => {
     upgradeId => {
       const def = clickUpgradeTypes.find(u => u.id === upgradeId);
       if (!def) return false;
+      const minP = getMinPrestige(def);
+      if (prestigeCount < minP) {
+        addNotification(`Requires prestige ${minP}+ (currently ${prestigeCount}).`, 'warning');
+        return false;
+      }
 
       const level = clickUpgradeLevels[upgradeId] ?? 0;
       const cost = clickUpgradeNextCost(def, level);
@@ -529,7 +556,7 @@ export const useGameState = () => {
       addNotification(`${def.name} → Lv.${level + 1}`, 'success');
       return true;
     },
-    [clout, clickUpgradeLevels, addNotification]
+    [clout, clickUpgradeLevels, prestigeCount, addNotification]
   );
 
   const buyGemCloutStack = useCallback(() => {
@@ -957,6 +984,8 @@ export const useGameState = () => {
     runCloutEarned,
     prestigeRunCloutRequired,
     passiveCloutPerSecond: calculatePassiveIncome(),
+    passiveByTalentType: passiveIncomeSnapshot.passiveByTalentType,
+    passiveByInfluencerId: passiveIncomeSnapshot.passiveByInfluencerId,
     clickCloutPerClick: getClickClout(),
     activeFrenzy,
     clickUpgradeLevels,
