@@ -36,7 +36,9 @@ import {
   writeGameSnapshot,
   downloadSaveFile,
   importSaveFromJsonText,
-  clearAllLocalGameData
+  clearAllLocalGameData,
+  markResetSaveGuard,
+  clearResetSaveGuard
 } from '../utils/persistence';
 import { playPrestigeChime } from '../utils/sound';
 
@@ -906,6 +908,7 @@ export const useGameState = () => {
         return false;
       }
       writeGameSnapshot(snap);
+      markResetSaveGuard();
       addNotification('Save imported — reloading…', 'success');
       window.setTimeout(() => window.location.reload(), 120);
       return true;
@@ -958,8 +961,13 @@ export const useGameState = () => {
   ]);
 
   const resetAllLocalProgress = useCallback(() => {
+    markResetSaveGuard();
     clearAllLocalGameData();
     window.location.reload();
+  }, []);
+
+  useLayoutEffect(() => {
+    clearResetSaveGuard();
   }, []);
 
   useLayoutEffect(() => {

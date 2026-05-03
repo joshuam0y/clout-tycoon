@@ -3,6 +3,37 @@ import { SFX_MUTE_STORAGE_KEY } from './sound';
 export const SAVE_VERSION = 3;
 export const SAVE_KEY = 'clout-tycoon-save';
 
+/**
+ * Blocks autosave while reset runs (debounced writes could otherwise fire after clear() and repopulate localStorage).
+ * Same-origin sessionStorage survives navigation within the tab.
+ */
+const RESET_SAVE_GUARD_KEY = 'clout-tycoon-reset-save-guard';
+
+export function markResetSaveGuard() {
+  try {
+    sessionStorage.setItem(RESET_SAVE_GUARD_KEY, '1');
+  } catch {
+    /* storage denied */
+  }
+}
+
+/** Call once after app mounts so normal autosave works again. */
+export function clearResetSaveGuard() {
+  try {
+    sessionStorage.removeItem(RESET_SAVE_GUARD_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+function isResetSaveGuardActive() {
+  try {
+    return sessionStorage.getItem(RESET_SAVE_GUARD_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
 /** Removes main save + local preferences (SFX mute). Reload after calling for a clean session. */
 export function clearAllLocalGameData() {
   try {
@@ -73,6 +104,7 @@ export function loadGameSnapshot() {
 
 export function writeGameSnapshot(payload) {
   try {
+    if (isResetSaveGuardActive()) return;
     const normalized = normalizeSnapshot(payload);
     if (!normalized) return;
     localStorage.setItem(
