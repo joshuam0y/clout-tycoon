@@ -743,7 +743,7 @@ export function migrateClickUpgradeLevels(raw) {
 export const clickUpgradeTypes = [
   {
     id: 'post_t01',
-    name: 'Echo',
+    name: 'Thumb Training',
     description: '+1 Clout per post per level',
     baseCost: 18,
     growth: 1.142,
@@ -752,7 +752,7 @@ export const clickUpgradeTypes = [
   },
   {
     id: 'post_t02',
-    name: 'Ripple',
+    name: 'Opening Hook',
     description: '+2 Clout per post per level',
     baseCost: 42,
     growth: 1.143,
@@ -761,7 +761,7 @@ export const clickUpgradeTypes = [
   },
   {
     id: 'post_t03',
-    name: 'Pulse',
+    name: 'Trend Radar',
     description: '+3 Clout per post per level',
     baseCost: 95,
     growth: 1.144,
@@ -770,7 +770,7 @@ export const clickUpgradeTypes = [
   },
   {
     id: 'post_t04',
-    name: 'Surge',
+    name: 'Caption Polish',
     description: '+4 Clout per post per level',
     baseCost: 220,
     growth: 1.145,
@@ -779,7 +779,7 @@ export const clickUpgradeTypes = [
   },
   {
     id: 'post_t05',
-    name: 'Forge',
+    name: 'Thumbnail Science',
     description: '+4 payout boost per post per level',
     baseCost: 500,
     growth: 1.146,
@@ -788,7 +788,7 @@ export const clickUpgradeTypes = [
   },
   {
     id: 'post_t06',
-    name: 'Prism',
+    name: 'Content Calendar',
     description: '+5 payout boost per post per level',
     baseCost: 1150,
     growth: 1.147,
@@ -797,7 +797,7 @@ export const clickUpgradeTypes = [
   },
   {
     id: 'post_t07',
-    name: 'Vector',
+    name: 'Collab Engine',
     description: '+6 payout boost per post per level',
     baseCost: 2650,
     growth: 1.148,
@@ -806,7 +806,7 @@ export const clickUpgradeTypes = [
   },
   {
     id: 'post_t08',
-    name: 'Apex',
+    name: 'Strategic Drama',
     description: '+7 payout boost per post per level',
     baseCost: 6200,
     growth: 1.149,
@@ -815,7 +815,7 @@ export const clickUpgradeTypes = [
   },
   {
     id: 'post_t09',
-    name: 'Nova',
+    name: 'Brand Kit',
     description: '+8 payout boost per post per level',
     baseCost: 14500,
     growth: 1.15,
@@ -824,7 +824,7 @@ export const clickUpgradeTypes = [
   },
   {
     id: 'post_t10',
-    name: 'Titan',
+    name: 'Talk Show Slot',
     description: '+9 payout boost per post per level',
     baseCost: 34000,
     growth: 1.151,
@@ -833,7 +833,7 @@ export const clickUpgradeTypes = [
   },
   {
     id: 'post_t11',
-    name: 'Vault',
+    name: 'Halftime Bid',
     description: '+10 payout boost per post per level',
     baseCost: 80000,
     growth: 1.152,
@@ -842,7 +842,7 @@ export const clickUpgradeTypes = [
   },
   {
     id: 'post_t12',
-    name: 'Crown',
+    name: 'Matrix PR Blitz',
     description: '+11 payout boost per post per level',
     baseCost: 190000,
     growth: 1.153,
@@ -851,7 +851,7 @@ export const clickUpgradeTypes = [
   },
   {
     id: 'post_t13',
-    name: 'Mythic',
+    name: 'Singularity Feed',
     description: '+13 payout boost per post per level',
     baseCost: 450000,
     growth: 1.154,
@@ -860,7 +860,7 @@ export const clickUpgradeTypes = [
   },
   {
     id: 'post_t14',
-    name: 'Omega',
+    name: 'Omnichannel Waves',
     description: '+15 payout boost per post per level',
     baseCost: 1100000,
     growth: 1.155,
@@ -869,7 +869,7 @@ export const clickUpgradeTypes = [
   },
   {
     id: 'post_t15',
-    name: 'Singular',
+    name: 'Syndication Net',
     description: '+17 payout boost per post per level',
     baseCost: 2700000,
     growth: 1.156,
@@ -878,7 +878,7 @@ export const clickUpgradeTypes = [
   },
   {
     id: 'post_t16',
-    name: 'Infinite',
+    name: 'Total Presence',
     description: '+20 payout boost per post per level',
     baseCost: 6500000,
     growth: 1.157,
