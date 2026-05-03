@@ -17,44 +17,6 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick })
   const dragStateRef = useRef(null);
   const suppressPlacementClickRef = useRef(false);
 
-  const blueprintPads = useMemo(() => {
-    const nano = influencerTypes.find(i => i.id === 'nano');
-    const desk = buildingTypes.find(b => b.id === 'desk');
-    const studio = buildingTypes.find(b => b.id === 'studio');
-    return [
-      {
-        key: 'talent',
-        worldX: -3,
-        worldY: 0,
-        w: 1,
-        h: 1,
-        label: nano?.name ?? 'Talent',
-        sym: nano?.icon ?? '✨'
-      },
-      {
-        key: 'desk',
-        worldX: -1,
-        worldY: 0,
-        w: 1,
-        h: 1,
-        label: desk?.name ?? 'Desk',
-        sym: desk?.icon ?? '💻'
-      },
-      {
-        key: 'studio',
-        worldX: 1,
-        worldY: -1,
-        w: 2,
-        h: 2,
-        label: studio?.name ?? 'Studio',
-        sym: studio?.icon ?? '🎬'
-      }
-    ];
-  }, []);
-
-  const placementCount = influencers.length + buildings.length;
-  const showBlueprintPads = placementCount < 4;
-
   const viewportWorldBand = useMemo(() => {
     const ox = viewOffset.x;
     const oy = viewOffset.y;
@@ -99,6 +61,23 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick })
       tileY < building.position.y + type.size
     );
   };
+
+  const hoveredPlacedBuilding = useMemo(() => {
+    if (selectedTool || !hoveredCell) return null;
+    for (let i = buildings.length - 1; i >= 0; i--) {
+      if (doesBuildingCoverTile(buildings[i], hoveredCell.x, hoveredCell.y)) return buildings[i];
+    }
+    return null;
+  }, [selectedTool, hoveredCell, buildings]);
+
+  const hoveredTalentOnly = useMemo(() => {
+    if (selectedTool || !hoveredCell || hoveredPlacedBuilding) return null;
+    return (
+      influencers.find(
+        inf => inf.position.x === hoveredCell.x && inf.position.y === hoveredCell.y
+      ) ?? null
+    );
+  }, [selectedTool, hoveredCell, hoveredPlacedBuilding, influencers]);
 
   const getPlacementState = anchor => {
     if (!selectedTool || !anchor || selectedPlacementSize <= 0) {
@@ -284,48 +263,21 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick })
 
   return (
     <div className="game-world">
-      <div
-        className={`world-grid ${isDragging ? 'dragging' : ''}`}
-        style={{
-          width: VIEW_COLS * CELL_SIZE,
-          height: VIEW_ROWS * CELL_SIZE
-        }}
-        onMouseLeave={() => {
-          setHoveredCell(null);
-          handleMouseUp();
-        }}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-      >
-        {showBlueprintPads && (
-          <>
-            <div className="blueprint-layer" aria-hidden />
-            {blueprintPads.map(pad => (
-              <div
-                key={pad.key}
-                className="blueprint-pad"
-                style={{
-                  ...toScreen(pad.worldX, pad.worldY),
-                  width: CELL_SIZE * pad.w,
-                  height: CELL_SIZE * pad.h
-                }}
-              >
-                <span className="blueprint-pad-sym" aria-hidden>
-                  {pad.sym}
-                </span>
-                <span className="blueprint-pad-label">{pad.label}</span>
-              </div>
-            ))}
-          </>
-        )}
-        {placementCount < 12 && (
-          <div className="blueprint-ribbon">
-            {placementCount === 0
-              ? 'Starter layout (suggested): hire Nano Creator on a tile, add Creator Desk in range, then Content Studio for a bigger buff radius.'
-              : 'Placements are fixed to the grid — drag only moves the camera. Keep stacking talent and buff buildings from the Agency Shop.'}
-          </div>
-        )}
+      <div className="world-grid-wrap">
+        <div
+          className={`world-grid ${isDragging ? 'dragging' : ''}`}
+          style={{
+            width: VIEW_COLS * CELL_SIZE,
+            height: VIEW_ROWS * CELL_SIZE
+          }}
+          onMouseLeave={() => {
+            setHoveredCell(null);
+            handleMouseUp();
+          }}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+        >
         {/* Grid cells */}
         {visibleCells.map(cell => (
           <div
@@ -445,7 +397,64 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick })
           );
         })}
 
+        {hoveredPlacedBuilding &&
+          !selectedTool &&
+          (() => {
+            const hb = hoveredPlacedBuilding;
+            const ht = buildingTypes.find(t => t.id === hb.typeId);
+            if (!ht) return null;
+            const p = toScreen(hb.position.x, hb.position.y);
+            return (
+              <div
+                className="entity-hover-tooltip"
+                style={{
+                  left: p.left,
+                  top: p.top,
+                  width: CELL_SIZE * ht.size
+                }}
+              >
+                <div className="entity-hover-title">
+                  {ht.icon} {ht.name}
+                </div>
+                <div className="entity-hover-line">
+                  Footprint <strong>{ht.size}×{ht.size}</strong> tiles · Buff radius{' '}
+                  <strong>{ht.range}</strong> (Manhattan steps from edge)
+                </div>
+                <div className="entity-hover-line">
+                  <strong>×{ht.multiplier}</strong> to passive Clout for talent in range (stacks per building)
+                </div>
+              </div>
+            );
+          })()}
+
+        {hoveredTalentOnly &&
+          !selectedTool &&
+          (() => {
+            const tt = influencerTypes.find(t => t.id === hoveredTalentOnly.typeId);
+            if (!tt) return null;
+            const p = toScreen(hoveredTalentOnly.position.x, hoveredTalentOnly.position.y);
+            return (
+              <div
+                className="entity-hover-tooltip talent-hover-tooltip"
+                style={{
+                  left: p.left,
+                  top: p.top,
+                  width: CELL_SIZE
+                }}
+              >
+                <div className="entity-hover-title">
+                  {tt.icon} {tt.name}
+                </div>
+                <div className="entity-hover-line">
+                  Tile: <strong>1×1</strong> · Base passive <strong>{tt.baseCloutPerSecond.toFixed(2)}</strong>{' '}
+                  Clout/s (before buffs)
+                </div>
+              </div>
+            );
+          })()}
+
         <div className="camera-hint">Drag to pan · infinite grid</div>
+        </div>
       </div>
     </div>
   );

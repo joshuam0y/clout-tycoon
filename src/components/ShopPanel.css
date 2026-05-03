@@ -11,16 +11,59 @@
   border-left: none;
 }
 
-.shop-scroll {
+.shop-inner {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-md);
+  padding-bottom: calc(var(--spacing-md) + env(safe-area-inset-bottom, 0px));
+  gap: var(--spacing-sm);
+}
+
+.shop-tabs {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.shop-tab {
+  flex: 1;
+  min-height: 44px;
+  padding: 8px 6px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: 2px solid rgba(0, 255, 255, 0.35);
+  border-radius: 8px;
+  background: rgba(0, 20, 30, 0.85);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s, box-shadow 0.12s, background 0.12s;
+}
+
+.shop-tab:hover {
+  color: var(--text-primary);
+  border-color: rgba(0, 255, 255, 0.55);
+}
+
+.shop-tab.active {
+  color: var(--neon-cyan);
+  border-color: var(--neon-cyan);
+  background: rgba(0, 255, 255, 0.1);
+  box-shadow: var(--glow-cyan);
+}
+
+.shop-tab-panel {
   flex: 1;
   min-height: 0;
   overflow-x: hidden;
   overflow-y: auto;
-  padding: var(--spacing-md);
-  padding-bottom: calc(var(--spacing-xl) + env(safe-area-inset-bottom, 0px));
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
+  overscroll-behavior: contain;
+  scroll-behavior: auto;
+  padding-top: var(--spacing-xs);
+  -webkit-overflow-scrolling: touch;
 }
 
 .shop-follower-discount {
@@ -109,7 +152,7 @@
 }
 
 .upgrade-name {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: bold;
   color: var(--text-primary);
 }
@@ -121,9 +164,9 @@
 }
 
 .upgrade-desc {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text-secondary);
-  line-height: 1.35;
+  line-height: 1.4;
 }
 
 .upgrade-cost {

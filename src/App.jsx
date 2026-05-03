@@ -8,6 +8,7 @@ import { BrandDealPopup } from './components/BrandDealPopup';
 import { Notifications } from './components/Notifications';
 import { MonetizationPanel } from './components/MonetizationPanel';
 import { HowToPlayModal } from './components/HowToPlayModal';
+import { AgencyRoadmapBar } from './components/AgencyRoadmapBar';
 
 function App() {
   const gameState = useGameState();
@@ -40,7 +41,11 @@ function App() {
       {/* Scanline effect */}
       <div className="scanline" />
 
-      {/* Main game layout */}
+      <AgencyRoadmapBar
+        influencerCount={gameState.influencers.length}
+        buildingCount={gameState.buildings.length}
+      />
+
       <div className="game-layout">
         {/* Left panel - Controls and stats */}
         <ControlPanel
@@ -56,6 +61,8 @@ function App() {
           runCloutEarned={gameState.runCloutEarned}
           gems={gameState.gems}
           totalClicks={gameState.totalClicks}
+          prestigeRunCloutRequired={gameState.prestigeRunCloutRequired}
+          activeFrenzy={gameState.activeFrenzy}
           onClickPostContent={gameState.clickPostContent}
           onPrestige={gameState.prestige}
           onOpenShop={() => setShowMonetizationPanel(true)}

@@ -6,8 +6,9 @@ import {
   prestigeEras,
   clickUpgradeTypes,
   achievementDefs,
-  PRESTIGE_RUN_CLOUT_THRESHOLD,
+  getPrestigeRunCloutRequired,
   PRESTIGE_GEMS_BASE,
+  brandDealsMaySpawn,
   reputationIncomeMultiplierFromRep
 } from '../data/gameData';
 import {
@@ -43,6 +44,11 @@ const CLOUT_SURGE_SECONDS = 72;
 const GACHA_SINGLE_COST = 85;
 const GACHA_MULTI_COST = 750;
 const GACHA_MULTI_PULLS = 10;
+
+const FRENZY_COOLDOWN_MS = 72_000;
+const FRENZY_DURATION_MIN_MS = 12_000;
+const FRENZY_DURATION_MAX_MS = 22_000;
+const FRENZY_SPAWN_CHANCE_PER_TICK = 0.00038;
 
 const savedGame = loadGameSnapshot();
 
@@ -144,6 +150,13 @@ export const useGameState = () => {
     () => savedGame?.brandDealsAccepted ?? 0
   );
 
+  const [activeFrenzy, setActiveFrenzy] = useState(null);
+  const [frenzyCooldownEndAt, setFrenzyCooldownEndAt] = useState(0);
+  /** Bumps during active frenzy so HUD countdown repaints even when passive Clout/tick is 0 */
+  const [, setFrenzyUiTick] = useState(0);
+
+  const prestigeRunCloutRequired = getPrestigeRunCloutRequired(prestigeCount);
+
   const addNotification = useCallback((message, type = 'info') => {
     const notification = {
       id: Date.now() + Math.random(),
@@ -203,13 +216,19 @@ export const useGameState = () => {
       totalCloutPerSecond += cloutPerSecond;
     });
 
+    const frenzyPassiveMult =
+      activeFrenzy?.kind === 'passive_frenzy' && Date.now() < activeFrenzy.endsAt
+        ? activeFrenzy.multiplier
+        : 1;
+
     return (
       totalCloutPerSecond *
       prestigeMultiplier *
       getFollowerCloutMult(followers) *
       getReputationIncomeMultiplier() *
       getGemCloutMult() *
-      getGemPassiveMult()
+      getGemPassiveMult() *
+      frenzyPassiveMult
     );
   }, [
     influencers,
@@ -218,7 +237,8 @@ export const useGameState = () => {
     followers,
     getReputationIncomeMultiplier,
     getGemCloutMult,
-    getGemPassiveMult
+    getGemPassiveMult,
+    activeFrenzy
   ]);
 
   const getClickClout = useCallback(() => {
@@ -229,6 +249,11 @@ export const useGameState = () => {
       getReputationIncomeMultiplier() *
       getGemCloutMult() *
       getGemClickMult();
+    const frenzyClickMult =
+      activeFrenzy?.kind === 'click_frenzy' && Date.now() < activeFrenzy.endsAt
+        ? activeFrenzy.multiplier
+        : 1;
+    mult *= frenzyClickMult;
     clickUpgradeTypes.forEach(u => {
       const level = clickUpgradeLevels[u.id] ?? 0;
       if (level === 0) return;
@@ -242,7 +267,8 @@ export const useGameState = () => {
     clickUpgradeLevels,
     getReputationIncomeMultiplier,
     getGemCloutMult,
-    getGemClickMult
+    getGemClickMult,
+    activeFrenzy
   ]);
 
   const addCloutEarned = useCallback(delta => {
@@ -365,7 +391,8 @@ export const useGameState = () => {
   ]);
 
   const prestige = useCallback(() => {
-    if (runCloutEarned < PRESTIGE_RUN_CLOUT_THRESHOLD) return false;
+    const required = getPrestigeRunCloutRequired(prestigeCount);
+    if (runCloutEarned < required) return false;
 
     const newPrestigeCount = prestigeCount + 1;
     const newMultiplier = 1 + newPrestigeCount * 0.45;
@@ -380,6 +407,8 @@ export const useGameState = () => {
     setManagers([]);
     setActiveBrandDeal(null);
     setBrandDealCooldown(0);
+    setActiveFrenzy(null);
+    setFrenzyCooldownEndAt(0);
     setTotalClicks(0);
     setRunCloutEarned(0);
     setClickUpgradeLevels({});
@@ -615,6 +644,15 @@ export const useGameState = () => {
 
   useEffect(() => {
     const interval = setInterval(() => {
+      const now = Date.now();
+
+      if (activeFrenzy && now >= activeFrenzy.endsAt) {
+        setActiveFrenzy(null);
+        setFrenzyCooldownEndAt(now + FRENZY_COOLDOWN_MS);
+      } else if (activeFrenzy && now < activeFrenzy.endsAt) {
+        setFrenzyUiTick(t => (t + 1) % 1_000_000);
+      }
+
       const passiveCloutPerSecond = calculatePassiveIncome();
       const passiveCloutPerTick = (passiveCloutPerSecond * TICK_INTERVAL) / 1000;
 
@@ -632,8 +670,32 @@ export const useGameState = () => {
       }
 
       if (
+        !activeFrenzy &&
+        now >= frenzyCooldownEndAt &&
+        (influencers.length >= 1 || totalClicks > 35) &&
+        Math.random() < FRENZY_SPAWN_CHANCE_PER_TICK * (0.48 + (reputation / 100) * 0.95)
+      ) {
+        const passiveRoll = Math.random() < 0.5;
+        const mult = passiveRoll ? 2.05 + Math.random() * 2.2 : 1.9 + Math.random() * 1.95;
+        const duration =
+          FRENZY_DURATION_MIN_MS + Math.random() * (FRENZY_DURATION_MAX_MS - FRENZY_DURATION_MIN_MS);
+        setActiveFrenzy({
+          kind: passiveRoll ? 'passive_frenzy' : 'click_frenzy',
+          multiplier: mult,
+          endsAt: now + duration
+        });
+        addNotification(
+          passiveRoll
+            ? `📈 Feed surge — passive ×${mult.toFixed(1)} (~${Math.round(duration / 1000)}s)`
+            : `🔥 Viral frenzy — posts ×${mult.toFixed(1)} (~${Math.round(duration / 1000)}s)`,
+          'success'
+        );
+      }
+
+      if (
         !activeBrandDeal &&
         brandDealCooldown === 0 &&
+        brandDealsMaySpawn(lifetimeClout, influencers.length, buildings.length) &&
         Math.random() < BRAND_DEAL_SPAWN_CHANCE_PER_TICK * (0.28 + (reputation / 100) * 0.85)
       ) {
         const availableDeals = brandDealTypes.filter(deal => deal.requiredEra <= currentEra);
@@ -696,10 +758,15 @@ export const useGameState = () => {
     activeBrandDeal,
     currentEra,
     influencers.length,
+    buildings.length,
     reputation,
     followers,
     clout,
     runCloutEarned,
+    lifetimeClout,
+    activeFrenzy,
+    frenzyCooldownEndAt,
+    totalClicks,
     addCloutEarned,
     addNotification
   ]);
@@ -721,8 +788,10 @@ export const useGameState = () => {
     totalClicks,
     lifetimeClout,
     runCloutEarned,
+    prestigeRunCloutRequired,
     passiveCloutPerSecond: calculatePassiveIncome(),
     clickCloutPerClick: getClickClout(),
+    activeFrenzy,
     clickUpgradeLevels,
     reputationIncomeMultiplier: getReputationIncomeMultiplier(),
     gems,

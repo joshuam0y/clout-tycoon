@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import './ControlPanel.css';
-import { prestigeEras, PRESTIGE_RUN_CLOUT_THRESHOLD } from '../data/gameData';
+import { prestigeEras, PRESTIGE_RUN_CLOUT_SCALE_PER_PRESTIGE } from '../data/gameData';
 import { formatNumber, formatRate } from '../utils/formatNumber';
+import { getFollowerBonusSummary } from '../utils/gameMath';
 
 export const ControlPanel = ({
   clout,
@@ -16,6 +17,8 @@ export const ControlPanel = ({
   runCloutEarned,
   gems,
   totalClicks,
+  prestigeRunCloutRequired,
+  activeFrenzy,
   onClickPostContent,
   onPrestige,
   onOpenShop,
@@ -33,9 +36,19 @@ export const ControlPanel = ({
     setTimeout(() => setIsClicking(false), 100);
   };
 
-  const canPrestige = runCloutEarned >= PRESTIGE_RUN_CLOUT_THRESHOLD;
-  const runProgress = Math.min(1, runCloutEarned / PRESTIGE_RUN_CLOUT_THRESHOLD);
+  const required = prestigeRunCloutRequired ?? 1;
+  const canPrestige = runCloutEarned >= required;
+  const runProgress = Math.min(1, runCloutEarned / required);
   const currentEraData = prestigeEras[currentEra];
+  const followerBonuses = getFollowerBonusSummary(followers);
+  const prestigeScalePct = Math.round((PRESTIGE_RUN_CLOUT_SCALE_PER_PRESTIGE - 1) * 100);
+  const frenzyLive =
+    activeFrenzy && Date.now() < activeFrenzy.endsAt
+      ? activeFrenzy
+      : null;
+  const frenzySecLeft = frenzyLive
+    ? Math.max(0, Math.ceil((frenzyLive.endsAt - Date.now()) / 1000))
+    : 0;
 
   return (
     <div className="control-panel panel">
@@ -68,8 +81,9 @@ export const ControlPanel = ({
         </div>
         <div className="stat-row follower-hint">
           <span>
-            Audience speeds Clout, softens hire/build costs, and nudges deal followers. Reputation affects how
-            fast you earn; messy deals can drag it down.
+            Followers: <strong>+{followerBonuses.cloutBonusPct}%</strong> all Clout ·{' '}
+            <strong>−{followerBonuses.hireDiscountPct}%</strong> hire/build. They also nudge deal payouts and
+            passive audience growth. Reputation shifts income &amp; deal quality.
           </span>
         </div>
         <div className="stat">
@@ -77,6 +91,18 @@ export const ControlPanel = ({
           <span className="stat-value">{Math.floor(reputation)}%</span>
         </div>
       </div>
+
+      {frenzyLive && (
+        <div
+          className={`frenzy-banner ${frenzyLive.kind === 'passive_frenzy' ? 'frenzy-passive' : 'frenzy-click'}`}
+        >
+          <span className="frenzy-banner-label">
+            {frenzyLive.kind === 'passive_frenzy' ? 'Feed surge' : 'Viral frenzy'}
+          </span>
+          <span className="frenzy-banner-mult">×{frenzyLive.multiplier.toFixed(1)}</span>
+          <span className="frenzy-banner-time">{frenzySecLeft}s</span>
+        </div>
+      )}
 
       <div className="economy-strip">
         <div className="economy-cell">
@@ -118,7 +144,7 @@ export const ControlPanel = ({
         <div className="stat-row run-clout-row">
           <span>This run (prestige bar):</span>
           <span>
-            {formatNumber(runCloutEarned)} / {formatNumber(PRESTIGE_RUN_CLOUT_THRESHOLD)}
+            {formatNumber(runCloutEarned)} / {formatNumber(required)}
           </span>
         </div>
         <div className="prestige-run-bar" aria-hidden>
@@ -148,11 +174,12 @@ export const ControlPanel = ({
           Prestige{' '}
           {canPrestige
             ? '✓'
-            : `(${formatNumber(Math.max(0, PRESTIGE_RUN_CLOUT_THRESHOLD - runCloutEarned))} run clout)`}
+            : `(${formatNumber(Math.max(0, required - runCloutEarned))} run clout)`}
         </button>
         <div className="prestige-hint">
-          Resets a run at {formatNumber(PRESTIGE_RUN_CLOUT_THRESHOLD)} this-run clout. Lifetime clout &
-          gems stay. +45% permanent mult per prestige. +1 💎 per prestige, plus +1 extra every 4th prestige.
+          This run needs {formatNumber(required)} Clout to prestige (next run’s bar is ~{prestigeScalePct}% higher
+          per prestige you’ve already finished — compounds). Lifetime clout &amp; gems stay. +45% permanent mult
+          per prestige. +1 💎 per prestige, +1 extra every 4th.
         </div>
       </div>
     </div>

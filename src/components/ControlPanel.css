@@ -120,6 +120,55 @@
   text-shadow: var(--glow-pink);
 }
 
+.frenzy-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  margin-bottom: var(--spacing-sm);
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 2px solid;
+  animation: frenzyPulse 1.2s ease-in-out infinite;
+}
+
+.frenzy-banner.frenzy-click {
+  border-color: var(--neon-pink);
+  color: var(--neon-pink);
+  background: rgba(255, 0, 255, 0.12);
+  box-shadow: var(--glow-pink);
+}
+
+.frenzy-banner.frenzy-passive {
+  border-color: var(--neon-green);
+  color: var(--neon-green);
+  background: rgba(0, 255, 136, 0.1);
+  box-shadow: var(--glow-green);
+}
+
+.frenzy-banner-mult {
+  font-size: 14px;
+}
+
+.frenzy-banner-time {
+  opacity: 0.85;
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes frenzyPulse {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.12);
+  }
+}
+
 .post-button-wrap {
   position: relative;
   margin: var(--spacing-md) 0;
@@ -244,10 +293,11 @@
 }
 
 .follower-hint {
-  font-size: 10px;
-  line-height: 1.35;
-  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-secondary);
   border-left: 3px solid var(--neon-pink);
+  padding-left: 8px;
 }
 
 .run-clout-row span:last-child {

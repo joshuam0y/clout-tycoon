@@ -1,8 +1,50 @@
 /** Per-unit price scaling (Cookie Clicker–style): each copy costs this much more */
-export const UNIT_PRICE_GROWTH = 1.18;
+export const UNIT_PRICE_GROWTH = 1.205;
 
-/** Clout earned this run required before prestige (lifetime clout is all-time and never resets) */
-export const PRESTIGE_RUN_CLOUT_THRESHOLD = 420000;
+/**
+ * This-run Clout needed to prestige — base for first run; scales up each time you prestige.
+ * completedPrestigeCount = current prestigeCount (0 before first prestige, 1 after first, …).
+ */
+export const PRESTIGE_RUN_CLOUT_BASE = 560000;
+/** Each prestige raises the next run’s bar by this factor (compounds). */
+export const PRESTIGE_RUN_CLOUT_SCALE_PER_PRESTIGE = 1.168;
+
+export function getPrestigeRunCloutRequired(completedPrestigeCount) {
+  const n = Math.max(0, Math.floor(completedPrestigeCount ?? 0));
+  const raw = PRESTIGE_RUN_CLOUT_BASE * Math.pow(PRESTIGE_RUN_CLOUT_SCALE_PER_PRESTIGE, n);
+  return Math.min(Number.MAX_SAFE_INTEGER, Math.floor(raw));
+}
+
+/** @deprecated use getPrestigeRunCloutRequired(0) */
+export const PRESTIGE_RUN_CLOUT_THRESHOLD = getPrestigeRunCloutRequired(0);
+
+/** Minimum lifetime Clout before brand deals can ever roll (proves basic engagement). */
+export const BRAND_DEALS_MIN_LIFETIME_CLOUT = 2200;
+
+/** Usually need this many influencers hired (deals = brand attention on a roster). */
+export const BRAND_DEALS_MIN_INFLUENCERS = 2;
+
+/** Solo path: one creator + at least one building + higher lifetime Clout. */
+export const BRAND_DEALS_SOLO_MIN_INFLUENCERS = 1;
+export const BRAND_DEALS_SOLO_MIN_BUILDINGS = 1;
+export const BRAND_DEALS_SOLO_MIN_LIFETIME_CLOUT = 7800;
+
+/**
+ * Fair unlock: lifetime gate + (roster depth OR proven grid + higher lifetime).
+ * Prevents deals before the player has placed talent / structure meaningfully.
+ */
+export function brandDealsMaySpawn(lifetimeClout, influencerCount, buildingCount) {
+  if (lifetimeClout < BRAND_DEALS_MIN_LIFETIME_CLOUT) return false;
+  if (influencerCount >= BRAND_DEALS_MIN_INFLUENCERS) return true;
+  if (
+    influencerCount >= BRAND_DEALS_SOLO_MIN_INFLUENCERS &&
+    buildingCount >= BRAND_DEALS_SOLO_MIN_BUILDINGS &&
+    lifetimeClout >= BRAND_DEALS_SOLO_MIN_LIFETIME_CLOUT
+  ) {
+    return true;
+  }
+  return false;
+}
 
 /** Base gems awarded each prestige (bonus scales slightly with prestige depth) */
 export const PRESTIGE_GEMS_BASE = 1;
