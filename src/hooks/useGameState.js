@@ -1055,6 +1055,37 @@ export const useGameState = () => {
     acceptBrandDealRef.current = acceptBrandDeal;
   }, [acceptBrandDeal]);
 
+  useEffect(() => {
+    const devToolsOn =
+      import.meta.env.DEV ||
+      import.meta.env.VITE_CT_DEV_TOOLS === 'true' ||
+      import.meta.env.VITE_CT_DEV_TOOLS === '1';
+    if (!devToolsOn) return undefined;
+    const api = {
+      setClout: n => setClout(Math.max(0, Math.floor(Number(n) || 0))),
+      addClout: n => setClout(prev => prev + Math.max(0, Math.floor(Number(n) || 0))),
+      /** Enough Clout to buy any single shop line in practice */
+      unlimitedClout: () => setClout(Number.MAX_SAFE_INTEGER),
+      setGems: n => setGems(Math.max(0, Math.floor(Number(n) || 0))),
+      addGems: n => setGems(prev => prev + Math.max(0, Math.floor(Number(n) || 0))),
+      maxCloutAndGems: () => {
+        setClout(Number.MAX_SAFE_INTEGER);
+        setGems(Number.MAX_SAFE_INTEGER);
+      },
+      help: () =>
+        console.info(
+          '[clout-tycoon dev] __CT_DEV__: addClout(1e15), setClout(n), unlimitedClout(), setGems(n), addGems(9999), maxCloutAndGems()'
+        )
+    };
+    window.__CT_DEV__ = api;
+    console.info(
+      '[clout-tycoon] Test cheats on window.__CT_DEV__ — __CT_DEV__.help() (enable on Vercel: env VITE_CT_DEV_TOOLS=true)'
+    );
+    return () => {
+      delete window.__CT_DEV__;
+    };
+  }, [setClout, setGems]);
+
   return {
     clout,
     followers,

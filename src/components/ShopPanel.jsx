@@ -85,8 +85,10 @@ export const ShopPanel = ({
           {shopTab === 'upgrades' && (
             <div className="shop-upgrades">
               <p className="shop-posts-hint">
-                Post upgrades are listed <strong>weakest → strongest</strong>; base price rises each row (each tier is
-                stronger than the one above).
+                Post upgrades are listed <strong>weakest → strongest</strong>; base price rises each row.{' '}
+                <strong>Adds</strong> = flat Clout into your post <em>before</em> multipliers;{' '}
+                <strong>Multiplies whole post</strong> = scales the <em>final</em> payout (gets stronger as base + other
+                bonuses grow).
               </p>
               {clickUpgradeTypes.map(upgrade => {
                 const level = clickUpgradeLevels[upgrade.id] ?? 0;

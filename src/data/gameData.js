@@ -744,7 +744,7 @@ export const clickUpgradeTypes = [
   {
     id: 'post_t01',
     name: 'Thumb Training',
-    description: '+1 Clout per post per level',
+    description: 'Adds +1 Clout to post base per level',
     baseCost: 18,
     growth: 1.142,
     kind: 'flat',
@@ -753,7 +753,7 @@ export const clickUpgradeTypes = [
   {
     id: 'post_t02',
     name: 'Opening Hook',
-    description: '+2 Clout per post per level',
+    description: 'Adds +2 Clout to post base per level',
     baseCost: 42,
     growth: 1.143,
     kind: 'flat',
@@ -762,7 +762,7 @@ export const clickUpgradeTypes = [
   {
     id: 'post_t03',
     name: 'Trend Radar',
-    description: '+3 Clout per post per level',
+    description: 'Adds +3 Clout to post base per level',
     baseCost: 95,
     growth: 1.144,
     kind: 'flat',
@@ -771,7 +771,7 @@ export const clickUpgradeTypes = [
   {
     id: 'post_t04',
     name: 'Caption Polish',
-    description: '+4 Clout per post per level',
+    description: 'Adds +4 Clout to post base per level',
     baseCost: 220,
     growth: 1.145,
     kind: 'flat',
@@ -780,7 +780,7 @@ export const clickUpgradeTypes = [
   {
     id: 'post_t05',
     name: 'Thumbnail Science',
-    description: '+4 payout boost per post per level',
+    description: 'Multiplies whole post (+4 strength / level)',
     baseCost: 500,
     growth: 1.146,
     kind: 'mult',
@@ -789,7 +789,7 @@ export const clickUpgradeTypes = [
   {
     id: 'post_t06',
     name: 'Content Calendar',
-    description: '+5 payout boost per post per level',
+    description: 'Multiplies whole post (+5 strength / level)',
     baseCost: 1150,
     growth: 1.147,
     kind: 'mult',
@@ -798,7 +798,7 @@ export const clickUpgradeTypes = [
   {
     id: 'post_t07',
     name: 'Collab Engine',
-    description: '+6 payout boost per post per level',
+    description: 'Multiplies whole post (+6 strength / level)',
     baseCost: 2650,
     growth: 1.148,
     kind: 'mult',
@@ -807,7 +807,7 @@ export const clickUpgradeTypes = [
   {
     id: 'post_t08',
     name: 'Strategic Drama',
-    description: '+7 payout boost per post per level',
+    description: 'Multiplies whole post (+7 strength / level)',
     baseCost: 6200,
     growth: 1.149,
     kind: 'mult',
@@ -816,7 +816,7 @@ export const clickUpgradeTypes = [
   {
     id: 'post_t09',
     name: 'Brand Kit',
-    description: '+8 payout boost per post per level',
+    description: 'Multiplies whole post (+8 strength / level)',
     baseCost: 14500,
     growth: 1.15,
     kind: 'mult',
@@ -825,7 +825,7 @@ export const clickUpgradeTypes = [
   {
     id: 'post_t10',
     name: 'Talk Show Slot',
-    description: '+9 payout boost per post per level',
+    description: 'Multiplies whole post (+9 strength / level)',
     baseCost: 34000,
     growth: 1.151,
     kind: 'mult',
@@ -834,7 +834,7 @@ export const clickUpgradeTypes = [
   {
     id: 'post_t11',
     name: 'Halftime Bid',
-    description: '+10 payout boost per post per level',
+    description: 'Multiplies whole post (+10 strength / level)',
     baseCost: 80000,
     growth: 1.152,
     kind: 'mult',
@@ -843,7 +843,7 @@ export const clickUpgradeTypes = [
   {
     id: 'post_t12',
     name: 'Matrix PR Blitz',
-    description: '+11 payout boost per post per level',
+    description: 'Multiplies whole post (+11 strength / level)',
     baseCost: 190000,
     growth: 1.153,
     kind: 'mult',
@@ -852,7 +852,7 @@ export const clickUpgradeTypes = [
   {
     id: 'post_t13',
     name: 'Singularity Feed',
-    description: '+13 payout boost per post per level',
+    description: 'Multiplies whole post (+13 strength / level)',
     baseCost: 450000,
     growth: 1.154,
     kind: 'mult',
@@ -861,7 +861,7 @@ export const clickUpgradeTypes = [
   {
     id: 'post_t14',
     name: 'Omnichannel Waves',
-    description: '+15 payout boost per post per level',
+    description: 'Multiplies whole post (+15 strength / level)',
     baseCost: 1100000,
     growth: 1.155,
     kind: 'mult',
@@ -870,7 +870,7 @@ export const clickUpgradeTypes = [
   {
     id: 'post_t15',
     name: 'Syndication Net',
-    description: '+17 payout boost per post per level',
+    description: 'Multiplies whole post (+17 strength / level)',
     baseCost: 2700000,
     growth: 1.156,
     kind: 'mult',
@@ -879,7 +879,7 @@ export const clickUpgradeTypes = [
   {
     id: 'post_t16',
     name: 'Total Presence',
-    description: '+20 payout boost per post per level',
+    description: 'Multiplies whole post (+20 strength / level)',
     baseCost: 6500000,
     growth: 1.157,
     kind: 'mult',
