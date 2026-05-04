@@ -11,6 +11,7 @@ import { Notifications } from './components/Notifications';
 import { MonetizationPanel } from './components/MonetizationPanel';
 import { HowToPlayModal } from './components/HowToPlayModal';
 import { GameHudBar } from './components/GameHudBar';
+import { AgencyMenu } from './components/AgencyMenu';
 import { useMatchMedia } from './hooks/useMatchMedia';
 
 /** Layout breakpoint: single-column shell + bottom tabs (see App.css). */
@@ -27,7 +28,8 @@ function App() {
   } = gameState;
   const [showMonetizationPanel, setShowMonetizationPanel] = useState(false);
   const [howToPlayOpen, setHowToPlayOpen] = useState(true);
-  const [saveVaultOpen, setSaveVaultOpen] = useState(false);
+  const [agencyMenuOpen, setAgencyMenuOpen] = useState(false);
+  const [agencySaveBlocking, setAgencySaveBlocking] = useState(false);
   const isNarrowShell = useMatchMedia(MOBILE_LAYOUT_QUERY);
   /** Mobile-only: which full-screen pane is visible */
   const [mobileTab, setMobileTab] = useState('grid');
@@ -72,7 +74,7 @@ function App() {
       if (howToPlayOpen) return;
       if (inTextField) return;
       if (e.code === 'Escape') {
-        if (saveVaultOpen) return;
+        if (agencySaveBlocking) return;
         if (showMonetizationPanel) {
           e.preventDefault();
           setShowMonetizationPanel(false);
@@ -112,7 +114,7 @@ function App() {
     prestige,
     selectedTool,
     setSelectedTool,
-    saveVaultOpen
+    agencySaveBlocking
   ]);
 
   const handleCellClick = (position) => {
@@ -159,6 +161,22 @@ function App() {
           staffCount={gameState.managers.length}
           catalogEra={gameState.catalogEra}
           gemPassiveTimedBoost={gameState.gemPassiveTimedBoost}
+          onOpenAgencyMenu={() => setAgencyMenuOpen(true)}
+        />
+
+        <AgencyMenu
+          open={agencyMenuOpen}
+          onClose={() => setAgencyMenuOpen(false)}
+          namedSaveSlots={gameState.namedSaveSlots}
+          activeProfileName={gameState.activeProfileName}
+          lastProfileSyncAt={gameState.lastProfileSyncAt}
+          onSaveNamed={gameState.saveGameNamed}
+          onLoadNamed={gameState.loadGameNamed}
+          onDeleteNamedSave={gameState.deleteNamedSaveSlot}
+          onClearProfileBackup={gameState.clearProfileBackup}
+          onResetLocalSave={gameState.resetAllLocalProgress}
+          saveVaultHotkeyActive={!howToPlayOpen && !showMonetizationPanel && !activeBrandDeal}
+          onAgencySaveBlockingChange={setAgencySaveBlocking}
         />
 
         <div
@@ -172,7 +190,6 @@ function App() {
           >
             <ControlPanel
               prestigeCount={gameState.prestigeCount}
-              prestigeMultiplier={gameState.prestigeMultiplier}
               clickCloutPerClick={gameState.clickCloutPerClick}
               runCloutEarned={gameState.runCloutEarned}
               prestigeRunCloutRequired={gameState.prestigeRunCloutRequired}
@@ -181,17 +198,6 @@ function App() {
               onPrestige={gameState.prestige}
               onOpenShop={() => setShowMonetizationPanel(true)}
               onOpenHowToPlay={() => setHowToPlayOpen(true)}
-              namedSaveSlots={gameState.namedSaveSlots}
-              activeProfileName={gameState.activeProfileName}
-              lastProfileSyncAt={gameState.lastProfileSyncAt}
-              onSaveNamed={gameState.saveGameNamed}
-              onLoadNamed={gameState.loadGameNamed}
-              onDeleteNamedSave={gameState.deleteNamedSaveSlot}
-              onClearProfileBackup={gameState.clearProfileBackup}
-              onResetLocalSave={gameState.resetAllLocalProgress}
-              onImportNamedSave={gameState.importNamedSaveJson}
-              saveVaultHotkeyActive={!howToPlayOpen && !showMonetizationPanel && !activeBrandDeal}
-              onSaveVaultOpenChange={setSaveVaultOpen}
             />
           </div>
 
@@ -273,7 +279,7 @@ function App() {
         gemCloutMult={gameState.gemCloutMult}
         onAccept={gameState.acceptBrandDeal}
         onDecline={gameState.declineBrandDeal}
-        deferEscapeDecline={saveVaultOpen}
+        deferEscapeDecline={agencySaveBlocking}
       />
 
       {howToPlayOpen && <HowToPlayModal onClose={() => setHowToPlayOpen(false)} />}
@@ -285,7 +291,7 @@ function App() {
       {showMonetizationPanel && (
         <MonetizationPanel
           onClose={() => setShowMonetizationPanel(false)}
-          deferEscapeClose={saveVaultOpen}
+          deferEscapeClose={agencySaveBlocking}
           gems={gameState.gems}
           gemCloutMultStacks={gameState.gemCloutMultStacks}
           gemClickMultStacks={gameState.gemClickMultStacks}

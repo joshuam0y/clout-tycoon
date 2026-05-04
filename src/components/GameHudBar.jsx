@@ -21,7 +21,8 @@ export const GameHudBar = ({
   totalClicks,
   staffCount,
   catalogEra,
-  gemPassiveTimedBoost
+  gemPassiveTimedBoost,
+  onOpenAgencyMenu
 }) => {
   const [hudNow, setHudNow] = useState(() => Date.now());
   useEffect(() => {
@@ -44,6 +45,17 @@ export const GameHudBar = ({
 
   return (
     <header className="game-hud-bar" aria-label="Agency stats">
+      {onOpenAgencyMenu ? (
+        <button
+          type="button"
+          className="game-hud-menu-btn"
+          onClick={onOpenAgencyMenu}
+          aria-haspopup="dialog"
+          aria-label="Agency menu — saves, vault, sound"
+        >
+          Agency
+        </button>
+      ) : null}
       <div className="game-hud-main">
         <div className="game-hud-clout-block">
           <div className="game-hud-clout-label">Clout</div>

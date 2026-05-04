@@ -52,6 +52,9 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick, p
   /** Coalesce pan to one setState per animation frame (touch can fire >60 move events/sec). */
   const panRafRef = useRef(null);
   const pendingViewOffsetRef = useRef(null);
+  const gridRef = useRef(null);
+  /** Window listeners for pan (mobile loses pointerleave / element-bound moves). */
+  const detachWindowPanRef = useRef(null);
 
   useEffect(() => {
     const onKey = e => {
@@ -74,6 +77,8 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick, p
         cancelAnimationFrame(panRafRef.current);
         panRafRef.current = null;
       }
+      detachWindowPanRef.current?.();
+      detachWindowPanRef.current = null;
     },
     []
   );
@@ -354,6 +359,8 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick, p
 
   const handlePointerDown = event => {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
+    detachWindowPanRef.current?.();
+    detachWindowPanRef.current = null;
     if (panRafRef.current != null) {
       cancelAnimationFrame(panRafRef.current);
       panRafRef.current = null;
@@ -371,7 +378,31 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick, p
     /* Without capture, pointer events (and click) reach the grid cell under the cursor — required for placement.
        With capture, the grid steals the event target and cell onClick never fires. */
     if (!selectedTool) {
-      event.currentTarget.setPointerCapture(event.pointerId);
+      const gridEl = gridRef.current;
+      if (gridEl) {
+        gridEl.setPointerCapture(event.pointerId);
+      }
+      const pid = event.pointerId;
+      const winOpts = { capture: true, passive: false };
+      const onWinMove = ev => {
+        if (ev.pointerId !== pid) return;
+        handlePointerMove(ev);
+        if (dragStateRef.current?.moved) ev.preventDefault();
+      };
+      const onWinEnd = ev => {
+        if (ev.pointerId !== pid) return;
+        detachWindowPanRef.current?.();
+        detachWindowPanRef.current = null;
+        endPointerDrag(ev);
+      };
+      window.addEventListener('pointermove', onWinMove, winOpts);
+      window.addEventListener('pointerup', onWinEnd, winOpts);
+      window.addEventListener('pointercancel', onWinEnd, winOpts);
+      detachWindowPanRef.current = () => {
+        window.removeEventListener('pointermove', onWinMove, winOpts);
+        window.removeEventListener('pointerup', onWinEnd, winOpts);
+        window.removeEventListener('pointercancel', onWinEnd, winOpts);
+      };
     }
   };
 
@@ -406,10 +437,15 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick, p
 
   const endPointerDrag = event => {
     if (!dragStateRef.current || event.pointerId !== dragStateRef.current.pointerId) return;
-    try {
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    } catch {
-      /* already released */
+    detachWindowPanRef.current?.();
+    detachWindowPanRef.current = null;
+    const gridEl = gridRef.current;
+    if (gridEl) {
+      try {
+        gridEl.releasePointerCapture(event.pointerId);
+      } catch {
+        /* already released */
+      }
     }
     if (panRafRef.current != null) {
       cancelAnimationFrame(panRafRef.current);
@@ -434,19 +470,17 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick, p
     <main id="game-main" className="game-world" tabIndex={-1} aria-label="Agency grid">
       <div className="world-grid-wrap">
         <div
+          ref={gridRef}
           className={`world-grid ${isDragging ? 'dragging' : ''}`}
           style={{
             width: VIEW_COLS * CELL_SIZE,
             height: VIEW_ROWS * CELL_SIZE
           }}
-          onPointerLeave={e => {
+          onPointerLeave={() => {
             setHoveredCell(null);
-            if (dragStateRef.current?.pointerId === e.pointerId) {
-              endPointerDrag(e);
-            }
           }}
           onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
+          onPointerMove={selectedTool ? handlePointerMove : undefined}
           onPointerUp={endPointerDrag}
           onPointerCancel={endPointerDrag}
         >
