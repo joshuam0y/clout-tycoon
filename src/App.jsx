@@ -176,7 +176,6 @@ function App() {
           onBuyClickUpgrade={gameState.buyClickUpgrade}
           managers={gameState.managers}
           onBuyManager={gameState.buyManager}
-          passiveCloutPerSecond={gameState.passiveCloutPerSecond}
           passiveByTalentType={gameState.passiveByTalentType}
           prestigeCount={gameState.prestigeCount}
           catalogEra={gameState.catalogEra}

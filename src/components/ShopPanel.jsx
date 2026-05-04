@@ -7,7 +7,6 @@ import {
   managerTypes,
   getMinPrestige,
   passiveCatalogTunedCps,
-  PASSIVE_GLOBAL_MULT,
   catalogEraMeetsRequired
 } from '../data/gameData';
 import {
@@ -60,14 +59,12 @@ export const ShopPanel = ({
   clickUpgradeLevels,
   onBuyClickUpgrade,
   onBuyManager,
-  passiveCloutPerSecond = 0,
   passiveByTalentType = {},
   prestigeCount = 0,
   catalogEra = 0
 }) => {
   const [shopTab, setShopTab] = useState('upgrades');
   const costMult = getFollowerCostMult(followers);
-  const discountPct = Math.round((1 - costMult) * 100);
 
   const availableInfluencers = influencerTypes;
   const availableBuildings = buildingTypes;
@@ -126,20 +123,9 @@ export const ShopPanel = ({
           >
             <span className="shop-tool-banner-label">Placing</span>
             <span className="shop-tool-banner-name">{selectedToolBanner.text}</span>
-            <span className="shop-tool-banner-hint">Tap grid · Esc clears · click banner for tab</span>
+            <span className="shop-tool-banner-hint">Tap grid · Esc</span>
           </button>
         ) : null}
-        <p className="shop-tagline">
-          Each extra copy of the same hire/build ramps up sharply (accelerating curve — not a flat %).
-          Catalog era {catalogEra + 1}/4 — late rows need deeper prestige runs. Keys <kbd className="shop-kbd">1</kbd>–
-          <kbd className="shop-kbd">4</kbd> switch tabs when not typing.
-          {discountPct > 0 && (
-            <span className="shop-follower-discount">
-              {' '}
-              Audience: −{discountPct}% on hires & builds.
-            </span>
-          )}
-        </p>
 
         <div className="shop-tabs" role="tablist" aria-label="Shop categories">
           {TABS.map(tab => (
@@ -167,12 +153,6 @@ export const ShopPanel = ({
         >
           {shopTab === 'upgrades' && (
             <div className="shop-upgrades">
-              <p className="shop-posts-hint">
-                Post upgrades are listed <strong>weakest → strongest</strong>; base price rises each row.{' '}
-                <strong>Adds</strong> = flat Clout into your post <em>before</em> multipliers;{' '}
-                <strong>Multiplies whole post</strong> = scales the <em>final</em> payout (gets stronger as base + other
-                bonuses grow).
-              </p>
               {clickUpgradeTypes.map(upgrade => {
                 const level = clickUpgradeLevels[upgrade.id] ?? 0;
                 const cost = clickUpgradeNextCost(upgrade, level);
@@ -214,13 +194,6 @@ export const ShopPanel = ({
 
           {shopTab === 'influencers' && (
             <div className="shop-items">
-              <p className="shop-passive-hint">
-                HUD passive <strong>{formatRate(passiveCloutPerSecond)}</strong> Clout/s — add up each talent row
-                below; that sum matches the HUD (each row is <strong>all copies</strong> of that type, with structure
-                buffs + prestige / followers / rep / gems / producer / feed surge). Catalog rates below include the{' '}
-                <strong>×{PASSIVE_GLOBAL_MULT} passive balance</strong> per tile (no structures); raw engine values are{' '}
-                <strong>~{formatRate(1 / PASSIVE_GLOBAL_MULT)}×</strong> higher.
-              </p>
               {availableInfluencers.map(influencer => {
                 const owned = influencers.filter(i => i.typeId === influencer.id).length;
                 const raw = scaledUnitCost(influencer.cost, owned);
@@ -256,25 +229,13 @@ export const ShopPanel = ({
                         <div className="item-name">{influencer.name}</div>
                         <div className="item-stats">
                           {owned > 0 ? (
-                            <>
-                              <span className="item-stats-primary">
-                                {formatRate(agencySlice)} Clout/s — all {owned} on grid → HUD
-                              </span>
-                              <div className="item-stats-base">
-                                Tuned passive / tile: {formatRate(passiveCatalogTunedCps(influencer.baseCloutPerSecond))}{' '}
-                                Clout/s each (includes ×{PASSIVE_GLOBAL_MULT} balance, no structures). Grid + roster
-                                multipliers still apply on the HUD.
-                              </div>
-                            </>
+                            <span className="item-stats-primary">
+                              {formatRate(agencySlice)}/s · {owned} on grid
+                            </span>
                           ) : (
-                            <>
-                              {formatRate(passiveCatalogTunedCps(influencer.baseCloutPerSecond))} Clout/s tuned passive
-                              per tile
-                              <span className="item-stats-base">
-                                {' '}
-                                (×{PASSIVE_GLOBAL_MULT} balance) · structures + roster HUD × after hire
-                              </span>
-                            </>
+                            <span className="item-stats-primary">
+                              {formatRate(passiveCatalogTunedCps(influencer.baseCloutPerSecond))}/s per tile
+                            </span>
                           )}
                         </div>
                       </div>
@@ -367,13 +328,6 @@ export const ShopPanel = ({
 
           {shopTab === 'buildings' && (
             <>
-              <p className="shop-buildings-hint">
-                Range × applies to each <strong>in-range</strong> talent (Manhattan from footprint edge). Multiple{' '}
-                <strong>same-type</strong> auras on one talent stack with a <strong>soft cap</strong> (extras add less
-                than a full multiply). Later-era builds cost more per duplicate. Final HUD passive also applies{' '}
-                <strong>×{PASSIVE_GLOBAL_MULT} passive balance</strong> plus prestige, followers, reputation, staff,
-                and gems.
-              </p>
               <div className="shop-items">
               {availableBuildings.map(building => {
                 const owned = buildings.filter(b => b.typeId === building.id).length;
