@@ -6,6 +6,7 @@ import { serializeNamedSaveForExport } from '../utils/persistence';
 import {
   prestigeEras,
   getPrestigeRunCloutRequired,
+  PRESTIGE_RUN_CLOUT_MULT_PER_STEP,
   PRESTIGE_RUN_CLOUT_MULT_DEEP,
   PRESTIGE_RUN_CLOUT_DEEP_AFTER
 } from '../data/gameData';

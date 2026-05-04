@@ -7,6 +7,8 @@ import {
   BRAND_DEALS_SOLO_MIN_BUILDINGS,
   BRAND_DEALS_SOLO_MIN_LIFETIME_CLOUT,
   PRESTIGE_RUN_CLOUT_MULT_PER_STEP,
+  PRESTIGE_RUN_CLOUT_MULT_DEEP,
+  PRESTIGE_RUN_CLOUT_DEEP_AFTER,
   PASSIVE_GLOBAL_MULT
 } from '../data/gameData';
 
@@ -136,13 +138,15 @@ const PAGES = [
           When your <strong>this-run Clout</strong> bar fills, you can prestige: <strong>everything in the run</strong>{' '}
           resets (Clout, roster, buildings, post upgrades, reputation for that run, etc.).{' '}
           <strong>Gems</strong> and <strong>Premium Shop 💎 upgrades</strong> persist; lifetime Clout and achievements
-          stay too. The left panel “era” name is only cosmetic theme vs prestige depth — shop content is never locked.
-          Each prestige makes the <strong>next</strong> run’s bar about <strong>{PRESTIGE_RUN_CLOUT_MULT_PER_STEP}×</strong>{' '}
-          the Clout you needed for the previous tier.
+          stay too. The top bar shows <strong>catalog era</strong> (1–4): deeper rows in the shop (talent, builds, some
+          posts, and rarer brand deals) need more prestiges — the left panel era name is the matching cosmetic theme.
+          Each prestige multiplies the <strong>next</strong> run’s bar by about <strong>{PRESTIGE_RUN_CLOUT_MULT_PER_STEP}×</strong>{' '}
+          until you have completed <strong>{PRESTIGE_RUN_CLOUT_DEEP_AFTER}</strong> prestiges; after that the step
+          jumps to <strong>{PRESTIGE_RUN_CLOUT_MULT_DEEP}×</strong> (very late runs hit a numeric cap).
         </p>
         <p>
           <strong>Frenzy events</strong> can fire after a cooldown: <strong>Viral frenzy</strong> boosts post
-          Clout, or <strong>Feed surge</strong> boosts passive — watch the banner under your stats.
+          Clout, or <strong>Feed surge</strong> boosts passive — watch the banner in the left column.
         </p>
       </>
     )
@@ -151,8 +155,9 @@ const PAGES = [
     title: 'Premium Shop',
     body: (
       <p>
-        Spend <strong>gems</strong> (from prestige and trophies) on permanent multipliers, surges, and clout
-        drops. The game is fully playable without it — gems reward long-term play across many prestiges.
+        Spend <strong>gems</strong> (prestige, trophies, <strong>Daily</strong> tab check-in streak) on permanent
+        stacks, timed <strong>Spotlight rush</strong>, <strong>PR polish</strong> (reputation), surges, viral drops,
+        and press injections. Fully playable without simulated top-ups — gems reward long runs across many prestiges.
       </p>
     )
   },
