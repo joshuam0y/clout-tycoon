@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import './App.css';
 import { formatNumber } from './utils/formatNumber';
+import { unlockAudioContext } from './utils/sound';
 import { useGameState } from './hooks/useGameState';
 import { GameWorld } from './components/GameWorld';
 import { ControlPanel } from './components/ControlPanel';
@@ -17,6 +18,18 @@ function App() {
   const [showMonetizationPanel, setShowMonetizationPanel] = useState(false);
   const [howToPlayOpen, setHowToPlayOpen] = useState(true);
   const [saveVaultOpen, setSaveVaultOpen] = useState(false);
+
+  useEffect(() => {
+    const prime = () => {
+      void unlockAudioContext();
+    };
+    window.addEventListener('pointerdown', prime, { capture: true });
+    window.addEventListener('keydown', prime, { capture: true });
+    return () => {
+      window.removeEventListener('pointerdown', prime, { capture: true });
+      window.removeEventListener('keydown', prime, { capture: true });
+    };
+  }, []);
 
   useEffect(() => {
     document.title = `Clout Tycoon · ${formatNumber(gameState.clout)} Clout · P${gameState.prestigeCount}`;

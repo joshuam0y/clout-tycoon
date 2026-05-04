@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import './ControlPanel.css';
-import { isSfxMuted, setSfxMuted } from '../utils/sound';
+import { isSfxMuted, setSfxMuted, unlockAudioContext } from '../utils/sound';
 import { serializeNamedSaveForExport } from '../utils/persistence';
 import {
   prestigeEras,
@@ -123,6 +123,7 @@ export const ControlPanel = ({
     const next = !sfxMuted;
     setSfxMuted(next);
     setSfxMutedState(next);
+    if (!next) void unlockAudioContext();
   };
 
   const handleClick = () => {

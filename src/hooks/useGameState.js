@@ -33,7 +33,11 @@ import {
   BASE_POST_CLOUT,
   CLOUT_PRICE_MULTIPLIER,
   PRESTIGE_MULT_PER_LEVEL,
-  getMinPrestige
+  getMinPrestige,
+  catalogDupExpBonusForInfluencerId,
+  catalogDupExpBonusForBuildingTypeId,
+  catalogDupExpBonusForManagerId,
+  clickUpgradeTierIndex
 } from '../data/gameData';
 import {
   scaledUnitCost,
@@ -58,7 +62,14 @@ import {
   clearActiveNamedSlot,
   importNamedSaveFromExportJson
 } from '../utils/persistence';
-import { playPrestigeChime, playAchievementPing, playBrandDealAcceptChime } from '../utils/sound';
+import {
+  playPrestigeChime,
+  playAchievementPing,
+  playBrandDealAcceptChime,
+  playClickPostTick,
+  playPurchaseChime,
+  playGemSpendChime
+} from '../utils/sound';
 import { computePassiveIncomeSnapshot } from '../utils/computePassiveIncomeSnapshot';
 import { formatNumber } from '../utils/formatNumber';
 
@@ -396,6 +407,7 @@ export const useGameState = () => {
     const earnedClout = getClickClout();
     addCloutEarned(earnedClout);
     setTotalClicks(prev => prev + 1);
+    playClickPostTick();
 
     if (Math.random() < 0.07) {
       setFollowers(prev => prev + 1);
@@ -421,7 +433,12 @@ export const useGameState = () => {
         return false;
       }
       const owned = influencers.filter(i => i.typeId === typeId).length;
-      const rawCost = scaledUnitCost(type.cost, owned);
+      const rawCost = scaledUnitCost(
+        type.cost,
+        owned,
+        undefined,
+        catalogDupExpBonusForInfluencerId(typeId)
+      );
       const cost = Math.ceil(rawCost * getFollowerCostMult(followers));
       if (clout < cost) {
         addNotification(
@@ -459,6 +476,7 @@ export const useGameState = () => {
       setInfluencers(prev => [...prev, newInfluencer]);
       setClout(prev => prev - cost);
       addNotification(`Hired ${type.name}!`, 'success');
+      playPurchaseChime();
 
       return true;
     },
@@ -484,7 +502,12 @@ export const useGameState = () => {
         return false;
       }
       const owned = buildings.filter(b => b.typeId === typeId).length;
-      const rawCost = scaledBuildingPlacementCost(type.cost, owned, type.requiredEra ?? 0);
+      const rawCost = scaledBuildingPlacementCost(
+        type.cost,
+        owned,
+        type.requiredEra ?? 0,
+        catalogDupExpBonusForBuildingTypeId(typeId)
+      );
       const cost = Math.ceil(rawCost * getFollowerCostMult(followers));
       if (clout < cost) {
         addNotification(
@@ -523,6 +546,7 @@ export const useGameState = () => {
       setBuildings(prev => [...prev, newBuilding]);
       setClout(prev => prev - cost);
       addNotification(`Built ${type.name}!`, 'success');
+      playPurchaseChime();
 
       return true;
     },
@@ -539,7 +563,12 @@ export const useGameState = () => {
         return false;
       }
       const owned = managers.filter(m => m.typeId === typeId).length;
-      const rawCost = scaledUnitCost(def.cost, owned);
+      const rawCost = scaledUnitCost(
+        def.cost,
+        owned,
+        undefined,
+        catalogDupExpBonusForManagerId(typeId)
+      );
       const cost = Math.ceil(rawCost * getFollowerCostMult(followers));
       if (clout < cost) {
         addNotification(
@@ -551,6 +580,7 @@ export const useGameState = () => {
       setClout(c => c - cost);
       setManagers(prev => [...prev, { id: Date.now() + Math.random(), typeId }]);
       addNotification(`Hired ${def.name}!`, 'success');
+      playPurchaseChime();
       return true;
     },
     [clout, managers, followers, prestigeCount, addNotification]
@@ -683,7 +713,7 @@ export const useGameState = () => {
       }
 
       const level = clickUpgradeLevels[upgradeId] ?? 0;
-      const cost = clickUpgradeNextCost(def, level);
+      const cost = clickUpgradeNextCost(def, level, clickUpgradeTierIndex(upgradeId));
       if (clout < cost) {
         addNotification(
           `Need ${formatNumber(cost)} Clout for this upgrade (you have ${formatNumber(clout)}).`,
@@ -695,6 +725,7 @@ export const useGameState = () => {
       setClout(prev => prev - cost);
       setClickUpgradeLevels(prev => ({ ...prev, [upgradeId]: level + 1 }));
       addNotification(`${def.name} → Lv.${level + 1}`, 'success');
+      playPurchaseChime();
       return true;
     },
     [clout, clickUpgradeLevels, prestigeCount, addNotification]
@@ -713,6 +744,7 @@ export const useGameState = () => {
     spendGems(cost);
     setGemCloutMultStacks(s => s + 1);
     addNotification(`Syndicate: +${GEM_STACK_BONUS * 100}% all Clout (permanent)`, 'success');
+    playGemSpendChime();
     return true;
   }, [gems, gemCloutMultStacks, spendGems, addNotification]);
 
@@ -729,6 +761,7 @@ export const useGameState = () => {
     spendGems(cost);
     setGemClickMultStacks(s => s + 1);
     addNotification(`Creator Kit: +${GEM_CLICK_BONUS * 100}% post Clout (permanent)`, 'success');
+    playGemSpendChime();
     return true;
   }, [gems, gemClickMultStacks, spendGems, addNotification]);
 
@@ -745,6 +778,7 @@ export const useGameState = () => {
     spendGems(cost);
     setGemPassiveMultStacks(s => s + 1);
     addNotification(`Spotlight: +${GEM_PASSIVE_BONUS * 100}% passive Clout (permanent)`, 'success');
+    playGemSpendChime();
     return true;
   }, [gems, gemPassiveMultStacks, spendGems, addNotification]);
 
@@ -762,6 +796,7 @@ export const useGameState = () => {
     spendGems(CLOUT_SURGE_COST);
     addCloutEarned(burst);
     addNotification(`Clout Surge: +${Math.floor(burst)} (~${CLOUT_SURGE_SECONDS}s passive)`, 'success');
+    playGemSpendChime();
     return true;
   }, [gems, calculatePassiveIncome, addCloutEarned, spendGems, addNotification]);
 
@@ -787,6 +822,7 @@ export const useGameState = () => {
           : `Viral Drop (−${formatNumber(cost)} 💎): +${formatNumber(Math.floor(total))} Clout`,
         'success'
       );
+      playGemSpendChime();
     },
     [gems, calculatePassiveIncome, addCloutEarned, spendGems, addNotification]
   );
@@ -807,6 +843,7 @@ export const useGameState = () => {
       spendGems(gemCost);
       addCloutEarned(injection);
       addNotification(`${label}: +${Math.floor(injection)} Clout`, 'success');
+      playGemSpendChime();
     },
     [gems, calculatePassiveIncome, addCloutEarned, spendGems, addNotification]
   );
@@ -828,6 +865,7 @@ export const useGameState = () => {
     setDailyReward({ lastClaimUtcDay: today, streak, bestStreak });
     setGems(g => g + pack);
     addNotification(`Daily brief · streak ${streak} · +${pack} 💎`, 'success');
+    playAchievementPing();
     return true;
   }, [dailyReward, addNotification]);
 
@@ -843,6 +881,7 @@ export const useGameState = () => {
     spendGems(GEM_PR_POLISH_COST);
     setReputation(r => Math.min(100, r + 18));
     addNotification('PR polish: +18 reputation (caps at 100%).', 'success');
+    playGemSpendChime();
     return true;
   }, [gems, reputation, spendGems, addNotification]);
 
@@ -863,6 +902,7 @@ export const useGameState = () => {
       `Spotlight rush: +${Math.round((GEM_SPOTLIGHT_RUSH_MULT - 1) * 100)}% passive ~${GEM_SPOTLIGHT_RUSH_MS / 1000}s`,
       'success'
     );
+    playGemSpendChime();
     return true;
   }, [gems, calculatePassiveIncome, spendGems, addNotification]);
 

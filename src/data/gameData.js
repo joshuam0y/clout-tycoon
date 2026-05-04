@@ -1,11 +1,23 @@
 /** Base multiplier per duplicate tier before acceleration (see UNIT_PRICE_DUPLICATE_EXP). */
-export const UNIT_PRICE_GROWTH = 1.248;
+export const UNIT_PRICE_GROWTH = 1.258;
 
 /**
  * Duplicate Clout cost uses: base × growth^(owned ** DUPLICATE_EXP) × CLOUT_PRICE_MULTIPLIER.
  * > 1 makes each extra copy of the same item ramp faster than fixed-% geometric stacking.
  */
-export const UNIT_PRICE_DUPLICATE_EXP = 1.32;
+export const UNIT_PRICE_DUPLICATE_EXP = 1.36;
+
+/**
+ * Added to DUPLICATE_EXP per catalog row (talent/builds/staff list order), so late unlocks
+ * compound like Cookie/AdCap “next business” curves while early rows stay approachable.
+ */
+export const UNIT_PRICE_CATALOG_DUP_EXP_PER_INDEX = 0.014;
+
+/**
+ * Post-upgrade rows scale effective per-level growth: growth × (1 + tierIndex × this).
+ * Later ladder steps bite harder at high levels (Cookie-style upgrade inflation).
+ */
+export const CLICK_UPGRADE_GROWTH_BONUS_PER_TIER = 0.0065;
 
 /**
  * Multiple auras of the same building type on one talent: exponent stacks sublinearly after the first
@@ -1610,3 +1622,24 @@ export const managerTypes = [
     minPrestige: 3
   }
 ];
+
+export function catalogDupExpBonusForInfluencerId(typeId) {
+  const i = influencerTypes.findIndex(t => t.id === typeId);
+  return i < 0 ? 0 : i * UNIT_PRICE_CATALOG_DUP_EXP_PER_INDEX;
+}
+
+export function catalogDupExpBonusForBuildingTypeId(typeId) {
+  const i = buildingTypes.findIndex(t => t.id === typeId);
+  return i < 0 ? 0 : i * UNIT_PRICE_CATALOG_DUP_EXP_PER_INDEX;
+}
+
+export function catalogDupExpBonusForManagerId(typeId) {
+  const i = managerTypes.findIndex(m => m.id === typeId);
+  return i < 0 ? 0 : i * UNIT_PRICE_CATALOG_DUP_EXP_PER_INDEX;
+}
+
+/** Row index in the post-upgrade ladder (0 = first tier). */
+export function clickUpgradeTierIndex(upgradeId) {
+  const i = clickUpgradeTypes.findIndex(u => u.id === upgradeId);
+  return i < 0 ? 0 : i;
+}

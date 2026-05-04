@@ -30,6 +30,19 @@ function animationDelayFromId(id) {
   return `${(Math.abs(h) % 3000) / 1000}s`;
 }
 
+/** One paragraph for hover cards — trim without ugly mid-word cuts when possible. */
+function clipTooltipDescription(text, max = 168) {
+  const s = (text ?? '').trim();
+  if (!s) return '';
+  if (s.length <= max) return s;
+  const slice = s.slice(0, max);
+  const lastSentence = Math.max(slice.lastIndexOf('. '), slice.lastIndexOf('.'));
+  if (lastSentence > 48) return slice.slice(0, lastSentence + 1).trim();
+  const soft = slice.lastIndexOf(' ');
+  if (soft > max * 0.65) return `${slice.slice(0, soft).trim()}…`;
+  return `${slice.trimEnd()}…`;
+}
+
 export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick, passiveByInfluencerId }) => {
   const [viewOffset, setViewOffset] = useState(INITIAL_VIEW_OFFSET);
 
@@ -218,7 +231,7 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick, p
     return tiles;
   }, [selectedBuildingType, hoveredCell, viewportWorldBand]);
 
-  /** Inspect mode: show buff footprint + radius for a placed building (no text tooltip). */
+  /** Inspect mode: show buff footprint + radius for a placed building + hover card. */
   const placedBuildingHoverTiles = useMemo(() => {
     if (selectedTool || !hoveredPlacedBuilding) return [];
     const ht = buildingTypes.find(t => t.id === hoveredPlacedBuilding.typeId);
@@ -252,6 +265,25 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick, p
     if (!hoveredPlacedBuilding) return null;
     return buildingTypes.find(t => t.id === hoveredPlacedBuilding.typeId) ?? null;
   }, [hoveredPlacedBuilding]);
+
+  const hoveredBuildingTalentInRange = useMemo(() => {
+    if (!hoveredPlacedBuilding || !hoveredPlacedBuildingType) return 0;
+    const ht = hoveredPlacedBuildingType;
+    const hb = hoveredPlacedBuilding;
+    const minX = hb.position.x;
+    const maxX = hb.position.x + ht.size - 1;
+    const minY = hb.position.y;
+    const maxY = hb.position.y + ht.size - 1;
+    let n = 0;
+    for (const inf of influencers) {
+      const x = inf.position.x;
+      const y = inf.position.y;
+      const dx = x < minX ? minX - x : x > maxX ? x - maxX : 0;
+      const dy = y < minY ? minY - y : y > maxY ? y - maxY : 0;
+      if (dx + dy <= ht.range) n += 1;
+    }
+    return n;
+  }, [hoveredPlacedBuilding, hoveredPlacedBuildingType, influencers]);
 
   const boostedInfluencerIds = useMemo(() => {
     if (!selectedBuildingType || !hoveredCell) return new Set();
@@ -437,7 +469,7 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick, p
           />
         ))}
 
-        {/* Placed building inspect: buff radius only (visual, no tooltip) */}
+        {/* Placed building inspect: buff radius + hover card */}
         {placedBuildingHoverTiles.map(tile => (
           <div
             key={`placed-hover-${tile.x}-${tile.y}`}
@@ -515,6 +547,45 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick, p
             </div>
           );
         })}
+
+        {hoveredPlacedBuilding &&
+          hoveredPlacedBuildingType &&
+          !selectedTool &&
+          (() => {
+            const bt = hoveredPlacedBuildingType;
+            const hb = hoveredPlacedBuilding;
+            const p = toScreen(hb.position.x, hb.position.y);
+            const w = CELL_SIZE * bt.size;
+            const desc = clipTooltipDescription(bt.description);
+            return (
+              <div
+                className="entity-hover-tooltip building-hover-tooltip"
+                style={{
+                  left: p.left + w / 2,
+                  top: p.top,
+                  borderColor: bt.color,
+                  boxShadow: `0 10px 32px rgba(0, 0, 0, 0.58), 0 0 28px ${bt.color}40, inset 0 1px 0 rgba(255, 255, 255, 0.07)`
+                }}
+              >
+                <div className="entity-hover-title">
+                  {bt.icon} {bt.name}
+                </div>
+                <div className="entity-hover-line">
+                  Footprint <strong>{bt.size}×{bt.size}</strong> · Buff radius <strong>{bt.range}</strong> (from edge)
+                  {' · '}
+                  <strong>{hoveredBuildingTalentInRange}</strong>{' '}
+                  {hoveredBuildingTalentInRange === 1 ? 'talent' : 'talents'} in range
+                  {bt.effect === 'multiply' && bt.multiplier ? (
+                    <>
+                      {' · '}
+                      Passive <strong>×{bt.multiplier}</strong>
+                    </>
+                  ) : null}
+                </div>
+                {desc ? <div className="entity-hover-desc">{desc}</div> : null}
+              </div>
+            );
+          })()}
 
         {hoveredTalentOnly &&
           !selectedTool &&

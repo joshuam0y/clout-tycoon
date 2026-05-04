@@ -177,7 +177,8 @@ const PAGES = [
           <strong>keep backing that slot up</strong> every few seconds in this browser (plus the usual live autosave).
           Load a profile to continue; <strong>Stop auto-backup</strong> pauses named-slot updates without deleting the
           profile. <strong>Reset session</strong> clears the current autosave and sound preference; named lists stay
-          until you delete them. <strong>Sound</strong> is the prestige chime only.
+          until you delete them. <strong>Sound</strong>: posts, Clout purchases, gem spends, brand deals, prestige, and
+          achievements (toggle in Your agency).
         </p>
       </>
     )

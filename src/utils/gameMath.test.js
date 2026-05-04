@@ -91,6 +91,18 @@ describe('clickUpgradeNextCost', () => {
       Math.ceil(50 * 1.5 * 1.5 * CLOUT_PRICE_MULTIPLIER)
     );
   });
+  it('raises effective growth when tierIndex > 0', () => {
+    const u = { baseCost: 100, growth: 2 };
+    expect(clickUpgradeNextCost(u, 3, 0)).toBeLessThan(clickUpgradeNextCost(u, 3, 10));
+  });
+});
+
+describe('scaledUnitCost catalog bonus', () => {
+  it('steepens duplicate curve for late catalog rows', () => {
+    expect(scaledUnitCost(100, 4, UNIT_PRICE_GROWTH, 0.2)).toBeGreaterThan(
+      scaledUnitCost(100, 4, UNIT_PRICE_GROWTH, 0)
+    );
+  });
 });
 
 describe('getPrestigeRunCloutRequired scaling', () => {

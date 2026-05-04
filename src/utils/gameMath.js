@@ -8,7 +8,8 @@ import {
   BUILDING_SAME_TYPE_STACK_EXP_CAP,
   BUILDING_ERA_GROWTH_FACTOR,
   BUILDING_ERA_DUPLICATE_EXP_BONUS,
-  BUILDING_ERA_FLAT_COST_MULT
+  BUILDING_ERA_FLAT_COST_MULT,
+  CLICK_UPGRADE_GROWTH_BONUS_PER_TIER
 } from '../data/gameData';
 
 /** Manhattan distance from tile to rectangular building footprint (0 = inside/on edge). */
@@ -104,28 +105,44 @@ export function getFollowerBonusSummary(followers) {
   };
 }
 
-export function scaledUnitCost(baseCost, owned, growth = UNIT_PRICE_GROWTH) {
+export function scaledUnitCost(
+  baseCost,
+  owned,
+  growth = UNIT_PRICE_GROWTH,
+  catalogDupExpBonus = 0
+) {
   const n = Math.max(0, Math.floor(owned));
-  const exponent = n === 0 ? 0 : Math.pow(n, UNIT_PRICE_DUPLICATE_EXP);
-  return Math.ceil(baseCost * Math.pow(growth, exponent) * CLOUT_PRICE_MULTIPLIER);
+  const cat = Math.max(0, Number(catalogDupExpBonus) || 0);
+  const dupExp = UNIT_PRICE_DUPLICATE_EXP + cat;
+  const exponent = n === 0 ? 0 : Math.pow(n, dupExp);
+  const g = Number.isFinite(Number(growth)) && growth > 0 ? growth : UNIT_PRICE_GROWTH;
+  return Math.ceil(baseCost * Math.pow(g, exponent) * CLOUT_PRICE_MULTIPLIER);
 }
 
 /**
  * Placement cost for structures — steeper than generic hires for late-era catalog (early era 0 unchanged).
  */
-export function scaledBuildingPlacementCost(baseCost, owned, requiredEra = 0) {
+export function scaledBuildingPlacementCost(
+  baseCost,
+  owned,
+  requiredEra = 0,
+  catalogDupExpBonus = 0
+) {
   const era = Math.max(0, Math.min(3, Math.floor(Number(requiredEra) || 0)));
   const n = Math.max(0, Math.floor(owned));
   const growth = UNIT_PRICE_GROWTH * (1 + era * BUILDING_ERA_GROWTH_FACTOR);
   const eraBonus = BUILDING_ERA_DUPLICATE_EXP_BONUS[era] ?? BUILDING_ERA_DUPLICATE_EXP_BONUS.at(-1) ?? 0;
-  const dupExp = UNIT_PRICE_DUPLICATE_EXP + eraBonus;
+  const cat = Math.max(0, Number(catalogDupExpBonus) || 0);
+  const dupExp = UNIT_PRICE_DUPLICATE_EXP + eraBonus + cat;
   const exponent = n === 0 ? 0 : Math.pow(n, dupExp);
   const flat = BUILDING_ERA_FLAT_COST_MULT[era] ?? BUILDING_ERA_FLAT_COST_MULT.at(-1) ?? 1;
   return Math.ceil(baseCost * Math.pow(growth, exponent) * CLOUT_PRICE_MULTIPLIER * flat);
 }
 
-export function clickUpgradeNextCost(upgrade, currentLevel) {
+export function clickUpgradeNextCost(upgrade, currentLevel, tierIndex = 0) {
+  const t = Math.max(0, Math.floor(Number(tierIndex) || 0));
+  const effGrowth = upgrade.growth * (1 + t * CLICK_UPGRADE_GROWTH_BONUS_PER_TIER);
   return Math.ceil(
-    upgrade.baseCost * Math.pow(upgrade.growth, currentLevel) * CLOUT_PRICE_MULTIPLIER
+    upgrade.baseCost * Math.pow(effGrowth, currentLevel) * CLOUT_PRICE_MULTIPLIER
   );
 }

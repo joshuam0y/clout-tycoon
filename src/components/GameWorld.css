@@ -341,6 +341,21 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
+.entity-hover-tooltip.building-hover-tooltip {
+  /* border + glow overridden per-structure via inline color */
+  border-width: 1px;
+}
+
+.entity-hover-desc {
+  font-size: 11px;
+  line-height: 1.42;
+  color: var(--text-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .entity-hover-title {
   font-weight: 800;
   font-size: 13px;

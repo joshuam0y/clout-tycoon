@@ -7,7 +7,11 @@ import {
   managerTypes,
   getMinPrestige,
   passiveCatalogTunedCps,
-  catalogEraMeetsRequired
+  catalogEraMeetsRequired,
+  catalogDupExpBonusForInfluencerId,
+  catalogDupExpBonusForBuildingTypeId,
+  catalogDupExpBonusForManagerId,
+  clickUpgradeTierIndex
 } from '../data/gameData';
 import {
   scaledUnitCost,
@@ -155,7 +159,11 @@ export const ShopPanel = ({
             <div className="shop-upgrades">
               {clickUpgradeTypes.map(upgrade => {
                 const level = clickUpgradeLevels[upgrade.id] ?? 0;
-                const cost = clickUpgradeNextCost(upgrade, level);
+                const cost = clickUpgradeNextCost(
+                  upgrade,
+                  level,
+                  clickUpgradeTierIndex(upgrade.id)
+                );
                 const canAfford = clout >= cost;
                 const minP = getMinPrestige(upgrade);
                 const lockedP = minP > 0 && prestigeCount < minP;
@@ -196,7 +204,12 @@ export const ShopPanel = ({
             <div className="shop-items">
               {availableInfluencers.map(influencer => {
                 const owned = influencers.filter(i => i.typeId === influencer.id).length;
-                const raw = scaledUnitCost(influencer.cost, owned);
+                const raw = scaledUnitCost(
+                  influencer.cost,
+                  owned,
+                  undefined,
+                  catalogDupExpBonusForInfluencerId(influencer.id)
+                );
                 const nextCost = Math.ceil(raw * costMult);
                 const canAfford = clout >= nextCost;
                 const isSelected = selectedTool?.type === 'influencer' && selectedTool?.id === influencer.id;
@@ -264,7 +277,12 @@ export const ShopPanel = ({
             <div className="shop-items shop-staff">
               {managerTypes.map(m => {
                 const owned = managers.filter(x => x.typeId === m.id).length;
-                const raw = scaledUnitCost(m.cost, owned);
+                const raw = scaledUnitCost(
+                  m.cost,
+                  owned,
+                  undefined,
+                  catalogDupExpBonusForManagerId(m.id)
+                );
                 const nextCost = Math.ceil(raw * costMult);
                 const canAfford = clout >= nextCost;
                 const minP = getMinPrestige(m);
@@ -331,7 +349,12 @@ export const ShopPanel = ({
               <div className="shop-items">
               {availableBuildings.map(building => {
                 const owned = buildings.filter(b => b.typeId === building.id).length;
-                const raw = scaledBuildingPlacementCost(building.cost, owned, building.requiredEra ?? 0);
+                const raw = scaledBuildingPlacementCost(
+                  building.cost,
+                  owned,
+                  building.requiredEra ?? 0,
+                  catalogDupExpBonusForBuildingTypeId(building.id)
+                );
                 const nextCost = Math.ceil(raw * costMult);
                 const canAfford = clout >= nextCost;
                 const isSelected = selectedTool?.type === 'building' && selectedTool?.id === building.id;
