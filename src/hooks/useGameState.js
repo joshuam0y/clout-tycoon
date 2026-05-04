@@ -27,7 +27,6 @@ import {
   AGENT_AUTO_ACCEPT_DELAY_MS,
   AGENT_MIN_REP_AFTER_DEAL,
   CLICK_OUTPUT_GLOBAL_MULT,
-  INTERN_AUTO_POST_OUTPUT_MULT,
   INTERN_BASE_POSTS_PER_SEC,
   INTERN_STACKING_EXP,
   BASE_POST_CLOUT,
@@ -332,8 +331,7 @@ export const useGameState = () => {
         gemCloutMult: 1 + gemCloutMultStacks * GEM_STACK_BONUS,
         gemPassiveMult: 1 + gemPassiveMultStacks * GEM_PASSIVE_BONUS,
         gemPassiveTimedMult: gemPassiveTimedBoost ? gemPassiveTimedBoost.mult : 1,
-        activeFrenzy,
-        nowMs: Date.now()
+        activeFrenzy
       }),
     [
       influencers,
@@ -1156,7 +1154,10 @@ export const useGameState = () => {
     prestigeCount
   ]);
 
-  const namedSaveSlots = useMemo(() => listNamedSaves(), [namedSaveListTick]);
+  const namedSaveSlots = useMemo(() => {
+    void namedSaveListTick;
+    return listNamedSaves();
+  }, [namedSaveListTick]);
 
   const buildCurrentSnapshot = useCallback(
     () => ({
@@ -1210,7 +1211,9 @@ export const useGameState = () => {
   );
 
   const buildCurrentSnapshotRef = useRef(buildCurrentSnapshot);
-  buildCurrentSnapshotRef.current = buildCurrentSnapshot;
+  useLayoutEffect(() => {
+    buildCurrentSnapshotRef.current = buildCurrentSnapshot;
+  }, [buildCurrentSnapshot]);
 
   /** Tab close / switch — persist immediately (debounced save may not have fired yet). */
   useEffect(() => {

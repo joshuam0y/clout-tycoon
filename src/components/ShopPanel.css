@@ -447,6 +447,47 @@
 
   .shop-inner {
     padding-bottom: var(--spacing-md);
+    padding-top: 10px;
+    gap: 8px;
+  }
+
+  .shop-title {
+    font-size: 17px;
+    letter-spacing: 0.12em;
+  }
+
+  .shop-tabs {
+    gap: 4px;
+  }
+
+  .shop-tab {
+    min-height: 44px;
+    padding: 8px 4px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: none;
+    border-radius: 10px;
+    border-width: 1px;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .shop-tab:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+  .shop-tab.active {
+    box-shadow: 0 0 0 1px rgba(0, 255, 255, 0.35);
+  }
+
+  .shop-item:not(:disabled):hover {
+    transform: none;
+  }
+
+  .shop-upgrade:not(:disabled):hover {
+    transform: none;
   }
 }
 

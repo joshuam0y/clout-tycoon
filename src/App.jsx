@@ -18,7 +18,13 @@ const MOBILE_LAYOUT_QUERY = '(max-width: 900px)';
 
 function App() {
   const gameState = useGameState();
-  const { clickPostContent, prestige, activeBrandDeal } = gameState;
+  const {
+    clickPostContent,
+    prestige,
+    activeBrandDeal,
+    selectedTool,
+    setSelectedTool
+  } = gameState;
   const [showMonetizationPanel, setShowMonetizationPanel] = useState(false);
   const [howToPlayOpen, setHowToPlayOpen] = useState(true);
   const [saveVaultOpen, setSaveVaultOpen] = useState(false);
@@ -44,10 +50,9 @@ function App() {
 
   /* After choosing a hire/build tool in the shop, jump to the grid to place it */
   useEffect(() => {
-    if (isNarrowShell && gameState.selectedTool) {
-      setMobileTab('grid');
-    }
-  }, [isNarrowShell, gameState.selectedTool]);
+    if (!isNarrowShell || !selectedTool) return;
+    queueMicrotask(() => setMobileTab('grid'));
+  }, [isNarrowShell, selectedTool]);
 
   useEffect(() => {
     const onKey = e => {
@@ -74,9 +79,9 @@ function App() {
           return;
         }
         if (activeBrandDeal) return;
-        if (gameState.selectedTool) {
+        if (selectedTool) {
           e.preventDefault();
-          gameState.setSelectedTool(null);
+          setSelectedTool(null);
         }
         return;
       }
@@ -105,25 +110,25 @@ function App() {
     activeBrandDeal,
     clickPostContent,
     prestige,
-    gameState.selectedTool,
-    gameState.setSelectedTool,
+    selectedTool,
+    setSelectedTool,
     saveVaultOpen
   ]);
 
   const handleCellClick = (position) => {
-    if (!gameState.selectedTool) return;
+    if (!selectedTool) return;
 
-    const { type, id } = gameState.selectedTool;
+    const { type, id } = selectedTool;
 
     if (type === 'influencer') {
       const success = gameState.hireInfluencer(id, position);
       if (success) {
-        gameState.setSelectedTool(null);
+        setSelectedTool(null);
       }
     } else if (type === 'building') {
       const success = gameState.placeBuilding(id, position);
       if (success) {
-        gameState.setSelectedTool(null);
+        setSelectedTool(null);
       }
     }
   };
@@ -198,7 +203,7 @@ function App() {
             <GameWorld
               influencers={gameState.influencers}
               buildings={gameState.buildings}
-              selectedTool={gameState.selectedTool}
+              selectedTool={selectedTool}
               onCellClick={handleCellClick}
               passiveByInfluencerId={gameState.passiveByInfluencerId}
             />
@@ -212,8 +217,8 @@ function App() {
             <ShopPanel
               clout={gameState.clout}
               followers={gameState.followers}
-              selectedTool={gameState.selectedTool}
-              onSelectTool={gameState.setSelectedTool}
+              selectedTool={selectedTool}
+              onSelectTool={setSelectedTool}
               influencers={gameState.influencers}
               buildings={gameState.buildings}
               clickUpgradeLevels={gameState.clickUpgradeLevels}

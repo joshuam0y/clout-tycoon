@@ -45,6 +45,13 @@ function clipTooltipDescription(text, max = 168) {
 
 export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick, passiveByInfluencerId }) => {
   const [viewOffset, setViewOffset] = useState(INITIAL_VIEW_OFFSET);
+  const [hoveredCell, setHoveredCell] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStateRef = useRef(null);
+  const suppressPlacementClickRef = useRef(false);
+  /** Coalesce pan to one setState per animation frame (touch can fire >60 move events/sec). */
+  const panRafRef = useRef(null);
+  const pendingViewOffsetRef = useRef(null);
 
   useEffect(() => {
     const onKey = e => {
@@ -70,13 +77,6 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick, p
     },
     []
   );
-  const [hoveredCell, setHoveredCell] = useState(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const dragStateRef = useRef(null);
-  const suppressPlacementClickRef = useRef(false);
-  /** Coalesce pan to one setState per animation frame (touch can fire >60 move events/sec). */
-  const panRafRef = useRef(null);
-  const pendingViewOffsetRef = useRef(null);
 
   const viewportWorldBand = useMemo(() => {
     const ox = viewOffset.x;

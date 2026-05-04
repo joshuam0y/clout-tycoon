@@ -157,13 +157,7 @@ button {
   overflow: hidden;
 }
 
-button:hover {
-  background: var(--bg-hover);
-  box-shadow: var(--glow-cyan);
-  transform: translateY(-2px);
-}
-
-button:active {
+button:active:not(:disabled) {
   transform: translateY(0);
 }
 
@@ -173,19 +167,28 @@ button.primary {
   box-shadow: var(--glow-pink);
 }
 
-button.primary:hover {
-  box-shadow: var(--glow-pink), 0 0 30px var(--neon-pink);
-}
-
 button:disabled {
   opacity: 0.3;
   cursor: not-allowed;
   transform: none;
 }
 
-button:disabled:hover {
-  box-shadow: none;
-  background: var(--bg-panel);
+/* Hover lift / glow only on real pointers — touch was keeping “hover” stuck and warping layout */
+@media (hover: hover) and (pointer: fine) {
+  button:hover:not(:disabled) {
+    background: var(--bg-hover);
+    box-shadow: var(--glow-cyan);
+    transform: translateY(-2px);
+  }
+
+  button.primary:hover:not(:disabled) {
+    box-shadow: var(--glow-pink), 0 0 30px var(--neon-pink);
+  }
+
+  button:disabled:hover {
+    box-shadow: none;
+    background: var(--bg-panel);
+  }
 }
 
 /* Click effect */
