@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import './GameHudBar.css';
-import { formatNumber, formatRate } from '../utils/formatNumber';
+import { formatNumber, formatRate, formatIntegerExact, formatRateExact } from '../utils/formatNumber';
 import { getFollowerBonusSummary } from '../utils/gameMath';
 import {
   influencerTypes,
@@ -47,12 +47,16 @@ export const GameHudBar = ({
       <div className="game-hud-main">
         <div className="game-hud-clout-block">
           <div className="game-hud-clout-label">Clout</div>
-          <div className="game-hud-clout-value">{formatNumber(clout)}</div>
+          <div className="game-hud-clout-value" title={formatIntegerExact(clout)}>
+            {formatNumber(clout)}
+          </div>
         </div>
         <div className="game-hud-grid">
           <div className="game-hud-cell">
             <span className="game-hud-k">Followers</span>
-            <span className="game-hud-v">{formatNumber(followers)}</span>
+            <span className="game-hud-v" title={formatIntegerExact(followers)}>
+              {formatNumber(followers)}
+            </span>
             <span className="game-hud-sub">
               +{followerBonuses.cloutBonusPct}% Clout · −{followerBonuses.hireDiscountPct}% costs
             </span>
@@ -64,7 +68,9 @@ export const GameHudBar = ({
           </div>
           <div className="game-hud-cell">
             <span className="game-hud-k">Gems</span>
-            <span className="game-hud-v game-hud-gems">{gems.toLocaleString()} 💎</span>
+            <span className="game-hud-v game-hud-gems" title={formatIntegerExact(gems)}>
+              {formatNumber(gems)} 💎
+            </span>
             <span className="game-hud-sub">Prestige, trophies, daily brief</span>
           </div>
           <div className="game-hud-cell">
@@ -74,11 +80,18 @@ export const GameHudBar = ({
           </div>
           <div className="game-hud-cell">
             <span className="game-hud-k">Agency / sec</span>
-            <span className="game-hud-v game-hud-passive">{formatRate(passiveCloutPerSecond)}</span>
+            <span
+              className="game-hud-v game-hud-passive"
+              title={formatRateExact(passiveCloutPerSecond)}
+            >
+              {formatRate(passiveCloutPerSecond)}
+            </span>
           </div>
           <div className="game-hud-cell">
             <span className="game-hud-k">Per post</span>
-            <span className="game-hud-v game-hud-click">{formatRate(clickCloutPerClick)}</span>
+            <span className="game-hud-v game-hud-click" title={formatRateExact(clickCloutPerClick)}>
+              {formatRate(clickCloutPerClick)}
+            </span>
           </div>
         </div>
       </div>
@@ -98,7 +111,9 @@ export const GameHudBar = ({
       <div className="game-hud-run">
         <div className="game-hud-run-label">
           <span>This run → prestige</span>
-          <span>
+          <span
+            title={`${formatIntegerExact(runCloutEarned)} / ${formatIntegerExact(required)}`}
+          >
             {formatNumber(runCloutEarned)} / {formatNumber(required)}
           </span>
         </div>
@@ -106,7 +121,7 @@ export const GameHudBar = ({
           <div className="game-hud-run-fill" style={{ width: `${runProgress * 100}%` }} />
         </div>
         <div className="game-hud-run-foot">
-          <span>Lifetime {formatNumber(lifetimeClout)}</span>
+          <span title={formatIntegerExact(lifetimeClout)}>Lifetime {formatNumber(lifetimeClout)}</span>
           <span>
             Manual posts {totalClicks.toLocaleString()} · Staff {staffCount}
           </span>

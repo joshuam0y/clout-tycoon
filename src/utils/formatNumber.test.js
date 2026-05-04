@@ -1,25 +1,22 @@
 import { describe, it, expect } from 'vitest';
-import { formatNumber, formatRate, exponentToSuperscript } from './formatNumber';
-
-describe('exponentToSuperscript', () => {
-  it('maps small integers', () => {
-    expect(exponentToSuperscript(0)).toBe('⁰');
-    expect(exponentToSuperscript(6)).toBe('⁶');
-    expect(exponentToSuperscript(12)).toBe('¹²');
-  });
-  it('maps negative exponents', () => {
-    expect(exponentToSuperscript(-3)).toBe('⁻³');
-  });
-});
+import {
+  formatNumber,
+  formatRate,
+  formatIntegerExact,
+  formatRateExact
+} from './formatNumber';
 
 describe('formatNumber', () => {
-  it('keeps full grouping for six-digit magnitudes', () => {
-    expect(formatNumber(999_999)).not.toContain('×10');
+  it('keeps full grouping below a million', () => {
+    expect(formatNumber(999_999)).toMatch(/999/);
+    expect(formatNumber(5000).replace(/[,.\s\u202f]/g, '')).toMatch(/5000/);
   });
-  it('uses times-ten power for 7+ digit integers', () => {
-    expect(formatNumber(1_000_000)).toContain('×10');
-    expect(formatNumber(1_000_000)).toContain('⁶');
-    expect(formatNumber(12_345_678)).toContain('×10');
+  it('uses mil / bil / tril style instead of powers of ten', () => {
+    expect(formatNumber(1_000_000)).toContain('mil');
+    expect(formatNumber(1_000_000)).not.toContain('×10');
+    expect(formatNumber(12_345_678)).toContain('mil');
+    expect(formatNumber(3_500_000_000)).toContain('bil');
+    expect(formatNumber(2_000_000_000_000)).toContain('tril');
   });
 });
 
@@ -27,10 +24,22 @@ describe('formatRate', () => {
   it('keeps decimals for small rates', () => {
     expect(formatRate(3.456)).toBe('3.46');
   });
-  it('does not compact mid rates below threshold', () => {
-    expect(formatRate(12_345)).not.toContain('×10');
+  it('does not compact mid rates below a million', () => {
+    expect(formatRate(12_345)).not.toMatch(/mil|bil|tril/);
   });
-  it('uses times-ten power for large rates', () => {
-    expect(formatRate(987_654)).toContain('×10');
+  it('uses suffix ladder for large rates', () => {
+    const s = formatRate(987_654_321);
+    expect(s).toMatch(/mil|bil|tril|quad/);
+    expect(s).not.toContain('×10');
+  });
+});
+
+describe('tooltip helpers', () => {
+  it('formatIntegerExact uses locale grouping', () => {
+    expect(formatIntegerExact(1234567)).toMatch(/1/);
+    expect(formatIntegerExact(1234567)).toMatch(/234/);
+  });
+  it('formatRateExact stays finite for typical HUD numbers', () => {
+    expect(formatRateExact(12.3456789)).toContain('12');
   });
 });

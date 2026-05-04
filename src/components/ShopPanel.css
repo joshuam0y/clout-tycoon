@@ -283,6 +283,7 @@
   font-weight: bold;
   text-align: right;
   color: #666688;
+  font-variant-numeric: tabular-nums;
 }
 
 .upgrade-cost.afford {
@@ -386,6 +387,7 @@
   text-align: right;
   color: var(--neon-yellow);
   text-shadow: 0 0 8px rgba(255, 255, 0, 0.35);
+  font-variant-numeric: tabular-nums;
 }
 
 .shop-item.cannot-buy .item-cost {

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import './MonetizationPanel.css';
-import { formatNumber } from '../utils/formatNumber';
+import { formatNumber, formatIntegerExact, formatRate } from '../utils/formatNumber';
 
 function utcToday() {
   return new Date().toISOString().slice(0, 10);
@@ -311,7 +311,7 @@ export const MonetizationPanel = ({
                       <h4>Spotlight rush</h4>
                       <p>
                         ~90s of ×1.22 passive on the grid — stacks with buildings, producers, and feed surges.{' '}
-                        {formatNumber(passiveCloutPerSecond)}/s baseline now.
+                        {formatRate(passiveCloutPerSecond)}/s baseline now.
                       </p>
                     </div>
                   </div>
@@ -332,7 +332,7 @@ export const MonetizationPanel = ({
                       <h4>Clout Surge</h4>
                       <p>
                         Instantly gain ~72 seconds of passive at your current rate (
-                        {formatNumber(passiveCloutPerSecond)}/s).
+                        {formatRate(passiveCloutPerSecond)}/s).
                       </p>
                     </div>
                   </div>
@@ -452,7 +452,9 @@ export const MonetizationPanel = ({
 
         <div className="premium-currency">
           <span className="currency-label">Gems</span>
-          <span className="currency-value">{gems} 💎</span>
+          <span className="currency-value" title={formatIntegerExact(gems)}>
+            {formatNumber(gems)} 💎
+          </span>
           <button type="button" className="buy-currency" onClick={() => setActiveTab('gems')}>
             Get gems
           </button>

@@ -19,7 +19,7 @@ import {
   clickUpgradeNextCost,
   getFollowerCostMult
 } from '../utils/gameMath';
-import { formatNumber, formatRate } from '../utils/formatNumber';
+import { formatNumber, formatRate, formatIntegerExact } from '../utils/formatNumber';
 
 function PrestigeLockBadge({ minPrestige: minP }) {
   if (!minP || minP <= 0) return null;
@@ -176,6 +176,7 @@ export const ShopPanel = ({
                     key={upgrade.id}
                     type="button"
                     className={`shop-upgrade shop-item--gated ${!canAfford || locked ? 'disabled' : ''}`}
+                    title={`Exact cost ${formatIntegerExact(cost)} Clout`}
                     onClick={() => onBuyClickUpgrade(upgrade.id)}
                     disabled={!canAfford || locked}
                   >
@@ -226,6 +227,7 @@ export const ShopPanel = ({
                     key={influencer.id}
                     type="button"
                     className={`shop-item shop-item--gated ${isSelected ? 'selected' : ''} ${!canAfford || locked ? 'disabled' : ''}`}
+                    title={`Hire — exact cost ${formatIntegerExact(nextCost)} Clout`}
                     onClick={() => onSelectTool({ type: 'influencer', id: influencer.id })}
                     disabled={!canAfford || locked}
                     style={{
@@ -308,6 +310,7 @@ export const ShopPanel = ({
                     key={m.id}
                     type="button"
                     className={`shop-item shop-item--gated ${!canAfford || locked ? 'disabled' : ''}`}
+                    title={`Hire — exact cost ${formatIntegerExact(nextCost)} Clout`}
                     onClick={() => onBuyManager(m.id)}
                     disabled={!canAfford || locked}
                   >
@@ -369,7 +372,7 @@ export const ShopPanel = ({
                     key={building.id}
                     type="button"
                     className={`shop-item shop-item--gated ${isSelected ? 'selected' : ''} ${!canAfford || locked ? 'disabled' : ''}`}
-                    title={`Footprint ${building.size}×${building.size} tiles · Buff radius ${building.range} (Manhattan from edge) · ×${building.multiplier} talent in range`}
+                    title={`Footprint ${building.size}×${building.size} tiles · Buff radius ${building.range} (Manhattan from edge) · ×${building.multiplier} talent in range · Build cost ${formatIntegerExact(nextCost)} Clout`}
                     onClick={() => onSelectTool({ type: 'building', id: building.id })}
                     disabled={!canAfford || locked}
                     style={{

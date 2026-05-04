@@ -5,7 +5,7 @@ import {
   brandDealOfferableAtReputation,
   computeBrandDealPayouts
 } from '../data/gameData';
-import { formatNumber } from '../utils/formatNumber';
+import { formatNumber, formatIntegerExact } from '../utils/formatNumber';
 
 export const BrandDealPopup = ({
   activeBrandDeal,
@@ -125,13 +125,19 @@ export const BrandDealPopup = ({
           <div className="deal-rewards">
             <div className="reward-item">
               <span className="reward-label">Clout (this accept)</span>
-              <span className="reward-value clout">
+              <span
+                className="reward-value clout"
+                title={formatIntegerExact(Math.floor(payouts.earnedClout))}
+              >
                 +{formatNumber(Math.floor(payouts.earnedClout))}
               </span>
             </div>
             <div className="reward-item">
               <span className="reward-label">Followers</span>
-              <span className="reward-value followers">
+              <span
+                className="reward-value followers"
+                title={formatIntegerExact(Math.floor(payouts.followerGain))}
+              >
                 +{formatNumber(Math.floor(payouts.followerGain))}
               </span>
             </div>

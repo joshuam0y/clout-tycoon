@@ -37,6 +37,7 @@
   color: var(--neon-cyan, #00ffff);
   text-shadow: 0 0 14px rgba(0, 255, 255, 0.45);
   line-height: 1.1;
+  font-variant-numeric: tabular-nums;
 }
 
 .game-hud-grid {
@@ -72,6 +73,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
 }
 
 .game-hud-gems {

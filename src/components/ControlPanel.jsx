@@ -10,7 +10,7 @@ import {
   PRESTIGE_RUN_CLOUT_MULT_DEEP,
   PRESTIGE_RUN_CLOUT_DEEP_AFTER
 } from '../data/gameData';
-import { formatNumber, formatRate } from '../utils/formatNumber';
+import { formatNumber, formatRate, formatIntegerExact } from '../utils/formatNumber';
 
 function formatSaveAge(ts) {
   if (ts == null) return '…';
@@ -510,7 +510,11 @@ export const ControlPanel = ({
           className="prestige-button"
           onClick={onPrestige}
           disabled={!canPrestige}
-          title={canPrestige ? 'Shortcut: P to prestige' : 'Shortcut: P (when bar is full)'}
+          title={
+            canPrestige
+              ? `Shortcut: P · This run ${formatIntegerExact(runCloutEarned)} / ${formatIntegerExact(required)} Clout`
+              : `Need ${formatIntegerExact(Math.max(0, required - runCloutEarned))} more run Clout (exact) · P when full`
+          }
         >
           Prestige{' '}
           {canPrestige
