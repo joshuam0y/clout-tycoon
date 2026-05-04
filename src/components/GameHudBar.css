@@ -1,13 +1,18 @@
 .game-hud-bar {
   flex: 0 0 auto;
   z-index: 2;
+  /* Cap height so wrapped stats + run bar don’t eat the whole shell (app is overflow:hidden). */
+  max-height: min(46dvh, 420px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding: 10px 14px 12px;
   padding-top: calc(10px + env(safe-area-inset-top, 0px));
   padding-left: calc(14px + env(safe-area-inset-left, 0px));
   padding-right: calc(14px + env(safe-area-inset-right, 0px));
   border-bottom: 1px solid rgba(0, 255, 255, 0.22);
   background: linear-gradient(180deg, rgba(6, 10, 28, 0.94), rgba(4, 6, 18, 0.88));
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
 }
 
 .game-hud-main {
