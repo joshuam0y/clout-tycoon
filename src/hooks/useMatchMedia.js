@@ -11,9 +11,19 @@ export function useMatchMedia(query) {
   useEffect(() => {
     const mq = window.matchMedia(query);
     const onChange = () => setMatches(mq.matches);
-    mq.addEventListener('change', onChange);
+    if (typeof mq.addEventListener === 'function') {
+      mq.addEventListener('change', onChange);
+    } else {
+      mq.addListener(onChange);
+    }
     setMatches(mq.matches);
-    return () => mq.removeEventListener('change', onChange);
+    return () => {
+      if (typeof mq.removeEventListener === 'function') {
+        mq.removeEventListener('change', onChange);
+      } else {
+        mq.removeListener(onChange);
+      }
+    };
   }, [query]);
 
   return matches;

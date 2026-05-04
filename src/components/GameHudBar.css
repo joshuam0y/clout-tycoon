@@ -1,11 +1,6 @@
 .game-hud-bar {
   flex: 0 0 auto;
-  z-index: 2;
-  /* Cap height so wrapped stats + run bar don’t eat the whole shell (app is overflow:hidden). */
-  max-height: min(46dvh, 420px);
   overflow-x: hidden;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
   padding: 10px 14px 12px;
   padding-top: calc(10px + env(safe-area-inset-top, 0px));
   padding-left: calc(14px + env(safe-area-inset-left, 0px));
@@ -13,6 +8,15 @@
   border-bottom: 1px solid rgba(0, 255, 255, 0.22);
   background: linear-gradient(180deg, rgba(6, 10, 28, 0.94), rgba(4, 6, 18, 0.88));
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
+}
+
+/* Short desktop windows: scroll HUD instead of clipping the shell */
+@media (min-width: 901px) {
+  .game-hud-bar {
+    max-height: min(52dvh, 480px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 .game-hud-main {
@@ -156,4 +160,81 @@
   margin-top: 4px;
   font-size: 10px;
   color: var(--text-muted, #6a7a99);
+}
+
+/* Mobile shell (max-width matches App.jsx MOBILE_LAYOUT_QUERY) — must follow base .game-hud-* rules */
+@media (max-width: 900px) {
+  .game-hud-bar {
+    flex-shrink: 1;
+    min-height: 0;
+    max-height: min(32dvh, 220px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 6px 10px 8px;
+    padding-top: calc(6px + env(safe-area-inset-top, 0px));
+    padding-left: calc(10px + env(safe-area-inset-left, 0px));
+    padding-right: calc(10px + env(safe-area-inset-right, 0px));
+  }
+
+  .game-hud-main {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .game-hud-clout-block {
+    min-width: 0;
+    width: 100%;
+    padding: 6px 10px;
+  }
+
+  .game-hud-clout-value {
+    font-size: clamp(18px, 5.5vw, 24px);
+  }
+
+  .game-hud-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .game-hud-cell {
+    padding: 4px 6px;
+  }
+
+  .game-hud-k {
+    font-size: 8px;
+  }
+
+  .game-hud-v {
+    font-size: 12px;
+  }
+
+  .game-hud-sub {
+    font-size: 8px;
+    line-height: 1.2;
+  }
+
+  .game-hud-meta-row {
+    margin-top: 6px;
+    gap: 6px 10px;
+    font-size: 9px;
+  }
+
+  .game-hud-run {
+    margin-top: 6px;
+  }
+
+  .game-hud-run-label,
+  .game-hud-run-foot {
+    font-size: 9px;
+  }
+}
+
+/* Phone landscape: leave more vertical room for the grid + tab bar */
+@media (max-width: 900px) and (max-height: 520px) {
+  .game-hud-bar {
+    max-height: min(24dvh, 132px);
+    padding-top: calc(4px + env(safe-area-inset-top, 0px));
+  }
 }

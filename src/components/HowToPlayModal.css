@@ -6,13 +6,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--spacing-md);
+  padding: max(var(--spacing-md), env(safe-area-inset-top, 0px))
+    max(var(--spacing-md), env(safe-area-inset-right, 0px))
+    max(var(--spacing-md), env(safe-area-inset-bottom, 0px))
+    max(var(--spacing-md), env(safe-area-inset-left, 0px));
+  box-sizing: border-box;
   overscroll-behavior: none;
 }
 
 .how-to-panel {
   width: min(500px, 100%);
-  max-height: min(88vh, 720px);
+  max-height: min(88dvh, 720px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -63,7 +67,7 @@
 
 .how-to-page {
   flex: 1;
-  min-height: 200px;
+  min-height: 0;
   margin-top: var(--spacing-md);
   display: flex;
   flex-direction: column;
