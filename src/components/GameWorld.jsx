@@ -553,16 +553,11 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick, p
           !selectedTool &&
           (() => {
             const bt = hoveredPlacedBuildingType;
-            const hb = hoveredPlacedBuilding;
-            const p = toScreen(hb.position.x, hb.position.y);
-            const w = CELL_SIZE * bt.size;
             const desc = clipTooltipDescription(bt.description);
             return (
               <div
                 className="entity-hover-tooltip building-hover-tooltip"
                 style={{
-                  left: p.left + w / 2,
-                  top: p.top + w,
                   borderColor: bt.color,
                   boxShadow: `0 10px 32px rgba(0, 0, 0, 0.58), 0 0 28px ${bt.color}40, inset 0 1px 0 rgba(255, 255, 255, 0.07)`
                 }}

@@ -342,9 +342,14 @@
 }
 
 .entity-hover-tooltip.building-hover-tooltip {
-  /* Below footprint so hovering doesn’t cover talents / buff cells to the north */
-  transform: translate(-50%, 12px);
+  /* Pinned to map chrome — never draws over grid tiles */
+  top: 8px;
+  right: 8px;
+  left: auto;
+  bottom: auto;
+  transform: none;
   border-width: 1px;
+  max-width: min(300px, calc(100% - 20px));
 }
 
 .entity-hover-desc {
