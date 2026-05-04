@@ -2,6 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import './MonetizationPanel.css';
 import { formatNumber } from '../utils/formatNumber';
 
+function utcToday() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 export const MonetizationPanel = ({
   onClose,
   deferEscapeClose = false,
@@ -23,7 +27,13 @@ export const MonetizationPanel = ({
   onCloutSurge,
   onGachaPull,
   onGrantGemPack,
-  onMarketInject
+  onMarketInject,
+  dailyReward = { lastClaimUtcDay: '', streak: 0, bestStreak: 0 },
+  onClaimDaily = () => false,
+  onBuyReputationPolish = () => false,
+  onBuySpotlightRush = () => false,
+  spotlightRushCost = 55,
+  reputationPolishCost = 32
 }) => {
   const [activeTab, setActiveTab] = useState('gems');
   const [isPulling, setIsPulling] = useState(false);
@@ -53,6 +63,11 @@ export const MonetizationPanel = ({
     gemPassiveMultStacks >= maxGemPassiveStacks
       ? null
       : gemEconomy.passiveCostBase + gemPassiveMultStacks * gemEconomy.passiveCostPerOwned;
+
+  const todayUtc = utcToday();
+  const claimedToday = dailyReward.lastClaimUtcDay === todayUtc;
+  const streak = dailyReward.streak ?? 0;
+  const bestStreak = dailyReward.bestStreak ?? 0;
 
   useEffect(() => {
     const onKey = e => {
@@ -95,6 +110,13 @@ export const MonetizationPanel = ({
           </button>
           <button
             type="button"
+            className={`tab ${activeTab === 'daily' ? 'active' : ''}`}
+            onClick={() => setActiveTab('daily')}
+          >
+            Daily
+          </button>
+          <button
+            type="button"
             className={`tab ${activeTab === 'boosts' ? 'active' : ''}`}
             onClick={() => setActiveTab('boosts')}
           >
@@ -119,29 +141,72 @@ export const MonetizationPanel = ({
         <div className="monetization-content">
           {activeTab === 'gems' && (
             <div className="gems-section">
-              <h3>Get Gems</h3>
+              <h3>Top up</h3>
               <p className="section-description">
-                Gems are earned in-game from prestige and achievements. Purchases below simulate topping
-                up — no real payment is processed in this build.
+                Simulated storefront — no real card charge here. In the live game these would be the impulse buys
+                that skip a week of grinding; in this build they are free test buttons so you can feel the power
+                curve.
               </p>
               <div className="gem-packs">
                 <button type="button" className="gem-pack" onClick={() => onGrantGemPack(45)}>
-                  +45 💎
-                  <span className="gem-pack-sub">Starter</span>
+                  <span className="gem-pack-ribbon gem-pack-ribbon--soft">Warm up</span>
+                  <span className="gem-pack-strike">~~$4.99~~</span>
+                  <span className="gem-pack-main">+45 💎</span>
+                  <span className="gem-pack-sub">First sponsor call unlocked</span>
                 </button>
                 <button type="button" className="gem-pack primary-pack" onClick={() => onGrantGemPack(120)}>
-                  +120 💎
-                  <span className="gem-pack-sub">Creator</span>
+                  <span className="gem-pack-ribbon gem-pack-ribbon--hot">Best value</span>
+                  <span className="gem-pack-strike">~~$14.99~~</span>
+                  <span className="gem-pack-main">+120 💎</span>
+                  <span className="gem-pack-sub">Enough for a Syndicate stack + Surge</span>
                 </button>
-                <button type="button" className="gem-pack" onClick={() => onGrantGemPack(350)}>
-                  +350 💎
-                  <span className="gem-pack-sub">Agency</span>
+                <button type="button" className="gem-pack gem-pack--whale" onClick={() => onGrantGemPack(350)}>
+                  <span className="gem-pack-ribbon gem-pack-ribbon--gold">Whale lane</span>
+                  <span className="gem-pack-strike">~~$39.99~~</span>
+                  <span className="gem-pack-main">+350 💎</span>
+                  <span className="gem-pack-sub">Blitz gacha + permanent stacks fast</span>
                 </button>
               </div>
               <div className="gem-uses-hint">
-                <strong>What gems do:</strong> three permanent stack lines (all clout, post-only, passive-only),
-                instant surges, viral drops, and market injections. Stacks survive prestige and scale with your
-                account — meant for long runs across many resets.
+                <strong>Spend gems on:</strong> permanent Syndicate / Creator / Spotlight lines, timed spotlight
+                rush, reputation polish, Clout Surge, Viral Drops, and press injections — all tuned to stay strong
+                across many prestiges.
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'daily' && (
+            <div className="daily-section">
+              <h3>Daily brief</h3>
+              <p className="section-description">
+                One claim per UTC day. Streaks ramp the payout and feed the <strong>Check-in Week</strong> trophy.
+              </p>
+              <div className="daily-card">
+                <div className="daily-row">
+                  <span>Current streak</span>
+                  <strong>{streak}</strong>
+                </div>
+                <div className="daily-row">
+                  <span>Best streak</span>
+                  <strong>{bestStreak}</strong>
+                </div>
+                <div className="daily-row">
+                  <span>Today (UTC)</span>
+                  <strong>{todayUtc}</strong>
+                </div>
+                <button
+                  type="button"
+                  className="daily-claim-btn"
+                  disabled={claimedToday}
+                  onClick={() => onClaimDaily()}
+                >
+                  {claimedToday ? 'Come back tomorrow' : 'Claim today’s brief'}
+                </button>
+                {!claimedToday && (
+                  <p className="daily-foot">
+                    Next pack scales with streak · big bonuses at 7+, 14+, and 30+ day chains.
+                  </p>
+                )}
               </div>
             </div>
           )}
@@ -221,6 +286,47 @@ export const MonetizationPanel = ({
 
                 <div className="boost-item">
                   <div className="boost-header">
+                    <span className="boost-icon">✨</span>
+                    <div className="boost-info">
+                      <h4>PR polish</h4>
+                      <p>
+                        +18 reputation (caps at 100%) — dig out of risky deal spirals without burning a whole run.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="boost-buy"
+                    onClick={onBuyReputationPolish}
+                    disabled={gems < reputationPolishCost}
+                  >
+                    {reputationPolishCost} 💎
+                  </button>
+                </div>
+
+                <div className="boost-item">
+                  <div className="boost-header">
+                    <span className="boost-icon">🎆</span>
+                    <div className="boost-info">
+                      <h4>Spotlight rush</h4>
+                      <p>
+                        ~90s of ×1.22 passive on the grid — stacks with buildings, producers, and feed surges.{' '}
+                        {formatNumber(passiveCloutPerSecond)}/s baseline now.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="boost-buy"
+                    onClick={onBuySpotlightRush}
+                    disabled={gems < spotlightRushCost || passiveCloutPerSecond <= 0}
+                  >
+                    {spotlightRushCost} 💎
+                  </button>
+                </div>
+
+                <div className="boost-item">
+                  <div className="boost-header">
                     <span className="boost-icon">⚡</span>
                     <div className="boost-info">
                       <h4>Clout Surge</h4>
@@ -274,7 +380,8 @@ export const MonetizationPanel = ({
                   onClick={() => handleGacha(false)}
                   disabled={isPulling || gems < gachaCosts.single}
                 >
-                  Single ({gachaCosts.single} 💎)
+                  <span className="gacha-btn-title">Single pull</span>
+                  <span className="gacha-btn-meta">{gachaCosts.single} 💎 · taste the algorithm</span>
                 </button>
                 <button
                   type="button"
@@ -282,7 +389,11 @@ export const MonetizationPanel = ({
                   onClick={() => handleGacha(true)}
                   disabled={isPulling || gems < gachaCosts.multi}
                 >
-                  10× ({gachaCosts.multi} 💎)
+                  <span className="gacha-btn-title">10× bundle</span>
+                  <span className="gacha-btn-meta">
+                    {gachaCosts.multi} 💎 · ~{Math.round((gachaCosts.multi / gachaCosts.single) * 10) / 10}× value vs
+                    singles
+                  </span>
                 </button>
               </div>
             </div>
@@ -311,7 +422,7 @@ export const MonetizationPanel = ({
           )}
         </div>
 
-        {activeTab !== 'gems' && activeTab !== 'achievements' && (
+        {activeTab !== 'gems' && activeTab !== 'achievements' && activeTab !== 'daily' && (
           <div className="market-inline">
             <h4>Market noise (clout injection)</h4>
             <p className="section-description small">

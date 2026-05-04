@@ -245,6 +245,29 @@
   line-height: 1.25;
 }
 
+.shop-era-lock-badge {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 12, 28, 0.62);
+  border-radius: inherit;
+  z-index: 3;
+  pointer-events: none;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #a8e8ff;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.95);
+  gap: 4px;
+  padding: var(--spacing-xs);
+  text-align: center;
+  line-height: 1.25;
+}
+
 .shop-prestige-lock-icon {
   font-size: 22px;
   line-height: 1;

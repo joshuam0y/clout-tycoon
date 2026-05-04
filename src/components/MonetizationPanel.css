@@ -63,7 +63,7 @@
 }
 
 .tab {
-  flex: 1 1 22%;
+  flex: 1 1 18%;
   min-width: 0;
   min-height: 44px;
   padding: 8px 6px;
@@ -172,8 +172,28 @@
 
 .gacha-button {
   flex: 1;
-  height: 60px;
-  font-size: 16px;
+  min-height: 72px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.gacha-btn-title {
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.gacha-btn-meta {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 0 4px;
 }
 
 .gacha-rates {
@@ -394,6 +414,52 @@
   box-shadow: var(--glow-yellow);
 }
 
+.daily-section .daily-card {
+  padding: var(--spacing-md);
+  border-radius: 10px;
+  border: 1px solid rgba(0, 255, 200, 0.35);
+  background: rgba(0, 40, 32, 0.35);
+}
+
+.daily-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.daily-row strong {
+  color: #ccffee;
+}
+
+.daily-claim-btn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 8px;
+  border: 2px solid var(--neon-cyan);
+  background: rgba(0, 255, 255, 0.12);
+  color: var(--neon-cyan);
+  cursor: pointer;
+}
+
+.daily-claim-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.daily-foot {
+  margin-top: 10px;
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
 /* Gem packs */
 .gem-packs {
   display: grid;
@@ -409,28 +475,81 @@
 }
 
 .gem-pack {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 4px;
-  min-height: 72px;
+  min-height: 118px;
+  padding-top: 14px;
   font-size: 15px;
   border-color: var(--neon-yellow);
   background: rgba(255, 255, 0, 0.06);
+  overflow: hidden;
 }
 
 .gem-pack.primary-pack {
   border-color: var(--neon-pink);
   background: rgba(255, 0, 255, 0.08);
+  box-shadow: 0 0 22px rgba(255, 0, 255, 0.18);
+}
+
+.gem-pack--whale {
+  border-color: #ffd966;
+  background: rgba(255, 200, 80, 0.07);
+}
+
+.gem-pack-ribbon {
+  position: absolute;
+  top: 10px;
+  right: -36px;
+  width: 140px;
+  text-align: center;
+  transform: rotate(38deg);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 4px 0;
+  color: #0a0a12;
+}
+
+.gem-pack-ribbon--soft {
+  background: linear-gradient(90deg, #a8fff0, #66ddff);
+}
+
+.gem-pack-ribbon--hot {
+  background: linear-gradient(90deg, #ff99ee, #ffdd66);
+}
+
+.gem-pack-ribbon--gold {
+  background: linear-gradient(90deg, #ffe6aa, #ffcc55);
+}
+
+.gem-pack-strike {
+  font-size: 11px;
+  text-decoration: line-through;
+  color: var(--text-muted);
+  opacity: 0.85;
+}
+
+.gem-pack-main {
+  font-size: 20px;
+  font-weight: 900;
+  color: #fff8ff;
+  text-shadow: 0 0 12px rgba(255, 200, 255, 0.35);
 }
 
 .gem-pack-sub {
   font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.06em;
   color: var(--text-muted);
   font-weight: 600;
+  text-align: center;
+  line-height: 1.35;
+  padding: 0 6px;
 }
 
 .gem-uses-hint {

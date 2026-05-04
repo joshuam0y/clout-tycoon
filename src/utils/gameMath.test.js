@@ -101,4 +101,11 @@ describe('getPrestigeRunCloutRequired scaling', () => {
       )
     );
   });
+
+});
+
+describe('scaledBuildingPlacementCost era 3', () => {
+  it('era 3 costs more than era 2 for same base', () => {
+    expect(scaledBuildingPlacementCost(1000, 1, 3)).toBeGreaterThan(scaledBuildingPlacementCost(1000, 1, 2));
+  });
 });

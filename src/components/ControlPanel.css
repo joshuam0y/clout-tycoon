@@ -920,6 +920,120 @@
   flex: 1 1 140px;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.save-compact {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.save-compact-top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.save-compact-input {
+  flex: 1 1 120px;
+  min-width: 0;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(100, 140, 200, 0.35);
+  background: rgba(6, 8, 18, 0.75);
+  color: #e8ecff;
+  font-size: 12px;
+}
+
+.save-compact-primary {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1px solid var(--neon-cyan);
+  background: rgba(0, 255, 255, 0.12);
+  color: var(--neon-cyan);
+  cursor: pointer;
+}
+
+.save-compact-vault {
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid rgba(180, 160, 255, 0.45);
+  background: rgba(120, 80, 200, 0.12);
+  color: #ddccff;
+  cursor: pointer;
+}
+
+.save-compact-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 6px 10px;
+  margin-top: 6px;
+  font-size: 10px;
+  color: var(--text-muted);
+  align-items: center;
+}
+
+.save-compact-sync {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.save-compact-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  align-items: center;
+}
+
+.save-compact-link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: #9ad8ff;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.save-compact-link--danger {
+  color: #ff8899;
+}
+
+.era-display--compact {
+  padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.era-display--compact .era-name {
+  font-size: 14px;
+}
+
+.era-display--compact .era-description {
+  font-size: 10px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .frenzy-banner {
     animation: none;

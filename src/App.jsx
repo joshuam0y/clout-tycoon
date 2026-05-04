@@ -9,6 +9,7 @@ import { BrandDealPopup } from './components/BrandDealPopup';
 import { Notifications } from './components/Notifications';
 import { MonetizationPanel } from './components/MonetizationPanel';
 import { HowToPlayModal } from './components/HowToPlayModal';
+import { GameHudBar } from './components/GameHudBar';
 
 function App() {
   const gameState = useGameState();
@@ -111,21 +112,30 @@ function App() {
       {/* Scanline effect */}
       <div className="scanline" />
 
-      <div className="game-layout" aria-label="Agency panels and grid">
-        {/* Left panel - Controls and stats */}
-        <ControlPanel
+      <div className="game-shell">
+        <GameHudBar
           clout={gameState.clout}
           followers={gameState.followers}
           reputation={gameState.reputation}
-          prestigeCount={gameState.prestigeCount}
-          prestigeMultiplier={gameState.prestigeMultiplier}
+          gems={gameState.gems}
           passiveCloutPerSecond={gameState.passiveCloutPerSecond}
           clickCloutPerClick={gameState.clickCloutPerClick}
           lifetimeClout={gameState.lifetimeClout}
           runCloutEarned={gameState.runCloutEarned}
-          gems={gameState.gems}
-          staffCount={gameState.managers.length}
+          prestigeRunCloutRequired={gameState.prestigeRunCloutRequired}
           totalClicks={gameState.totalClicks}
+          staffCount={gameState.managers.length}
+          catalogEra={gameState.catalogEra}
+          gemPassiveTimedBoost={gameState.gemPassiveTimedBoost}
+        />
+
+        <div className="game-layout" aria-label="Agency panels and grid">
+        {/* Left panel - Controls and stats */}
+        <ControlPanel
+          prestigeCount={gameState.prestigeCount}
+          prestigeMultiplier={gameState.prestigeMultiplier}
+          clickCloutPerClick={gameState.clickCloutPerClick}
+          runCloutEarned={gameState.runCloutEarned}
           prestigeRunCloutRequired={gameState.prestigeRunCloutRequired}
           activeFrenzy={gameState.activeFrenzy}
           onClickPostContent={gameState.clickPostContent}
@@ -169,7 +179,9 @@ function App() {
           passiveCloutPerSecond={gameState.passiveCloutPerSecond}
           passiveByTalentType={gameState.passiveByTalentType}
           prestigeCount={gameState.prestigeCount}
+          catalogEra={gameState.catalogEra}
         />
+        </div>
       </div>
 
       {/* Brand deal popup */}
@@ -215,6 +227,12 @@ function App() {
           onGachaPull={gameState.pullGacha}
           onGrantGemPack={gameState.grantGemsFromPack}
           onMarketInject={gameState.marketCloutInjection}
+          dailyReward={gameState.dailyReward}
+          onClaimDaily={gameState.claimDailyReward}
+          onBuyReputationPolish={gameState.buyReputationPolish}
+          onBuySpotlightRush={gameState.buySpotlightRush}
+          spotlightRushCost={gameState.gemSinkCosts.spotlightRush}
+          reputationPolishCost={gameState.gemSinkCosts.reputationPolish}
         />
       )}
     </div>

@@ -17,8 +17,8 @@ export const BUILDING_SAME_TYPE_STACK_EXP_CAP = 3.55;
 
 /** Duplicate building costs use slightly steeper growth / exponent by requiredEra (0 = early catalog). */
 export const BUILDING_ERA_GROWTH_FACTOR = 0.062;
-export const BUILDING_ERA_DUPLICATE_EXP_BONUS = [0, 0.055, 0.12];
-export const BUILDING_ERA_FLAT_COST_MULT = [1, 1.2, 1.46];
+export const BUILDING_ERA_DUPLICATE_EXP_BONUS = [0, 0.055, 0.12, 0.19];
+export const BUILDING_ERA_FLAT_COST_MULT = [1, 1.2, 1.46, 1.82];
 
 /**
  * Legacy economy applied 0.48× to manual posts; baseline is now 1 Clout per post (before upgrades).
@@ -33,12 +33,38 @@ export const CLOUT_PRICE_MULTIPLIER = 25 / 12;
 export const PRESTIGE_RUN_CLOUT_BASE = 800000;
 /** Next run’s prestige bar is this × the previous tier’s requirement. */
 export const PRESTIGE_RUN_CLOUT_MULT_PER_STEP = 14;
+/** After this many completed prestiges, each further bar step uses the deep multiplier (late-game brake). */
+export const PRESTIGE_RUN_CLOUT_DEEP_AFTER = 12;
+export const PRESTIGE_RUN_CLOUT_MULT_DEEP = 18;
 
 export function getPrestigeRunCloutRequired(completedPrestigeCount) {
   const n = Math.max(0, Math.floor(completedPrestigeCount ?? 0));
-  const raw =
-    PRESTIGE_RUN_CLOUT_BASE * CLOUT_PRICE_MULTIPLIER * Math.pow(PRESTIGE_RUN_CLOUT_MULT_PER_STEP, n);
+  let mult = 1;
+  for (let i = 0; i < n; i++) {
+    mult *=
+      i >= PRESTIGE_RUN_CLOUT_DEEP_AFTER ? PRESTIGE_RUN_CLOUT_MULT_DEEP : PRESTIGE_RUN_CLOUT_MULT_PER_STEP;
+  }
+  const raw = PRESTIGE_RUN_CLOUT_BASE * CLOUT_PRICE_MULTIPLIER * mult;
   return Math.min(Number.MAX_SAFE_INTEGER, Math.floor(raw));
+}
+
+/** Prestiges completed → highest catalog era index unlocked (0…3). Tied to prestige depth, not theme skin. */
+export const CATALOG_ERA_PRESTIGE_STEP = 3;
+export const MAX_CATALOG_ERA_INDEX = 3;
+
+export function getUnlockedCatalogEra(prestigeCount) {
+  const p = Math.max(0, Math.floor(prestigeCount ?? 0));
+  return Math.min(MAX_CATALOG_ERA_INDEX, Math.floor(p / CATALOG_ERA_PRESTIGE_STEP));
+}
+
+export function catalogEraMeetsRequired(unlockedEra, requiredEra) {
+  const need = Math.max(0, Math.floor(requiredEra ?? 0));
+  const have = Math.max(0, Math.floor(unlockedEra ?? 0));
+  return have >= need;
+}
+
+export function brandDealSpawnableAtCatalogEra(deal, unlockedCatalogEra) {
+  return catalogEraMeetsRequired(unlockedCatalogEra, deal?.requiredEra ?? 0);
 }
 
 /**
@@ -168,7 +194,21 @@ export const achievementDefs = [
     name: 'Full Agency',
     gemReward: 10,
     description: 'Employ intern, agent, executive producer, and brand scout at the same time.'
-  }
+  },
+  { id: 'prestige_15', name: 'Fifteen Seasons', gemReward: 18, description: 'Reach prestige level 15.' },
+  { id: 'prestige_25', name: 'Syndicated', gemReward: 35, description: 'Reach prestige level 25.' },
+  { id: 'ten_million_run', name: 'Eight Zeros Sprint', gemReward: 22, description: 'Earn 10,000,000 Clout in a single run.' },
+  { id: 'trillion_life', name: 'Trillionaire Aura', gemReward: 40, description: 'Reach 1 trillion lifetime Clout.' },
+  { id: 'followers_250k', name: 'Arena Tour', gemReward: 14, description: 'Reach 250,000 followers.' },
+  { id: 'deal_250', name: 'Sponsor Magnet', gemReward: 16, description: 'Accept 250 brand deals (all-time).' },
+  { id: 'buildings_25', name: 'Skyline', gemReward: 12, description: 'Place 25 buildings on the grid.' },
+  { id: 'roster_25', name: 'Convention Floor', gemReward: 12, description: 'Have 25 influencers on the roster at once.' },
+  { id: 'staff_8', name: 'Bullpen', gemReward: 10, description: 'Employ 8 staff total.' },
+  { id: 'scout_squad', name: 'Scout Squad', gemReward: 14, description: 'Hire 4+ Brand Scouts.' },
+  { id: 'gem_whale', name: 'Whale Desk', gemReward: 20, description: 'Hold 2,500 gems at once.' },
+  { id: 'daily_week', name: 'Check-in Week', gemReward: 25, description: 'Claim daily rewards 7 days in a row.' },
+  { id: 'gem_spender_500', name: 'Liquid Hype', gemReward: 15, description: 'Spend 500 gems total (this save).' },
+  { id: 'gem_spender_5000', name: 'Burn Rate', gemReward: 45, description: 'Spend 5,000 gems total (this save).' }
 ];
 
 // Influencer types — cost and output climb sharply at the top tiers
@@ -193,6 +233,17 @@ export const influencerTypes = [
     baseCloutPerSecond: 0.36,
     color: '#66ffee',
     icon: '✨',
+    requiredEra: 0
+  },
+  {
+    id: 'opinion_host',
+    name: 'Hot Take Host',
+    description:
+      'Punchy commentary — engagement bait that somehow works. Synergy: ×1.09 near Karaoke Pod.',
+    cost: 68,
+    baseCloutPerSecond: 0.41,
+    color: '#ff8866',
+    icon: '📣',
     requiredEra: 0
   },
   {
@@ -240,6 +291,17 @@ export const influencerTypes = [
     requiredEra: 0
   },
   {
+    id: 'asmr_whisper',
+    name: 'ASMR Whisperer',
+    description:
+      'Tingles that print minutes. Synergy: ×1.08 near Green Room.',
+    cost: 248,
+    baseCloutPerSecond: 0.92,
+    color: '#cceeff',
+    icon: '🎧',
+    requiredEra: 0
+  },
+  {
     id: 'lifestyle',
     name: 'Lifestyle Blogger',
     description:
@@ -254,7 +316,7 @@ export const influencerTypes = [
     id: 'beauty_guru',
     name: 'Beauty Guru',
     description:
-      'Tutorials and GRWM — synergy ×1.11 near Vanity Set when in range.',
+      'Tutorials and GRWM — synergy ×1.11 near Vanity Set and ×1.06 near Green Room when in range.',
     cost: 495,
     baseCloutPerSecond: 2.05,
     color: '#ff99cc',
@@ -281,6 +343,17 @@ export const influencerTypes = [
     baseCloutPerSecond: 4.2,
     color: '#00ff00',
     icon: '🎮',
+    requiredEra: 1
+  },
+  {
+    id: 'speedrun_ace',
+    name: 'Speedrun Ace',
+    description:
+      'PB chases and frame-perfect clips. Synergy: ×1.12 near Reels Crucible.',
+    cost: 1680,
+    baseCloutPerSecond: 4.95,
+    color: '#66ff99',
+    icon: '⏱️',
     requiredEra: 1
   },
   {
@@ -328,6 +401,17 @@ export const influencerTypes = [
     requiredEra: 1
   },
   {
+    id: 'debate_moderator',
+    name: 'Debate Moderator',
+    description:
+      'Panel chaos and clip farms. Synergy: ×1.14 near Motion Stage.',
+    cost: 22800,
+    baseCloutPerSecond: 38,
+    color: '#aa99ff',
+    icon: '⚖️',
+    requiredEra: 1
+  },
+  {
     id: 'esports_pro',
     name: 'Esports Pro',
     description:
@@ -336,6 +420,17 @@ export const influencerTypes = [
     baseCloutPerSecond: 65,
     color: '#ff4444',
     icon: '🏆',
+    requiredEra: 1
+  },
+  {
+    id: 'iron_archon',
+    name: 'Iron Archon',
+    description:
+      'Hardcore MMO statics and theorycraft. Synergy: ×1.15 near CDN Nexus.',
+    cost: 38500,
+    baseCloutPerSecond: 78,
+    color: '#aa4444',
+    icon: '🛡️',
     requiredEra: 1
   },
   {
@@ -350,73 +445,112 @@ export const influencerTypes = [
     requiredEra: 1
   },
   {
+    id: 'doc_lens',
+    name: 'Doc Lens',
+    description:
+      'Long-form investigations — slower burn, huge trust. Synergy: ×1.12 near Ethics Review Room.',
+    cost: 118000,
+    baseCloutPerSecond: 155,
+    color: '#88ccaa',
+    icon: '🎥',
+    requiredEra: 2,
+    minPrestige: 2
+  },
+  {
     id: 'ai',
     name: 'AI Influencer',
     description:
       'Generated perfection, endless content. Synergy: ×1.08 near PR War Room when in range.',
-    cost: 420000,
+    cost: 620000,
     baseCloutPerSecond: 420,
     color: '#ff0080',
     icon: '🤖',
-    requiredEra: 2
+    requiredEra: 2,
+    minPrestige: 3
   },
   {
     id: 'celebrity',
     name: 'Red Carpet Talent',
     description:
       'Agency rates go through the roof. Synergy: ×1.23 near Agency HQ Tower, ×1.06 near Satellite Relay.',
-    cost: 1650000,
+    cost: 2150000,
     baseCloutPerSecond: 1650,
     color: '#ffd700',
     icon: '🌟',
-    requiredEra: 2
+    requiredEra: 2,
+    minPrestige: 4
   },
   {
     id: 'synth_idol',
     name: 'Synth Idol',
     description:
       'Holographic arena tours — synergy ×1.24 near Holo Deck when in range.',
-    cost: 9800000,
+    cost: 14500000,
     baseCloutPerSecond: 4200,
     color: '#ff66ee',
     icon: '🎤',
-    requiredEra: 2
+    requiredEra: 2,
+    minPrestige: 5
   },
   {
     id: 'mogul',
     name: 'Media Mogul',
     description:
       'Owns feeds and franchises. Synergy: ×1.28 near Fan Fest Arena.',
-    cost: 42000000,
+    cost: 92000000,
     baseCloutPerSecond: 12000,
     color: '#ffaa00',
     icon: '👑',
     requiredEra: 2,
-    minPrestige: 3
+    minPrestige: 8
   },
   {
     id: 'world_icon',
     name: 'World Icon',
     description:
       'Planetary reach — absurd passive if you can afford them. Synergy: ×1.35 near Quantum Stage.',
-    cost: 320000000,
+    cost: 520000000,
     baseCloutPerSecond: 85000,
     color: '#ffffff',
     icon: '🌍',
     requiredEra: 2,
-    minPrestige: 4
+    minPrestige: 12
   },
   {
     id: 'galaxy_ambassador',
     name: 'Galaxy Ambassador',
     description:
       'Off-planet reach — synergy ×1.34 near Orbital Set when in range.',
-    cost: 820000000,
+    cost: 1200000000,
     baseCloutPerSecond: 155000,
     color: '#e0e8ff',
     icon: '🛸',
     requiredEra: 2,
-    minPrestige: 5
+    minPrestige: 16
+  },
+  {
+    id: 'signal_ceo',
+    name: 'Signal CEO',
+    description:
+      'Runs the feed like a utility — synergy ×1.32 near Singularity Shell.',
+    cost: 18500000000,
+    baseCloutPerSecond: 420000,
+    color: '#dde8ff',
+    icon: '📡',
+    requiredEra: 3,
+    minPrestige: 18
+  },
+  {
+    id: 'continuum_host',
+    name: 'Continuum Host',
+    description:
+      'Every timeline tuned to you — endgame passive. Synergy: ×1.38 near Reality Tunnel.',
+    cost: 120000000000,
+    baseCloutPerSecond: 2200000,
+    color: '#f0f4ff',
+    icon: '🔮',
+    requiredEra: 3,
+    minPrestige: 22
   }
 ];
 
@@ -493,6 +627,20 @@ export const buildingTypes = [
     requiredEra: 0
   },
   {
+    id: 'karaoke_pod',
+    name: 'Karaoke Pod',
+    description:
+      'One-mic chaos — synergy ×1.09 with Hot Take Host in range.',
+    cost: 340,
+    effect: 'multiply',
+    multiplier: 1.3,
+    range: 1,
+    color: '#ff77aa',
+    icon: '🎤',
+    size: 1,
+    requiredEra: 0
+  },
+  {
     id: 'studio',
     name: 'Content Studio',
     description:
@@ -521,6 +669,20 @@ export const buildingTypes = [
     requiredEra: 0
   },
   {
+    id: 'green_room',
+    name: 'Green Room',
+    description:
+      'Pre-show calm — synergy ×1.08 with ASMR Whisperer, ×1.06 with Beauty Guru in range.',
+    cost: 1080,
+    effect: 'multiply',
+    multiplier: 1.38,
+    range: 2,
+    color: '#99ddbb',
+    icon: '🛋️',
+    size: 1,
+    requiredEra: 0
+  },
+  {
     id: 'server',
     name: 'Server Rack',
     description:
@@ -531,6 +693,20 @@ export const buildingTypes = [
     range: 3,
     color: '#00ff88',
     icon: '🖥️',
+    size: 1,
+    requiredEra: 1
+  },
+  {
+    id: 'reels_crucible',
+    name: 'Reels Crucible',
+    description:
+      'Vertical-first pipeline — synergy ×1.12 with Speedrun Ace in range.',
+    cost: 5200,
+    effect: 'multiply',
+    multiplier: 2.08,
+    range: 2,
+    color: '#ff99dd',
+    icon: '🔥',
     size: 1,
     requiredEra: 1
   },
@@ -549,6 +725,21 @@ export const buildingTypes = [
     requiredEra: 1
   },
   {
+    id: 'ethics_review',
+    name: 'Ethics Review Room',
+    description:
+      'Legal + moral sign-off — synergy ×1.12 with Doc Lens in range.',
+    cost: 88000,
+    effect: 'multiply',
+    multiplier: 2.52,
+    range: 3,
+    color: '#aaffcc',
+    icon: '⚖️',
+    size: 1,
+    requiredEra: 2,
+    minPrestige: 3
+  },
+  {
     id: 'drone_bay',
     name: 'Drone Bay',
     description:
@@ -560,6 +751,20 @@ export const buildingTypes = [
     color: '#88ddff',
     icon: '🚁',
     size: 1,
+    requiredEra: 1
+  },
+  {
+    id: 'motion_stage',
+    name: 'Motion Stage',
+    description:
+      'Tracked cameras + LED volume — synergy ×1.14 with Debate Moderator in range.',
+    cost: 42000,
+    effect: 'multiply',
+    multiplier: 2.42,
+    range: 3,
+    color: '#bbaaff',
+    icon: '🎭',
+    size: 2,
     requiredEra: 1
   },
   {
@@ -604,6 +809,21 @@ export const buildingTypes = [
     size: 3,
     requiredEra: 2,
     minPrestige: 1
+  },
+  {
+    id: 'cdn_nexus',
+    name: 'CDN Nexus',
+    description:
+      'Edge caches for hype spikes — synergy ×1.15 with Iron Archon in range.',
+    cost: 620000,
+    effect: 'multiply',
+    multiplier: 3.25,
+    range: 5,
+    color: '#66ffdd',
+    icon: '🌐',
+    size: 2,
+    requiredEra: 2,
+    minPrestige: 4
   },
   {
     id: 'holo_deck',
@@ -663,7 +883,7 @@ export const buildingTypes = [
     icon: '⚛️',
     size: 2,
     requiredEra: 2,
-    minPrestige: 4
+    minPrestige: 6
   },
   {
     id: 'orbital_set',
@@ -678,7 +898,37 @@ export const buildingTypes = [
     icon: '🛰️',
     size: 2,
     requiredEra: 2,
-    minPrestige: 5
+    minPrestige: 10
+  },
+  {
+    id: 'singularity_shell',
+    name: 'Singularity Shell',
+    description:
+      'Faraday-caged hype reactor — synergy ×1.32 with Signal CEO in range.',
+    cost: 4200000000,
+    effect: 'multiply',
+    multiplier: 8.8,
+    range: 9,
+    color: '#ccd9ff',
+    icon: '🧬',
+    size: 3,
+    requiredEra: 3,
+    minPrestige: 15
+  },
+  {
+    id: 'reality_tunnel',
+    name: 'Reality Tunnel',
+    description:
+      'Nonlinear sets for multiverse drops — synergy ×1.38 with Continuum Host in range.',
+    cost: 28000000000,
+    effect: 'multiply',
+    multiplier: 12.5,
+    range: 11,
+    color: '#e8e0ff',
+    icon: '🌀',
+    size: 2,
+    requiredEra: 3,
+    minPrestige: 20
   }
 ];
 
@@ -709,8 +959,30 @@ export const synergyRules = [
   { buildingTypeId: 'satellite_relay', influencerTypeIds: ['celebrity'], bonusMultiplier: 1.06 },
   { buildingTypeId: 'fan_fest_arena', influencerTypeIds: ['mogul'], bonusMultiplier: 1.28 },
   { buildingTypeId: 'quantum_stage', influencerTypeIds: ['world_icon'], bonusMultiplier: 1.35 },
-  { buildingTypeId: 'orbital_set', influencerTypeIds: ['galaxy_ambassador'], bonusMultiplier: 1.34 }
+  { buildingTypeId: 'orbital_set', influencerTypeIds: ['galaxy_ambassador'], bonusMultiplier: 1.34 },
+  { buildingTypeId: 'karaoke_pod', influencerTypeIds: ['opinion_host'], bonusMultiplier: 1.09 },
+  { buildingTypeId: 'green_room', influencerTypeIds: ['asmr_whisper'], bonusMultiplier: 1.08 },
+  { buildingTypeId: 'green_room', influencerTypeIds: ['beauty_guru'], bonusMultiplier: 1.06 },
+  { buildingTypeId: 'reels_crucible', influencerTypeIds: ['speedrun_ace'], bonusMultiplier: 1.12 },
+  { buildingTypeId: 'motion_stage', influencerTypeIds: ['debate_moderator'], bonusMultiplier: 1.14 },
+  { buildingTypeId: 'cdn_nexus', influencerTypeIds: ['iron_archon'], bonusMultiplier: 1.15 },
+  { buildingTypeId: 'ethics_review', influencerTypeIds: ['doc_lens'], bonusMultiplier: 1.12 },
+  { buildingTypeId: 'singularity_shell', influencerTypeIds: ['signal_ceo'], bonusMultiplier: 1.32 },
+  { buildingTypeId: 'reality_tunnel', influencerTypeIds: ['continuum_host'], bonusMultiplier: 1.38 }
 ];
+
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+/** Rotating weekly “meta lane” — one talent archetype gets extra passive (algorithm spotlight). */
+export const WEEKLY_TALENT_META_MULT = 1.1;
+
+export function getWeeklyTalentMetaBoostTypeId(nowMs = Date.now()) {
+  const week = Math.floor(Number(nowMs) / WEEK_MS);
+  const ids = influencerTypes.map(t => t.id);
+  if (!ids.length) return null;
+  const idx = ((week % ids.length) + ids.length) % ids.length;
+  return ids[idx];
+}
 
 export function getSynergyMultiplierFromBuildingTypes(influencerTypeId, uniqueBuildingTypeIds) {
   const present = new Set(uniqueBuildingTypeIds);
@@ -901,6 +1173,70 @@ export const clickUpgradeTypes = [
     growth: 1.157,
     kind: 'mult',
     perLevel: 0.2
+  },
+  {
+    id: 'post_t17',
+    name: 'Signal Boost',
+    description: 'Multiplies whole post (+22 strength / level)',
+    baseCost: 15500000,
+    growth: 1.158,
+    kind: 'mult',
+    perLevel: 0.22,
+    minPrestige: 6
+  },
+  {
+    id: 'post_t18',
+    name: 'Omnicast Grid',
+    description: 'Multiplies whole post (+24 strength / level)',
+    baseCost: 38000000,
+    growth: 1.159,
+    kind: 'mult',
+    perLevel: 0.24,
+    minPrestige: 8
+  },
+  {
+    id: 'post_t19',
+    name: 'Reputation Engine',
+    description: 'Multiplies whole post (+27 strength / level)',
+    baseCost: 92000000,
+    growth: 1.16,
+    kind: 'mult',
+    perLevel: 0.27,
+    minPrestige: 11,
+    requiredEra: 2
+  },
+  {
+    id: 'post_t20',
+    name: 'Ledger Drama',
+    description: 'Multiplies whole post (+30 strength / level)',
+    baseCost: 220000000,
+    growth: 1.161,
+    kind: 'mult',
+    perLevel: 0.3,
+    minPrestige: 14,
+    requiredEra: 2
+  },
+  {
+    id: 'post_t21',
+    name: 'Singularity Copy',
+    description: 'Multiplies whole post (+34 strength / level)',
+    baseCost: 520000000,
+    growth: 1.162,
+    kind: 'mult',
+    perLevel: 0.34,
+    minPrestige: 17,
+    requiredEra: 3
+  },
+  {
+    id: 'post_t22',
+    name: 'Continuum Finale',
+    description: 'Multiplies whole post (+40 strength / level)',
+    baseCost: 1200000000,
+    growth: 1.163,
+    kind: 'mult',
+    perLevel: 0.4,
+    minPrestige: 20,
+    requiredEra: 3
   }
 ];
 
@@ -1050,6 +1386,54 @@ export const brandDealTypes = [
     minFollowers: 280,
     requiredEra: 2,
     color: '#ff2266'
+  },
+  {
+    id: 'orbital_sponsor',
+    name: 'Orbital Sponsor Patch',
+    description: 'Satellite logo read — chunky upside, measurable optics risk.',
+    cloutShare: 0.18,
+    followersShare: 0.16,
+    reputationDelta: -9,
+    minClout: 2400,
+    minFollowers: 320,
+    requiredEra: 3,
+    color: '#99ccff'
+  },
+  {
+    id: 'multiverse_launch',
+    name: 'Multiverse SKU Launch',
+    description: 'Parallel drops across regions — huge bag, messy headlines.',
+    cloutShare: 0.26,
+    followersShare: 0.23,
+    reputationDelta: -18,
+    minClout: 5200,
+    minFollowers: 520,
+    requiredEra: 3,
+    color: '#ddaaff'
+  },
+  {
+    id: 'continuity_grant',
+    name: 'Continuity Grant',
+    description: 'Platform endowment — prestige optics, slower cash than chaos deals.',
+    cloutShare: 0.13,
+    followersShare: 0.11,
+    reputationDelta: 12,
+    minClout: 4800,
+    minFollowers: 480,
+    requiredEra: 3,
+    color: '#aaffdd'
+  },
+  {
+    id: 'timeline_buyout',
+    name: 'Timeline Buyout',
+    description: 'Own the conversation for 48h — apex payout, apex backlash.',
+    cloutShare: 0.34,
+    followersShare: 0.3,
+    reputationDelta: -32,
+    minClout: 12000,
+    minFollowers: 900,
+    requiredEra: 3,
+    color: '#ffdd66'
   }
 ];
 
@@ -1091,6 +1475,12 @@ export const brandDealSeasonPhases = [
     label: 'Arena & whale deals',
     favoredDealIds: ['stadium', 'exclusive', 'creator_fund', 'scorched_earth', 'aipartner'],
     weightMult: 1.2
+  },
+  {
+    id: 'singularity',
+    label: 'Singularity season',
+    favoredDealIds: ['orbital_sponsor', 'multiverse_launch', 'timeline_buyout', 'aipartner'],
+    weightMult: 1.22
   }
 ];
 
@@ -1122,7 +1512,7 @@ export const AGENT_AUTO_ACCEPT_DELAY_MS = 2800;
 /** Skip auto-accept when reputation would fall below this (agent protects the brand) */
 export const AGENT_MIN_REP_AFTER_DEAL = 22;
 
-// Prestige eras
+// Prestige eras (cosmetic theme — advances every few prestiges; catalog era uses the same cadence)
 export const prestigeEras = [
   {
     id: 0,
@@ -1155,6 +1545,17 @@ export const prestigeEras = [
       secondary: '#8000ff',
       accent: '#00ff80',
       background: '#220011'
+    }
+  },
+  {
+    id: 3,
+    name: 'Post-Feed Singularity',
+    description: 'Omnichannel gods, orbital sets, and deals that move markets',
+    theme: {
+      primary: '#a8f0ff',
+      secondary: '#ff66cc',
+      accent: '#ffd966',
+      background: '#0a0618'
     }
   }
 ];

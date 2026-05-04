@@ -2,7 +2,9 @@ import {
   influencerTypes,
   PASSIVE_GLOBAL_MULT,
   reputationIncomeMultiplierFromRep,
-  getProducerPassiveMult
+  getProducerPassiveMult,
+  getWeeklyTalentMetaBoostTypeId,
+  WEEKLY_TALENT_META_MULT
 } from '../data/gameData';
 import { getLocalGridBuffMultiplier, getFollowerCloutMult } from './gameMath';
 
@@ -19,8 +21,13 @@ export function computePassiveIncomeSnapshot({
   gemCloutMult,
   gemPassiveMult,
   activeFrenzy,
-  nowMs = Date.now()
+  gemPassiveTimedMult = 1,
+  nowMs = Date.now(),
+  /** Test hook: skip weekly lane multiplier (algorithm spotlight). */
+  disableWeeklyTalentMeta = false
 }) {
+  const metaTypeId = disableWeeklyTalentMeta ? null : getWeeklyTalentMetaBoostTypeId(nowMs);
+
   let totalRaw = 0;
   const rawByTalentType = {};
   const rawByInfluencerId = {};
@@ -28,7 +35,9 @@ export function computePassiveIncomeSnapshot({
   for (const inf of influencers) {
     const type = influencerTypes.find(t => t.id === inf.typeId);
     if (!type) continue;
-    const raw = type.baseCloutPerSecond * getLocalGridBuffMultiplier(inf, buildings);
+    const laneMult = metaTypeId && type.id === metaTypeId ? WEEKLY_TALENT_META_MULT : 1;
+    const raw =
+      type.baseCloutPerSecond * getLocalGridBuffMultiplier(inf, buildings) * laneMult;
     totalRaw += raw;
     rawByTalentType[type.id] = (rawByTalentType[type.id] ?? 0) + raw;
     rawByInfluencerId[inf.id] = raw;
@@ -41,6 +50,9 @@ export function computePassiveIncomeSnapshot({
 
   const producerMult = getProducerPassiveMult(managers.filter(m => m.typeId === 'producer').length);
 
+  const timedPassive = Number(gemPassiveTimedMult);
+  const passiveTimedFactor = Number.isFinite(timedPassive) && timedPassive > 0 ? timedPassive : 1;
+
   const globalMult =
     producerMult *
     prestigeMultiplier *
@@ -48,6 +60,7 @@ export function computePassiveIncomeSnapshot({
     reputationIncomeMultiplierFromRep(reputation) *
     gemCloutMult *
     gemPassiveMult *
+    passiveTimedFactor *
     frenzyPassiveMult *
     PASSIVE_GLOBAL_MULT;
 

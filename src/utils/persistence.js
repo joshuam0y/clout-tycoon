@@ -1,7 +1,7 @@
 import { SFX_MUTE_STORAGE_KEY } from './sound';
 import { migrateClickUpgradeLevels } from '../data/gameData';
 
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 export const SAVE_KEY = 'clout-tycoon-save';
 
 /** Multiple named snapshots stored in-browser (same origin); keys are user-chosen labels. */
@@ -285,7 +285,27 @@ export function normalizeSnapshot(raw) {
       raw.achievementsUnlocked && typeof raw.achievementsUnlocked === 'object'
         ? raw.achievementsUnlocked
         : {},
-    brandDealsAccepted: Math.max(0, Number(raw.brandDealsAccepted) || 0)
+    brandDealsAccepted: Math.max(0, Number(raw.brandDealsAccepted) || 0),
+    gemsSpentTotal: Math.max(0, Number(raw.gemsSpentTotal) || 0),
+    dailyReward: (() => {
+      const dr = raw.dailyReward;
+      if (!dr || typeof dr !== 'object') {
+        return { lastClaimUtcDay: '', streak: 0, bestStreak: 0 };
+      }
+      return {
+        lastClaimUtcDay: typeof dr.lastClaimUtcDay === 'string' ? dr.lastClaimUtcDay : '',
+        streak: Math.max(0, Math.floor(Number(dr.streak) || 0)),
+        bestStreak: Math.max(0, Math.floor(Number(dr.bestStreak) || 0))
+      };
+    })(),
+    gemPassiveTimedBoost: (() => {
+      const b = raw.gemPassiveTimedBoost;
+      if (!b || typeof b !== 'object') return null;
+      const endsAt = Math.max(0, Number(b.endsAt) || 0);
+      const mult = Number(b.mult);
+      if (!endsAt || !Number.isFinite(mult) || mult <= 1) return null;
+      return { endsAt, mult };
+    })()
   };
 }
 

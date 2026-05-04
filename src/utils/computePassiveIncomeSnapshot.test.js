@@ -22,7 +22,8 @@ describe('computePassiveIncomeSnapshot', () => {
       gemCloutMult: 1,
       gemPassiveMult: 1,
       activeFrenzy: null,
-      nowMs: 0
+      nowMs: 0,
+      disableWeeklyTalentMeta: true
     });
 
     const expectedRaw = 3 * petBase;
@@ -54,7 +55,8 @@ describe('computePassiveIncomeSnapshot', () => {
       gemCloutMult: 1,
       gemPassiveMult: 1,
       activeFrenzy: null,
-      nowMs: 0
+      nowMs: 0,
+      disableWeeklyTalentMeta: true
     });
     const sumInstances = Object.values(snap.passiveByInfluencerId).reduce((a, b) => a + b, 0);
     expect(sumInstances).toBeCloseTo(snap.passiveByTalentType.pet, 8);
@@ -77,7 +79,8 @@ describe('computePassiveIncomeSnapshot', () => {
       gemCloutMult: 1,
       gemPassiveMult: 1,
       activeFrenzy: null,
-      nowMs: 0
+      nowMs: 0,
+      disableWeeklyTalentMeta: true
     });
     expect(snap.totalRaw).toBeCloseTo(petBase * grid, 8);
     expect(snap.total).toBeCloseTo(petBase * grid * PASSIVE_GLOBAL_MULT, 8);

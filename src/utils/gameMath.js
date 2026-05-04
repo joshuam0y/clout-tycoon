@@ -114,12 +114,13 @@ export function scaledUnitCost(baseCost, owned, growth = UNIT_PRICE_GROWTH) {
  * Placement cost for structures — steeper than generic hires for late-era catalog (early era 0 unchanged).
  */
 export function scaledBuildingPlacementCost(baseCost, owned, requiredEra = 0) {
-  const era = Math.max(0, Math.min(2, Math.floor(Number(requiredEra) || 0)));
+  const era = Math.max(0, Math.min(3, Math.floor(Number(requiredEra) || 0)));
   const n = Math.max(0, Math.floor(owned));
   const growth = UNIT_PRICE_GROWTH * (1 + era * BUILDING_ERA_GROWTH_FACTOR);
-  const dupExp = UNIT_PRICE_DUPLICATE_EXP + (BUILDING_ERA_DUPLICATE_EXP_BONUS[era] ?? 0);
+  const eraBonus = BUILDING_ERA_DUPLICATE_EXP_BONUS[era] ?? BUILDING_ERA_DUPLICATE_EXP_BONUS.at(-1) ?? 0;
+  const dupExp = UNIT_PRICE_DUPLICATE_EXP + eraBonus;
   const exponent = n === 0 ? 0 : Math.pow(n, dupExp);
-  const flat = BUILDING_ERA_FLAT_COST_MULT[era] ?? 1;
+  const flat = BUILDING_ERA_FLAT_COST_MULT[era] ?? BUILDING_ERA_FLAT_COST_MULT.at(-1) ?? 1;
   return Math.ceil(baseCost * Math.pow(growth, exponent) * CLOUT_PRICE_MULTIPLIER * flat);
 }
 

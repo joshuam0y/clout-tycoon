@@ -18,6 +18,9 @@ import {
   PRESTIGE_GEMS_BASE,
   brandDealsMaySpawn,
   brandDealOfferableAtReputation,
+  brandDealSpawnableAtCatalogEra,
+  getUnlockedCatalogEra,
+  catalogEraMeetsRequired,
   reputationIncomeMultiplierFromRep,
   computeBrandDealPayouts,
   getBrandDealSeasonalWeightMult,
@@ -85,12 +88,21 @@ const GACHA_SINGLE_COST = Math.round(85 * CLOUT_PRICE_MULTIPLIER);
 const GACHA_MULTI_COST = Math.round(750 * CLOUT_PRICE_MULTIPLIER);
 const GACHA_MULTI_PULLS = 10;
 
+const GEM_PR_POLISH_COST = 32;
+const GEM_SPOTLIGHT_RUSH_COST = 55;
+const GEM_SPOTLIGHT_RUSH_MULT = 1.22;
+const GEM_SPOTLIGHT_RUSH_MS = 90_000;
+
 const FRENZY_COOLDOWN_MS = 72_000;
 const FRENZY_DURATION_MIN_MS = 12_000;
 const FRENZY_DURATION_MAX_MS = 22_000;
 const FRENZY_SPAWN_CHANCE_PER_TICK = 0.0003;
 
 const savedGame = loadGameSnapshot();
+
+function utcCalendarDay(ms = Date.now()) {
+  return new Date(ms).toISOString().slice(0, 10);
+}
 
 const doesBuildingCoverTile = (building, tileX, tileY) => {
   const buildingType = buildingTypes.find(t => t.id === building.typeId);
@@ -150,6 +162,34 @@ function achievementMet(id, snap) {
       const ids = new Set((snap.managers ?? []).map(m => m.typeId));
       return ids.has('intern') && ids.has('agent') && ids.has('producer') && ids.has('scout');
     }
+    case 'prestige_15':
+      return snap.prestigeCount >= 15;
+    case 'prestige_25':
+      return snap.prestigeCount >= 25;
+    case 'ten_million_run':
+      return snap.runCloutEarned >= 10_000_000;
+    case 'trillion_life':
+      return snap.lifetimeClout >= 1_000_000_000_000;
+    case 'followers_250k':
+      return snap.followers >= 250_000;
+    case 'deal_250':
+      return snap.brandDealsAccepted >= 250;
+    case 'buildings_25':
+      return snap.buildings.length >= 25;
+    case 'roster_25':
+      return snap.influencers.length >= 25;
+    case 'staff_8':
+      return (snap.managers?.length ?? 0) >= 8;
+    case 'scout_squad':
+      return (snap.managers?.filter(m => m.typeId === 'scout').length ?? 0) >= 4;
+    case 'gem_whale':
+      return (snap.gems ?? 0) >= 2500;
+    case 'daily_week':
+      return (snap.dailyReward?.bestStreak ?? 0) >= 7;
+    case 'gem_spender_500':
+      return (snap.gemsSpentTotal ?? 0) >= 500;
+    case 'gem_spender_5000':
+      return (snap.gemsSpentTotal ?? 0) >= 5000;
     default:
       return false;
   }
@@ -204,12 +244,32 @@ export const useGameState = () => {
     () => savedGame?.brandDealsAccepted ?? 0
   );
 
+  const [gemsSpentTotal, setGemsSpentTotal] = useState(() => savedGame?.gemsSpentTotal ?? 0);
+  const [dailyReward, setDailyReward] = useState(
+    () =>
+      savedGame?.dailyReward ?? {
+        lastClaimUtcDay: '',
+        streak: 0,
+        bestStreak: 0
+      }
+  );
+  const [gemPassiveTimedBoost, setGemPassiveTimedBoost] = useState(
+    () => savedGame?.gemPassiveTimedBoost ?? null
+  );
+
   const [activeFrenzy, setActiveFrenzy] = useState(null);
   const [frenzyCooldownEndAt, setFrenzyCooldownEndAt] = useState(0);
   /** Bumps during active frenzy so HUD countdown repaints even when passive Clout/tick is 0 */
   const [, setFrenzyUiTick] = useState(0);
 
   const prestigeRunCloutRequired = getPrestigeRunCloutRequired(prestigeCount);
+
+  const spendGems = useCallback(amount => {
+    const n = Math.max(0, Math.floor(Number(amount) || 0));
+    if (n <= 0) return;
+    setGems(g => g - n);
+    setGemsSpentTotal(s => s + n);
+  }, []);
 
   const addNotification = useCallback((message, type = 'info', durationMs) => {
     const defaultMs =
@@ -260,6 +320,7 @@ export const useGameState = () => {
         reputation,
         gemCloutMult: 1 + gemCloutMultStacks * GEM_STACK_BONUS,
         gemPassiveMult: 1 + gemPassiveMultStacks * GEM_PASSIVE_BONUS,
+        gemPassiveTimedMult: gemPassiveTimedBoost ? gemPassiveTimedBoost.mult : 1,
         activeFrenzy,
         nowMs: Date.now()
       }),
@@ -272,6 +333,7 @@ export const useGameState = () => {
       reputation,
       gemCloutMultStacks,
       gemPassiveMultStacks,
+      gemPassiveTimedBoost,
       activeFrenzy
     ]
   );
@@ -349,6 +411,15 @@ export const useGameState = () => {
         addNotification(`Requires prestige ${minP}+ (currently ${prestigeCount}).`, 'warning');
         return false;
       }
+      const unlockedEra = getUnlockedCatalogEra(prestigeCount);
+      if (!catalogEraMeetsRequired(unlockedEra, type.requiredEra ?? 0)) {
+        const need = Math.max(0, Math.floor(type.requiredEra ?? 0));
+        addNotification(
+          `Agency catalog locked — ${type.name} needs era ${need + 1} (prestige ${need * 3}+).`,
+          'warning'
+        );
+        return false;
+      }
       const owned = influencers.filter(i => i.typeId === typeId).length;
       const rawCost = scaledUnitCost(type.cost, owned);
       const cost = Math.ceil(rawCost * getFollowerCostMult(followers));
@@ -401,6 +472,15 @@ export const useGameState = () => {
       const minP = getMinPrestige(type);
       if (prestigeCount < minP) {
         addNotification(`Requires prestige ${minP}+ (currently ${prestigeCount}).`, 'warning');
+        return false;
+      }
+      const unlockedEraB = getUnlockedCatalogEra(prestigeCount);
+      if (!catalogEraMeetsRequired(unlockedEraB, type.requiredEra ?? 0)) {
+        const need = Math.max(0, Math.floor(type.requiredEra ?? 0));
+        addNotification(
+          `Agency catalog locked — ${type.name} needs era ${need + 1} (prestige ${need * 3}+).`,
+          'warning'
+        );
         return false;
       }
       const owned = buildings.filter(b => b.typeId === typeId).length;
@@ -545,8 +625,8 @@ export const useGameState = () => {
 
     const newPrestigeCount = prestigeCount + 1;
     const newMultiplier = 1 + newPrestigeCount * PRESTIGE_MULT_PER_LEVEL;
-    const themeEra = Math.min(2, Math.floor(newPrestigeCount / 3));
-    const prestigeGems = PRESTIGE_GEMS_BASE + Math.floor(newPrestigeCount / 4);
+    const themeEra = Math.min(prestigeEras.length - 1, Math.floor(newPrestigeCount / 3));
+    const prestigeGems = PRESTIGE_GEMS_BASE + Math.floor(newPrestigeCount / 4) + Math.floor(newPrestigeCount / 8);
 
     /* Full run reset — gems & Premium Shop stacks persist (not touched here). */
     setClout(0);
@@ -562,6 +642,7 @@ export const useGameState = () => {
     setTotalClicks(0);
     setRunCloutEarned(0);
     setClickUpgradeLevels({});
+    setGemPassiveTimedBoost(null);
 
     setPrestigeCount(newPrestigeCount);
     setPrestigeMultiplier(newMultiplier);
@@ -594,6 +675,12 @@ export const useGameState = () => {
         addNotification(`Requires prestige ${minP}+ (currently ${prestigeCount}).`, 'warning');
         return false;
       }
+      const unlockedEraU = getUnlockedCatalogEra(prestigeCount);
+      if (!catalogEraMeetsRequired(unlockedEraU, def.requiredEra ?? 0)) {
+        const need = Math.max(0, Math.floor(def.requiredEra ?? 0));
+        addNotification(`Post upgrade locked until era ${need + 1} (prestige ${need * 3}+).`, 'warning');
+        return false;
+      }
 
       const level = clickUpgradeLevels[upgradeId] ?? 0;
       const cost = clickUpgradeNextCost(def, level);
@@ -623,11 +710,11 @@ export const useGameState = () => {
       addNotification(`Need ${formatNumber(cost)} 💎`, 'warning');
       return false;
     }
-    setGems(g => g - cost);
+    spendGems(cost);
     setGemCloutMultStacks(s => s + 1);
     addNotification(`Syndicate: +${GEM_STACK_BONUS * 100}% all Clout (permanent)`, 'success');
     return true;
-  }, [gems, gemCloutMultStacks, addNotification]);
+  }, [gems, gemCloutMultStacks, spendGems, addNotification]);
 
   const buyGemClickStack = useCallback(() => {
     if (gemClickMultStacks >= MAX_GEM_CLICK_STACKS) {
@@ -639,11 +726,11 @@ export const useGameState = () => {
       addNotification(`Need ${formatNumber(cost)} 💎`, 'warning');
       return false;
     }
-    setGems(g => g - cost);
+    spendGems(cost);
     setGemClickMultStacks(s => s + 1);
     addNotification(`Creator Kit: +${GEM_CLICK_BONUS * 100}% post Clout (permanent)`, 'success');
     return true;
-  }, [gems, gemClickMultStacks, addNotification]);
+  }, [gems, gemClickMultStacks, spendGems, addNotification]);
 
   const buyGemPassiveStack = useCallback(() => {
     if (gemPassiveMultStacks >= MAX_GEM_PASSIVE_STACKS) {
@@ -655,11 +742,11 @@ export const useGameState = () => {
       addNotification(`Need ${formatNumber(cost)} 💎`, 'warning');
       return false;
     }
-    setGems(g => g - cost);
+    spendGems(cost);
     setGemPassiveMultStacks(s => s + 1);
     addNotification(`Spotlight: +${GEM_PASSIVE_BONUS * 100}% passive Clout (permanent)`, 'success');
     return true;
-  }, [gems, gemPassiveMultStacks, addNotification]);
+  }, [gems, gemPassiveMultStacks, spendGems, addNotification]);
 
   const buyCloutSurge = useCallback(() => {
     const rate = calculatePassiveIncome();
@@ -672,11 +759,11 @@ export const useGameState = () => {
       return false;
     }
     const burst = rate * CLOUT_SURGE_SECONDS;
-    setGems(g => g - CLOUT_SURGE_COST);
+    spendGems(CLOUT_SURGE_COST);
     addCloutEarned(burst);
     addNotification(`Clout Surge: +${Math.floor(burst)} (~${CLOUT_SURGE_SECONDS}s passive)`, 'success');
     return true;
-  }, [gems, calculatePassiveIncome, addCloutEarned, addNotification]);
+  }, [gems, calculatePassiveIncome, addCloutEarned, spendGems, addNotification]);
 
   const pullGacha = useCallback(
     (multi = false) => {
@@ -692,7 +779,7 @@ export const useGameState = () => {
         const seconds = 38 + Math.random() * 95;
         total += Math.max(120, rate * seconds);
       }
-      setGems(g => g - cost);
+      spendGems(cost);
       addCloutEarned(total);
       addNotification(
         multi
@@ -701,7 +788,7 @@ export const useGameState = () => {
         'success'
       );
     },
-    [gems, calculatePassiveIncome, addCloutEarned, addNotification]
+    [gems, calculatePassiveIncome, addCloutEarned, spendGems, addNotification]
   );
 
   const grantGemsFromPack = useCallback((amount = 120) => {
@@ -717,12 +804,67 @@ export const useGameState = () => {
       }
       const rate = calculatePassiveIncome();
       const injection = Math.max(800, rate * (38 + gemCost * 0.35));
-      setGems(g => g - gemCost);
+      spendGems(gemCost);
       addCloutEarned(injection);
       addNotification(`${label}: +${Math.floor(injection)} Clout`, 'success');
     },
-    [gems, calculatePassiveIncome, addCloutEarned, addNotification]
+    [gems, calculatePassiveIncome, addCloutEarned, spendGems, addNotification]
   );
+
+  const claimDailyReward = useCallback(() => {
+    const today = utcCalendarDay();
+    if (dailyReward.lastClaimUtcDay === today) {
+      addNotification('Already claimed today’s agency brief (UTC).', 'info');
+      return false;
+    }
+    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    let streak = 1;
+    if (dailyReward.lastClaimUtcDay === yesterday) {
+      streak = dailyReward.streak + 1;
+    }
+    const bestStreak = Math.max(dailyReward.bestStreak ?? 0, streak);
+    const pack =
+      5 + Math.min(streak, 28) * 2 + (streak >= 7 ? 22 : 0) + (streak >= 14 ? 30 : 0) + (streak >= 30 ? 40 : 0);
+    setDailyReward({ lastClaimUtcDay: today, streak, bestStreak });
+    setGems(g => g + pack);
+    addNotification(`Daily brief · streak ${streak} · +${pack} 💎`, 'success');
+    return true;
+  }, [dailyReward, addNotification]);
+
+  const buyReputationPolish = useCallback(() => {
+    if (gems < GEM_PR_POLISH_COST) {
+      addNotification(`Need ${GEM_PR_POLISH_COST} 💎`, 'warning');
+      return false;
+    }
+    if (reputation >= 100) {
+      addNotification('Reputation already maxed — save the polish for a rough week.', 'info');
+      return false;
+    }
+    spendGems(GEM_PR_POLISH_COST);
+    setReputation(r => Math.min(100, r + 18));
+    addNotification('PR polish: +18 reputation (caps at 100%).', 'success');
+    return true;
+  }, [gems, reputation, spendGems, addNotification]);
+
+  const buySpotlightRush = useCallback(() => {
+    if (gems < GEM_SPOTLIGHT_RUSH_COST) {
+      addNotification(`Need ${GEM_SPOTLIGHT_RUSH_COST} 💎`, 'warning');
+      return false;
+    }
+    const rate = calculatePassiveIncome();
+    if (rate <= 0) {
+      addNotification('Place talent first — nothing to spotlight yet.', 'warning');
+      return false;
+    }
+    spendGems(GEM_SPOTLIGHT_RUSH_COST);
+    const endsAt = Date.now() + GEM_SPOTLIGHT_RUSH_MS;
+    setGemPassiveTimedBoost({ endsAt, mult: GEM_SPOTLIGHT_RUSH_MULT });
+    addNotification(
+      `Spotlight rush: +${Math.round((GEM_SPOTLIGHT_RUSH_MULT - 1) * 100)}% passive ~${GEM_SPOTLIGHT_RUSH_MS / 1000}s`,
+      'success'
+    );
+    return true;
+  }, [gems, calculatePassiveIncome, spendGems, addNotification]);
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -745,7 +887,10 @@ export const useGameState = () => {
         gemClickMultStacks,
         gemPassiveMultStacks,
         achievementsUnlocked,
-        brandDealsAccepted
+        brandDealsAccepted,
+        gemsSpentTotal,
+        dailyReward,
+        gemPassiveTimedBoost
       });
     }, 400);
     return () => clearTimeout(t);
@@ -768,7 +913,10 @@ export const useGameState = () => {
     gemClickMultStacks,
     gemPassiveMultStacks,
     achievementsUnlocked,
-    brandDealsAccepted
+    brandDealsAccepted,
+    gemsSpentTotal,
+    dailyReward,
+    gemPassiveTimedBoost
   ]);
 
   useEffect(() => {
@@ -782,7 +930,9 @@ export const useGameState = () => {
       prestigeCount,
       followers,
       brandDealsAccepted,
-      gems
+      gems,
+      gemsSpentTotal,
+      dailyReward
     };
     achievementDefs.forEach(def => {
       if (achievementsUnlocked[def.id]) return;
@@ -803,6 +953,8 @@ export const useGameState = () => {
     brandDealsAccepted,
     managers,
     gems,
+    gemsSpentTotal,
+    dailyReward,
     achievementsUnlocked,
     addNotification
   ]);
@@ -810,6 +962,11 @@ export const useGameState = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       const now = Date.now();
+
+      setGemPassiveTimedBoost(prev => {
+        if (!prev) return prev;
+        return now < prev.endsAt ? prev : null;
+      });
 
       if (activeFrenzy && now >= activeFrenzy.endsAt) {
         setActiveFrenzy(null);
@@ -892,7 +1049,11 @@ export const useGameState = () => {
         brandDealsMaySpawn(lifetimeClout, influencers.length, buildings.length) &&
         Math.random() < BRAND_DEAL_SPAWN_CHANCE_PER_TICK * (0.28 + (reputation / 100) * 0.85)
       ) {
-        const availableDeals = brandDealTypes.filter(d => brandDealOfferableAtReputation(d, reputation));
+        const catalogEra = getUnlockedCatalogEra(prestigeCount);
+        const availableDeals = brandDealTypes.filter(
+          d =>
+            brandDealOfferableAtReputation(d, reputation) && brandDealSpawnableAtCatalogEra(d, catalogEra)
+        );
 
         if (availableDeals.length > 0) {
           const scoutN = managers.filter(m => m.typeId === 'scout').length;
@@ -951,7 +1112,8 @@ export const useGameState = () => {
     addNotification,
     managers,
     getClickClout,
-    getInternAutoClickClout
+    getInternAutoClickClout,
+    prestigeCount
   ]);
 
   const namedSaveSlots = useMemo(() => listNamedSaves(), [namedSaveListTick]);
@@ -976,7 +1138,10 @@ export const useGameState = () => {
       gemClickMultStacks,
       gemPassiveMultStacks,
       achievementsUnlocked,
-      brandDealsAccepted
+      brandDealsAccepted,
+      gemsSpentTotal,
+      dailyReward,
+      gemPassiveTimedBoost
     }),
     [
       clout,
@@ -997,7 +1162,10 @@ export const useGameState = () => {
       gemClickMultStacks,
       gemPassiveMultStacks,
       achievementsUnlocked,
-      brandDealsAccepted
+      brandDealsAccepted,
+      gemsSpentTotal,
+      dailyReward,
+      gemPassiveTimedBoost
     ]
   );
 
@@ -1220,6 +1388,13 @@ export const useGameState = () => {
     pullGacha,
     grantGemsFromPack,
     marketCloutInjection,
+    claimDailyReward,
+    buyReputationPolish,
+    buySpotlightRush,
+    catalogEra: getUnlockedCatalogEra(prestigeCount),
+    gemsSpentTotal,
+    dailyReward,
+    gemPassiveTimedBoost,
     gachaCosts: { single: GACHA_SINGLE_COST, multi: GACHA_MULTI_COST },
     gemEconomy: {
       syndicateCostBase: GEM_STACK_COST_BASE,
@@ -1236,6 +1411,10 @@ export const useGameState = () => {
     gemCloutMult: getGemCloutMult(),
     gemClickMult: getGemClickMult(),
     gemPassiveMult: getGemPassiveMult(),
+    gemSinkCosts: {
+      spotlightRush: GEM_SPOTLIGHT_RUSH_COST,
+      reputationPolish: GEM_PR_POLISH_COST
+    },
     namedSaveSlots,
     activeProfileName,
     lastProfileSyncAt,

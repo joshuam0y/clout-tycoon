@@ -7,7 +7,8 @@ import {
   managerTypes,
   getMinPrestige,
   passiveCatalogTunedCps,
-  PASSIVE_GLOBAL_MULT
+  PASSIVE_GLOBAL_MULT,
+  catalogEraMeetsRequired
 } from '../data/gameData';
 import {
   scaledUnitCost,
@@ -23,6 +24,20 @@ function PrestigeLockBadge({ minPrestige: minP }) {
     <div className="shop-prestige-lock-badge" aria-hidden="true">
       <span className="shop-prestige-lock-icon">🔒</span>
       <span>Prestige {minP}+</span>
+    </div>
+  );
+}
+
+function EraLockBadge({ requiredEra, catalogEra }) {
+  const need = Math.max(0, Math.floor(requiredEra ?? 0));
+  if (need <= 0) return null;
+  if (catalogEraMeetsRequired(catalogEra, need)) return null;
+  return (
+    <div className="shop-era-lock-badge" aria-hidden="true">
+      <span className="shop-prestige-lock-icon">🔐</span>
+      <span>
+        Era {need + 1} · P{need * 3}+
+      </span>
     </div>
   );
 }
@@ -47,7 +62,8 @@ export const ShopPanel = ({
   onBuyManager,
   passiveCloutPerSecond = 0,
   passiveByTalentType = {},
-  prestigeCount = 0
+  prestigeCount = 0,
+  catalogEra = 0
 }) => {
   const [shopTab, setShopTab] = useState('upgrades');
   const costMult = getFollowerCostMult(followers);
@@ -115,7 +131,7 @@ export const ShopPanel = ({
         ) : null}
         <p className="shop-tagline">
           Each extra copy of the same hire/build ramps up sharply (accelerating curve — not a flat %).
-          Full catalog — afford what you can. Keys <kbd className="shop-kbd">1</kbd>–
+          Catalog era {catalogEra + 1}/4 — late rows need deeper prestige runs. Keys <kbd className="shop-kbd">1</kbd>–
           <kbd className="shop-kbd">4</kbd> switch tabs when not typing.
           {discountPct > 0 && (
             <span className="shop-follower-discount">
@@ -162,7 +178,10 @@ export const ShopPanel = ({
                 const cost = clickUpgradeNextCost(upgrade, level);
                 const canAfford = clout >= cost;
                 const minP = getMinPrestige(upgrade);
-                const locked = minP > 0 && prestigeCount < minP;
+                const lockedP = minP > 0 && prestigeCount < minP;
+                const needEra = Math.max(0, Math.floor(upgrade.requiredEra ?? 0));
+                const lockedEra = !catalogEraMeetsRequired(catalogEra, needEra);
+                const locked = lockedP || lockedEra;
 
                 return (
                   <button
@@ -181,7 +200,11 @@ export const ShopPanel = ({
                       <div className={`upgrade-cost ${canAfford && !locked ? 'afford' : ''}`}>
                         {formatNumber(cost)} Clout
                       </div>
-                      {locked && <PrestigeLockBadge minPrestige={minP} />}
+                      {lockedP ? (
+                        <PrestigeLockBadge minPrestige={minP} />
+                      ) : lockedEra ? (
+                        <EraLockBadge requiredEra={needEra} catalogEra={catalogEra} />
+                      ) : null}
                     </div>
                   </button>
                 );
@@ -207,7 +230,10 @@ export const ShopPanel = ({
                 const agencySlice =
                   owned > 0 ? (passiveByTalentType[influencer.id] ?? 0) : null;
                 const minP = getMinPrestige(influencer);
-                const locked = minP > 0 && prestigeCount < minP;
+                const lockedP = minP > 0 && prestigeCount < minP;
+                const needEra = Math.max(0, Math.floor(influencer.requiredEra ?? 0));
+                const lockedEra = !catalogEraMeetsRequired(catalogEra, needEra);
+                const locked = lockedP || lockedEra;
 
                 return (
                   <button
@@ -261,7 +287,11 @@ export const ShopPanel = ({
                       </span>
                     </div>
                     {isSelected && <div className="selected-indicator">Click grid to place</div>}
-                    {locked && <PrestigeLockBadge minPrestige={minP} />}
+                    {lockedP ? (
+                      <PrestigeLockBadge minPrestige={minP} />
+                    ) : lockedEra ? (
+                      <EraLockBadge requiredEra={needEra} catalogEra={catalogEra} />
+                    ) : null}
                     </div>
                   </button>
                 );
@@ -277,7 +307,10 @@ export const ShopPanel = ({
                 const nextCost = Math.ceil(raw * costMult);
                 const canAfford = clout >= nextCost;
                 const minP = getMinPrestige(m);
-                const locked = minP > 0 && prestigeCount < minP;
+                const lockedP = minP > 0 && prestigeCount < minP;
+                const needEra = Math.max(0, Math.floor(m.requiredEra ?? 0));
+                const lockedEra = !catalogEraMeetsRequired(catalogEra, needEra);
+                const locked = lockedP || lockedEra;
                 const detail =
                   m.effect === 'autoclick'
                     ? m.id === 'intern'
@@ -320,7 +353,11 @@ export const ShopPanel = ({
                       <span className="item-owned">×{owned} hired</span>
                       <span className="item-cost">{formatNumber(nextCost)} Clout</span>
                     </div>
-                    {locked && <PrestigeLockBadge minPrestige={minP} />}
+                    {lockedP ? (
+                      <PrestigeLockBadge minPrestige={minP} />
+                    ) : lockedEra ? (
+                      <EraLockBadge requiredEra={needEra} catalogEra={catalogEra} />
+                    ) : null}
                     </div>
                   </button>
                 );
@@ -345,7 +382,10 @@ export const ShopPanel = ({
                 const canAfford = clout >= nextCost;
                 const isSelected = selectedTool?.type === 'building' && selectedTool?.id === building.id;
                 const minP = getMinPrestige(building);
-                const locked = minP > 0 && prestigeCount < minP;
+                const lockedP = minP > 0 && prestigeCount < minP;
+                const needEra = Math.max(0, Math.floor(building.requiredEra ?? 0));
+                const lockedEra = !catalogEraMeetsRequired(catalogEra, needEra);
+                const locked = lockedP || lockedEra;
 
                 return (
                   <button
@@ -378,7 +418,11 @@ export const ShopPanel = ({
                       <span className="item-cost">{formatNumber(nextCost)} Clout</span>
                     </div>
                     {isSelected && <div className="selected-indicator">Click grid to place</div>}
-                    {locked && <PrestigeLockBadge minPrestige={minP} />}
+                    {lockedP ? (
+                      <PrestigeLockBadge minPrestige={minP} />
+                    ) : lockedEra ? (
+                      <EraLockBadge requiredEra={needEra} catalogEra={catalogEra} />
+                    ) : null}
                     </div>
                   </button>
                 );
