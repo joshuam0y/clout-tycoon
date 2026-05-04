@@ -1,15 +1,8 @@
 import { useState, useEffect } from 'react';
 import './ControlPanel.css';
-import {
-  getPrestigeRunCloutRequired,
-  PRESTIGE_RUN_CLOUT_MULT_PER_STEP,
-  PRESTIGE_RUN_CLOUT_MULT_DEEP,
-  PRESTIGE_RUN_CLOUT_DEEP_AFTER
-} from '../data/gameData';
 import { formatNumber, formatRate, formatIntegerExact } from '../utils/formatNumber';
 
 export const ControlPanel = ({
-  prestigeCount,
   clickCloutPerClick,
   runCloutEarned,
   prestigeRunCloutRequired,
@@ -42,7 +35,6 @@ export const ControlPanel = ({
 
   const required = prestigeRunCloutRequired ?? 1;
   const canPrestige = runCloutEarned >= required;
-  const nextRunReq = getPrestigeRunCloutRequired(prestigeCount + 1);
   const frenzyLive =
     activeFrenzy && nowMs < activeFrenzy.endsAt ? activeFrenzy : null;
   const frenzySecLeft = frenzyLive
@@ -103,18 +95,6 @@ export const ControlPanel = ({
             ? '✓'
             : `(${formatNumber(Math.max(0, required - runCloutEarned))} run clout)`}
         </button>
-        <div className="prestige-hint">
-          This run needs {formatNumber(required)} Clout to prestige. Next bar ≈{' '}
-          <strong>
-            {prestigeCount >= PRESTIGE_RUN_CLOUT_DEEP_AFTER
-              ? PRESTIGE_RUN_CLOUT_MULT_DEEP
-              : PRESTIGE_RUN_CLOUT_MULT_PER_STEP}
-            ×
-          </strong>{' '}
-          (ramps harder after prestige {PRESTIGE_RUN_CLOUT_DEEP_AFTER}+). Next: {formatNumber(nextRunReq)}. Resets
-          roster, builds, post upgrades, rep, clicks… Keeps <strong>gems</strong>, Premium Shop stacks, lifetime
-          Clout, trophies. +24% mult per prestige tier + bonus 💎.
-        </div>
       </div>
     </div>
   );

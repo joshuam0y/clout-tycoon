@@ -189,7 +189,6 @@ function App() {
             }`}
           >
             <ControlPanel
-              prestigeCount={gameState.prestigeCount}
               clickCloutPerClick={gameState.clickCloutPerClick}
               runCloutEarned={gameState.runCloutEarned}
               prestigeRunCloutRequired={gameState.prestigeRunCloutRequired}
