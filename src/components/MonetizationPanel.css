@@ -23,6 +23,26 @@
   animation: popupSlideIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
+@media (max-width: 520px) {
+  .monetization-panel {
+    width: min(560px, calc(100vw - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px) - 12px));
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
+  .monetization-header h2 {
+    font-size: 1.15rem;
+    letter-spacing: 0.12em;
+  }
+
+  .premium-tagline {
+    font-size: 11px;
+  }
+
+  .close-button {
+    flex-shrink: 0;
+  }
+}
+
 @media (max-width: 900px) {
   .monetization-panel {
     min-height: 0;
@@ -33,9 +53,15 @@
 .monetization-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
   padding-bottom: var(--spacing-md);
   border-bottom: 2px solid var(--neon-purple);
+}
+
+.monetization-header-text {
+  flex: 1;
+  min-width: 0;
 }
 
 .monetization-header h2 {
@@ -45,6 +71,15 @@
   letter-spacing: 3px;
   text-shadow: var(--glow-purple);
   margin: 0;
+}
+
+.premium-tagline {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-muted);
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 .close-button {
@@ -112,6 +147,21 @@
   font-size: 13px;
   margin-bottom: var(--spacing-lg);
   line-height: 1.5;
+}
+
+.gem-early-hook {
+  margin: 0 0 var(--spacing-md);
+  padding: var(--spacing-md);
+  border-radius: 10px;
+  border: 1px solid rgba(180, 83, 9, 0.35);
+  background: linear-gradient(180deg, rgba(255, 253, 248, 0.95), rgba(255, 244, 224, 0.55));
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.gem-early-hook strong {
+  color: var(--text-primary);
 }
 
 /* Gacha section */
@@ -300,6 +350,89 @@
   box-shadow: var(--glow-green);
 }
 
+@media (max-width: 520px) {
+  .boost-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-sm);
+  }
+
+  .boost-header {
+    align-items: flex-start;
+  }
+
+  .boost-buy {
+    width: 100%;
+    min-width: 0;
+    align-self: stretch;
+  }
+
+  .boost-info h4 {
+    font-size: 14px;
+    line-height: 1.25;
+  }
+
+  .boost-info p {
+    font-size: 11px;
+  }
+}
+
+.hype-trade-card {
+  margin-bottom: var(--spacing-md);
+  padding: var(--spacing-md);
+  border-radius: 10px;
+  border: 1px solid rgba(0, 255, 200, 0.4);
+  background: rgba(0, 40, 32, 0.35);
+}
+
+.hype-trade-head {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: flex-start;
+  margin-bottom: var(--spacing-sm);
+}
+
+.hype-trade-icon {
+  font-size: 28px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.hype-trade-title {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--neon-cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.hype-trade-desc {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.hype-trade-btn {
+  width: 100%;
+  min-height: 46px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 8px;
+  border: 2px solid rgba(0, 255, 200, 0.55);
+  background: rgba(0, 255, 200, 0.1);
+  color: var(--neon-cyan);
+  cursor: pointer;
+}
+
+.hype-trade-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 /* Market section */
 .rival-agencies {
   display: flex;
@@ -388,8 +521,9 @@
 /* Premium currency */
 .premium-currency {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm) var(--spacing-md);
   padding-top: var(--spacing-md);
   border-top: 2px solid var(--neon-purple);
   margin-top: var(--spacing-md);
@@ -406,15 +540,34 @@
   font-size: 20px;
   font-weight: bold;
   text-shadow: var(--glow-yellow);
-  flex: 1;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
 }
 
 .buy-currency {
-  min-width: 150px;
+  min-width: min(150px, 100%);
   height: 50px;
   font-size: 16px;
   border-color: var(--neon-yellow);
   background: rgba(255, 255, 0, 0.1);
+  flex: 1 1 140px;
+}
+
+@media (max-width: 520px) {
+  .premium-currency {
+    row-gap: var(--spacing-sm);
+  }
+
+  .currency-value {
+    font-size: 16px;
+  }
+
+  .buy-currency {
+    min-width: 0;
+    flex: 1 1 100%;
+  }
 }
 
 .buy-currency:hover {
@@ -582,6 +735,24 @@
   padding: var(--spacing-md) 0 0;
   border-top: 1px solid rgba(128, 0, 255, 0.35);
   margin-top: var(--spacing-sm);
+}
+
+.market-inline--scroll {
+  margin-top: var(--spacing-lg);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid rgba(255, 140, 60, 0.45);
+}
+
+.market-noise-title {
+  color: var(--neon-orange);
+  font-size: 13px;
+  margin: 0 0 var(--spacing-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.market-noise-desc {
+  margin-bottom: var(--spacing-sm) !important;
 }
 
 .market-inline h4 {

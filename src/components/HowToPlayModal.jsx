@@ -61,7 +61,8 @@ const PAGES = [
             <strong>Esc</strong> closes the save manager when it is open, otherwise the Premium shop or a selected grid
             tool; during a brand deal, Esc declines (unless the save manager is on top).{' '}
             <strong>1</strong>–<strong>4</strong> switch Agency Shop tabs (Posts / Talent / Builds / Staff) when not typing.{' '}
-            <strong>Home</strong> recenters the map camera on the starting view. <strong>I</strong> toggles How to
+            <strong>Home</strong> or the map’s <strong>Recenter</strong> button recenters the camera on the starting
+            view. <strong>I</strong> toggles How to
             play (when not in a text field and no deal / Premium overlay).
           </li>
           <li>
@@ -87,9 +88,10 @@ const PAGES = [
             discount hire/build prices.
           </li>
           <li>
-            <strong>Reputation</strong> nudges how fast you earn. It only changes when you accept{' '}
-            <strong>brand deals</strong> (some deals add rep, risky ones subtract). There’s no other Clout-for-rep
-            button — prestige resets rep for the new run.
+            <strong>Reputation</strong> nudges how fast you earn. It moves when you accept{' '}
+            <strong>brand deals</strong> (some add rep, risky ones subtract). In the <strong>Premium Shop → Boosts</strong>{' '}
+            tab you can also <strong>hype-trade</strong> rep for followers (no gems). Prestige still resets rep for the
+            new run.
           </li>
           <li>
             The <strong>full talent and build lists</strong> are always in the shop — no era gates; you’re only
@@ -155,9 +157,10 @@ const PAGES = [
     title: 'Premium Shop',
     body: (
       <p>
-        Spend <strong>gems</strong> (prestige, trophies, <strong>Daily</strong> tab check-in streak) on permanent
-        stacks, timed <strong>Spotlight rush</strong>, <strong>PR polish</strong> (reputation), surges, viral drops,
-        and press injections. Fully playable without simulated top-ups — gems reward long runs across many prestiges.
+        Spend <strong>gems</strong> (prestige, trophies, <strong>Daily</strong> tab streak) on permanent stacks,{' '}
+        <strong>Spotlight rush</strong>, <strong>PR polish</strong> (+rep), <strong>Clout Surge</strong>, viral drops,
+        and press injections (scroll within <strong>Boosts</strong> / <strong>Drops</strong>). <strong>Hype trade</strong>{' '}
+        spends rep for followers — no gems. Fully playable without top-ups; test packs are free here.
       </p>
     )
   },

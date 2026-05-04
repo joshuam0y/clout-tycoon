@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import './GameWorld.css';
+import { subscribeMatchMedia } from '../hooks/matchMediaSubscribe';
 import {
   influencerTypes,
   buildingTypes,
@@ -55,6 +56,11 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick, p
   const gridRef = useRef(null);
   /** Window listeners for pan (mobile loses pointerleave / element-bound moves). */
   const detachWindowPanRef = useRef(null);
+  const [narrowTooltipViewport, setNarrowTooltipViewport] = useState(false);
+  /** Desktop: tooltip is outside transformed camera — coords relative to world-grid-wrap */
+  const [talentDesktopPos, setTalentDesktopPos] = useState(null);
+
+  useEffect(() => subscribeMatchMedia('(max-width: 768px)', setNarrowTooltipViewport), []);
 
   useEffect(() => {
     const onKey = e => {
@@ -466,9 +472,56 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick, p
     });
   };
 
+  const recenterCamera = useCallback(() => {
+    setViewOffset({ x: INITIAL_VIEW_OFFSET.x, y: INITIAL_VIEW_OFFSET.y });
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!hoveredTalentOnly || selectedTool) {
+      queueMicrotask(() => setTalentDesktopPos(null));
+      return undefined;
+    }
+    if (narrowTooltipViewport) {
+      queueMicrotask(() => setTalentDesktopPos(null));
+      return undefined;
+    }
+
+    const measure = () => {
+      queueMicrotask(() => {
+        const grid = gridRef.current;
+        if (!grid) {
+          setTalentDesktopPos(null);
+          return;
+        }
+        const wx = hoveredTalentOnly.position.x;
+        const wy = hoveredTalentOnly.position.y;
+        setTalentDesktopPos({
+          left: grid.offsetLeft + wx * CELL_SIZE - viewOffset.x + CELL_SIZE / 2,
+          top: grid.offsetTop + wy * CELL_SIZE - viewOffset.y
+        });
+      });
+    };
+
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [hoveredTalentOnly, selectedTool, viewOffset, narrowTooltipViewport]);
+
   return (
     <main id="game-main" className="game-world" tabIndex={-1} aria-label="Agency grid">
       <div className="world-grid-wrap">
+        <button
+          type="button"
+          className="grid-recenter-btn"
+          onClick={e => {
+            e.stopPropagation();
+            e.preventDefault();
+            recenterCamera();
+          }}
+          aria-label="Recenter map on starting view"
+        >
+          Recenter
+        </button>
         <div
           ref={gridRef}
           className={`world-grid ${isDragging ? 'dragging' : ''}`}
@@ -606,43 +659,6 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick, p
             );
           })}
 
-          {hoveredTalentOnly &&
-            !selectedTool &&
-            (() => {
-              const tt = influencerTypes.find(t => t.id === hoveredTalentOnly.typeId);
-              if (!tt) return null;
-              const p = toWorldLayer(hoveredTalentOnly.position.x, hoveredTalentOnly.position.y);
-              return (
-                <div
-                  className="entity-hover-tooltip talent-hover-tooltip"
-                  style={{
-                    left: p.left + CELL_SIZE / 2,
-                    top: p.top
-                  }}
-                >
-                  <div className="entity-hover-title">
-                    {tt.icon} {tt.name}
-                  </div>
-                  <div className="entity-hover-line">
-                    Agency (this tile){' '}
-                    <strong>{formatRate(passiveByInfluencerId?.[hoveredTalentOnly.id] ?? 0)}</strong> Clout/s
-                  </div>
-                  <div className="entity-hover-line">
-                    Tuned base on tile <strong>{formatRate(passiveCatalogTunedCps(tt.baseCloutPerSecond))}</strong> Clout/s
-                    (passive balance ×{PASSIVE_GLOBAL_MULT}; no grid buffs).
-                  </div>
-                  <div className="entity-hover-line talent-hover-buff">
-                    Grid buff (structures + pairings){' '}
-                    <strong>
-                      ×
-                      {hoveredTalentGridBuff >= 10
-                        ? hoveredTalentGridBuff.toFixed(1)
-                        : hoveredTalentGridBuff.toFixed(2)}
-                    </strong>
-                  </div>
-                </div>
-              );
-            })()}
         </div>
 
         {selectedBuildingType && hoveredCell && (
@@ -665,6 +681,45 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick, p
         )}
 
         </div>
+
+        {hoveredTalentOnly &&
+          !selectedTool &&
+          (narrowTooltipViewport || talentDesktopPos) &&
+          (() => {
+            const tt = influencerTypes.find(t => t.id === hoveredTalentOnly.typeId);
+            if (!tt) return null;
+            return (
+              <div
+                className="entity-hover-tooltip talent-hover-tooltip"
+                style={
+                  narrowTooltipViewport || !talentDesktopPos
+                    ? undefined
+                    : { left: talentDesktopPos.left, top: talentDesktopPos.top }
+                }
+              >
+                <div className="entity-hover-title">
+                  {tt.icon} {tt.name}
+                </div>
+                <div className="entity-hover-line">
+                  Agency (this tile){' '}
+                  <strong>{formatRate(passiveByInfluencerId?.[hoveredTalentOnly.id] ?? 0)}</strong> Clout/s
+                </div>
+                <div className="entity-hover-line">
+                  Tuned base on tile <strong>{formatRate(passiveCatalogTunedCps(tt.baseCloutPerSecond))}</strong> Clout/s
+                  (passive balance ×{PASSIVE_GLOBAL_MULT}; no grid buffs).
+                </div>
+                <div className="entity-hover-line talent-hover-buff">
+                  Grid buff (structures + pairings){' '}
+                  <strong>
+                    ×
+                    {hoveredTalentGridBuff >= 10
+                      ? hoveredTalentGridBuff.toFixed(1)
+                      : hoveredTalentGridBuff.toFixed(2)}
+                  </strong>
+                </div>
+              </div>
+            );
+          })()}
 
         {hoveredPlacedBuilding &&
           hoveredPlacedBuildingType &&
@@ -703,9 +758,9 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick, p
         <div className="camera-hint">
           {selectedTool
             ? placementToolHint
-              ? `Placing ${placementToolHint} — valid tiles cyan, blocked red · tap to confirm · Esc clears · Home recenters · drag to pan`
-              : 'Placement mode — tap the grid · Esc clears tool · Home recenters · drag to pan'
-            : 'Drag / swipe to pan · Home recenters camera · infinite grid'}
+              ? `Placing ${placementToolHint} — valid tiles cyan, blocked red · tap to confirm · Esc clears · Recenter / Home · drag to pan`
+              : 'Placement mode — tap the grid · Esc clears tool · Recenter / Home · drag to pan'
+            : 'Drag / swipe to pan · Recenter button or Home key · infinite grid'}
         </div>
       </div>
     </main>

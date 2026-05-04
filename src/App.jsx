@@ -316,6 +316,9 @@ function App() {
           onBuySpotlightRush={gameState.buySpotlightRush}
           spotlightRushCost={gameState.gemSinkCosts.spotlightRush}
           reputationPolishCost={gameState.gemSinkCosts.reputationPolish}
+          reputation={gameState.reputation}
+          onSellReputationForFollowers={gameState.sellReputationForFollowers}
+          repFollowersTrade={gameState.repFollowersTrade}
         />
       )}
     </div>

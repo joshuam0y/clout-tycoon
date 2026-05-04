@@ -99,6 +99,9 @@ const GACHA_MULTI_COST = Math.round(750 * CLOUT_PRICE_MULTIPLIER);
 const GACHA_MULTI_PULLS = 10;
 
 const GEM_PR_POLISH_COST = 32;
+/** Premium “Hype trade”: spend reputation (not gems) for followers; floor keeps deals playable */
+const REP_FOR_FOLLOWERS_REP_COST = 12;
+const REP_FOR_FOLLOWERS_MIN_REMAINING = 12;
 const GEM_SPOTLIGHT_RUSH_COST = 55;
 const GEM_SPOTLIGHT_RUSH_MULT = 1.22;
 const GEM_SPOTLIGHT_RUSH_MS = 90_000;
@@ -904,6 +907,30 @@ export const useGameState = () => {
     return true;
   }, [gems, calculatePassiveIncome, spendGems, addNotification]);
 
+  const sellReputationForFollowers = useCallback(() => {
+    const need = REP_FOR_FOLLOWERS_MIN_REMAINING + REP_FOR_FOLLOWERS_REP_COST;
+    if (reputation < need) {
+      addNotification(
+        `Need at least ${need}% reputation to hype-trade (stops at ${REP_FOR_FOLLOWERS_MIN_REMAINING}% so you can still take deals).`,
+        'warning'
+      );
+      return false;
+    }
+    const followerGain = Math.floor(
+      900 +
+        Math.pow(Math.max(0, followers) + 40, 0.36) * 140 +
+        prestigeCount * 1800 +
+        prestigeMultiplier * 650
+    );
+    setReputation(r => r - REP_FOR_FOLLOWERS_REP_COST);
+    setFollowers(f => f + followerGain);
+    addNotification(
+      `Hype trade: −${REP_FOR_FOLLOWERS_REP_COST}% rep · +${formatNumber(followerGain)} followers`,
+      'info'
+    );
+    return true;
+  }, [reputation, followers, prestigeCount, prestigeMultiplier, addNotification]);
+
   useEffect(() => {
     const t = setTimeout(() => {
       writeGameSnapshot({
@@ -1434,6 +1461,11 @@ export const useGameState = () => {
     claimDailyReward,
     buyReputationPolish,
     buySpotlightRush,
+    sellReputationForFollowers,
+    repFollowersTrade: {
+      repCost: REP_FOR_FOLLOWERS_REP_COST,
+      minReputationAfter: REP_FOR_FOLLOWERS_MIN_REMAINING
+    },
     catalogEra: getUnlockedCatalogEra(prestigeCount),
     gemsSpentTotal,
     dailyReward,

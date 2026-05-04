@@ -165,3 +165,38 @@ nav.mobile-tab-bar button.mobile-tab-bar__btn.is-active {
 nav.mobile-tab-bar button.mobile-tab-bar__btn:active {
   filter: brightness(0.96);
 }
+
+@media (max-width: 900px) {
+  .mobile-tab-bar {
+    background: linear-gradient(180deg, #f5f0e6, #ebe4d8);
+    border-top-color: #c9b896;
+    box-shadow: 0 -3px 14px rgba(42, 32, 20, 0.1);
+  }
+
+  nav.mobile-tab-bar button.mobile-tab-bar__btn {
+    border: 1px solid rgba(90, 70, 50, 0.28);
+    background: #fffdf8;
+    color: #2a2633;
+    font-weight: 800;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    nav.mobile-tab-bar button.mobile-tab-bar__btn:hover:not(.is-active) {
+      background: #fff4e0;
+      border-color: rgba(180, 83, 9, 0.45);
+      color: #1a1520;
+    }
+  }
+
+  nav.mobile-tab-bar button.mobile-tab-bar__btn.is-active {
+    color: #fffef9;
+    border-color: #0b5c4f;
+    background: #0f766e;
+    box-shadow: 0 2px 0 #0a5349;
+  }
+
+  nav.mobile-tab-bar button.mobile-tab-bar__btn:focus-visible {
+    outline: 2px solid #0f766e;
+    outline-offset: 2px;
+  }
+}

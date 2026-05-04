@@ -173,3 +173,53 @@
 .how-to-nav-btn.primary {
   flex: 1.2;
 }
+
+@media (max-width: 520px) {
+  .how-to-panel {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .how-to-header {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .how-to-header h2 {
+    font-size: 1.05rem;
+    line-height: 1.25;
+    min-width: 0;
+    flex: 1 1 0%;
+  }
+
+  .how-to-progress {
+    font-size: 0.72rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .how-to-page-body {
+    font-size: 0.92rem;
+    padding-right: 4px;
+  }
+
+  .how-to-page-body p,
+  .how-to-page-body li {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .how-to-steps li {
+    padding-left: 0;
+  }
+
+  .how-to-nav {
+    flex-wrap: wrap;
+  }
+
+  .how-to-nav-btn {
+    min-height: 44px;
+    font-size: 0.85rem;
+  }
+}

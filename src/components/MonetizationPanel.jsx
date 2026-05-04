@@ -6,6 +6,29 @@ function utcToday() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function MarketNoiseBlock({ onMarketInject }) {
+  return (
+    <div className="market-inline market-inline--scroll">
+      <h4 className="market-noise-title">Press cycle — instant Clout</h4>
+      <p className="section-description small market-noise-desc">
+        Spend gems for a simulated press push. Payout scales with your passive Clout/s (same idea as Clout Surge,
+        but you pick the headline tier).
+      </p>
+      <div className="market-buttons">
+        <button type="button" className="sabotage-button" onClick={() => onMarketInject(50, 'Buzz')}>
+          Buzz — 50 💎
+        </button>
+        <button type="button" className="sabotage-button" onClick={() => onMarketInject(120, 'Trend hijack')}>
+          Trend hijack — 120 💎
+        </button>
+        <button type="button" className="sabotage-button" onClick={() => onMarketInject(200, 'Full blitz')}>
+          Full blitz — 200 💎
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export const MonetizationPanel = ({
   onClose,
   deferEscapeClose = false,
@@ -33,7 +56,10 @@ export const MonetizationPanel = ({
   onBuyReputationPolish = () => false,
   onBuySpotlightRush = () => false,
   spotlightRushCost = 55,
-  reputationPolishCost = 32
+  reputationPolishCost = 32,
+  reputation = 100,
+  onSellReputationForFollowers = () => false,
+  repFollowersTrade = { repCost: 12, minReputationAfter: 12 }
 }) => {
   const [activeTab, setActiveTab] = useState('gems');
   const [isPulling, setIsPulling] = useState(false);
@@ -64,6 +90,9 @@ export const MonetizationPanel = ({
       ? null
       : gemEconomy.passiveCostBase + gemPassiveMultStacks * gemEconomy.passiveCostPerOwned;
 
+  const repTradeNeed = repFollowersTrade.minReputationAfter + repFollowersTrade.repCost;
+  const canRepTrade = reputation >= repTradeNeed;
+
   const todayUtc = utcToday();
   const claimedToday = dailyReward.lastClaimUtcDay === todayUtc;
   const streak = dailyReward.streak ?? 0;
@@ -88,7 +117,12 @@ export const MonetizationPanel = ({
     <div className="monetization-overlay" role="dialog" aria-labelledby="premium-shop-title">
       <div className="monetization-panel panel-purple">
         <div className="monetization-header">
-          <h2 id="premium-shop-title">Premium Shop</h2>
+          <div className="monetization-header-text">
+            <h2 id="premium-shop-title">Premium Shop</h2>
+            <p className="premium-tagline">
+              Gems &amp; stacks persist through prestige · this build uses free test packs (no card)
+            </p>
+          </div>
           <button
             ref={closeButtonRef}
             type="button"
@@ -142,10 +176,16 @@ export const MonetizationPanel = ({
           {activeTab === 'gems' && (
             <div className="gems-section">
               <h3>Top up</h3>
+              <p className="gem-early-hook">
+                <strong>Why bother early?</strong> A small gem stack buys <strong>Syndicate</strong> (+% all Clout)
+                and a <strong>Clout Surge</strong> or <strong>Viral Drop</strong> — that combo usually beats hours of
+                raw clicking before your first prestige. Trophies and the <strong>Daily</strong> tab also drip free
+                gems if you prefer not to use the test packs.
+              </p>
               <p className="section-description">
-                Simulated storefront — no real card charge here. In the live game these would be the impulse buys
-                that skip a week of grinding; in this build they are free test buttons so you can feel the power
-                curve.
+                Simulated storefront — no real card charge here. In the live game these would be impulse buys that
+                skip a week of grinding; in this build the packs are <strong>free test buttons</strong> so you can
+                feel the power curve.
               </p>
               <div className="gem-packs">
                 <button type="button" className="gem-pack" onClick={() => onGrantGemPack(45)}>
@@ -213,11 +253,38 @@ export const MonetizationPanel = ({
 
           {activeTab === 'boosts' && (
             <div className="boosts-section">
-              <h3>Spend Gems</h3>
+              <h3>Boosts &amp; sinks</h3>
               <p className="section-description">
-                Permanent stacks never reset on prestige. Syndicate buffs everything; Creator and Spotlight split
-                power so you can specialize. Costs rise slightly per stack.
+                <strong>Gem rows</strong> below are permanent or timed buffs. <strong>Hype trade</strong> costs
+                reputation only — good when you are deep in rep and want followers faster. Scroll to the bottom of
+                this tab for <strong>press injections</strong> (gem → instant Clout).
               </p>
+
+              <div className="hype-trade-card">
+                <div className="hype-trade-head">
+                  <span className="hype-trade-icon" aria-hidden>
+                    📰
+                  </span>
+                  <div>
+                    <h4 className="hype-trade-title">Hype trade (no gems)</h4>
+                    <p className="hype-trade-desc">
+                      Lose <strong>{repFollowersTrade.repCost}%</strong> reputation for a follower spike. Keeps at
+                      least <strong>{repFollowersTrade.minReputationAfter}%</strong> so you can still sign deals.
+                      Low rep still hurts income — same as risky sponsors.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="hype-trade-btn"
+                  disabled={!canRepTrade}
+                  onClick={() => onSellReputationForFollowers()}
+                >
+                  {canRepTrade
+                    ? `Trade −${repFollowersTrade.repCost}% rep for followers`
+                    : `Need ${repTradeNeed}%+ rep`}
+                </button>
+              </div>
 
               <div className="boost-items">
                 <div className="boost-item">
@@ -346,6 +413,8 @@ export const MonetizationPanel = ({
                   </button>
                 </div>
               </div>
+
+              <MarketNoiseBlock onMarketInject={onMarketInject} />
             </div>
           )}
 
@@ -396,6 +465,8 @@ export const MonetizationPanel = ({
                   </span>
                 </button>
               </div>
+
+              <MarketNoiseBlock onMarketInject={onMarketInject} />
             </div>
           )}
 
@@ -421,34 +492,6 @@ export const MonetizationPanel = ({
             </div>
           )}
         </div>
-
-        {activeTab !== 'gems' && activeTab !== 'achievements' && activeTab !== 'daily' && (
-          <div className="market-inline">
-            <h4>Market noise (clout injection)</h4>
-            <p className="section-description small">
-              Spend gems to simulate a press cycle — payout scales with your passive clout/sec.
-            </p>
-            <div className="market-buttons">
-              <button type="button" className="sabotage-button" onClick={() => onMarketInject(50, 'Buzz')}>
-                Buzz (50 💎)
-              </button>
-              <button
-                type="button"
-                className="sabotage-button"
-                onClick={() => onMarketInject(120, 'Trend hijack')}
-              >
-                Trend hijack (120 💎)
-              </button>
-              <button
-                type="button"
-                className="sabotage-button"
-                onClick={() => onMarketInject(200, 'Full blitz')}
-              >
-                Full blitz (200 💎)
-              </button>
-            </div>
-          </div>
-        )}
 
         <div className="premium-currency">
           <span className="currency-label">Gems</span>

@@ -78,12 +78,15 @@ export const GameHudBar = ({
             <span className="game-hud-v">{Math.floor(reputation)}%</span>
             <span className="game-hud-sub">Deals move rep · shapes income</span>
           </div>
-          <div className="game-hud-cell">
+          <div className="game-hud-cell game-hud-cell--gems">
             <span className="game-hud-k">Gems</span>
             <span className="game-hud-v game-hud-gems" title={formatIntegerExact(gems)}>
               {formatNumber(gems)} 💎
             </span>
-            <span className="game-hud-sub">Prestige, trophies, daily brief</span>
+            <span className="game-hud-sub game-hud-sub--desktop">Prestige, trophies, daily brief</span>
+            <span className="game-hud-sub game-hud-sub--mobile">
+              Early runs: Syndicate %, Surge and Drops punch through slow grinds
+            </span>
           </div>
           <div className="game-hud-cell">
             <span className="game-hud-k">Catalog era</span>
@@ -133,9 +136,14 @@ export const GameHudBar = ({
           <div className="game-hud-run-fill" style={{ width: `${runProgress * 100}%` }} />
         </div>
         <div className="game-hud-run-foot">
-          <span title={formatIntegerExact(lifetimeClout)}>Lifetime {formatNumber(lifetimeClout)}</span>
-          <span>
-            Manual posts {totalClicks.toLocaleString()} · Staff {staffCount}
+          <span className="game-hud-run-stat" title={formatIntegerExact(lifetimeClout)}>
+            Lifetime <strong>{formatNumber(lifetimeClout)}</strong>
+          </span>
+          <span className="game-hud-run-stat">
+            Manual posts <strong>{totalClicks.toLocaleString()}</strong>
+          </span>
+          <span className="game-hud-run-stat">
+            Staff <strong>{staffCount}</strong>
           </span>
         </div>
       </div>
