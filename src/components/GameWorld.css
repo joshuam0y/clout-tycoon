@@ -342,7 +342,8 @@
 }
 
 .entity-hover-tooltip.building-hover-tooltip {
-  /* border + glow overridden per-structure via inline color */
+  /* Below footprint so hovering doesn’t cover talents / buff cells to the north */
+  transform: translate(-50%, 12px);
   border-width: 1px;
 }
 
