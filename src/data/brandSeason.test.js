@@ -12,6 +12,6 @@ describe('brand deal seasons', () => {
     const base = getBrandDealSeasonalWeightMult('partnership', t, 0);
     const withScouts = getBrandDealSeasonalWeightMult('partnership', t, 2);
     expect(base).toBeGreaterThan(1);
-    expect(withScouts / base).toBeCloseTo(1.07, 5);
+    expect(withScouts / base).toBeCloseTo(1.11, 5);
   });
 });

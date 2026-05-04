@@ -1,23 +1,23 @@
 /** Base multiplier per duplicate tier before acceleration (see UNIT_PRICE_DUPLICATE_EXP). */
-export const UNIT_PRICE_GROWTH = 1.258;
+export const UNIT_PRICE_GROWTH = 1.268;
 
 /**
  * Duplicate Clout cost uses: base × growth^(owned ** DUPLICATE_EXP) × CLOUT_PRICE_MULTIPLIER.
  * > 1 makes each extra copy of the same item ramp faster than fixed-% geometric stacking.
  */
-export const UNIT_PRICE_DUPLICATE_EXP = 1.36;
+export const UNIT_PRICE_DUPLICATE_EXP = 1.42;
 
 /**
  * Added to DUPLICATE_EXP per catalog row (talent/builds/staff list order), so late unlocks
  * compound like Cookie/AdCap “next business” curves while early rows stay approachable.
  */
-export const UNIT_PRICE_CATALOG_DUP_EXP_PER_INDEX = 0.014;
+export const UNIT_PRICE_CATALOG_DUP_EXP_PER_INDEX = 0.024;
 
 /**
  * Post-upgrade rows scale effective per-level growth: growth × (1 + tierIndex × this).
  * Later ladder steps bite harder at high levels (Cookie-style upgrade inflation).
  */
-export const CLICK_UPGRADE_GROWTH_BONUS_PER_TIER = 0.0065;
+export const CLICK_UPGRADE_GROWTH_BONUS_PER_TIER = 0.0088;
 
 /**
  * Multiple auras of the same building type on one talent: exponent stacks sublinearly after the first
@@ -145,11 +145,11 @@ export const CLICK_OUTPUT_GLOBAL_MULT = 1;
  * Intern “scheduled posts” use a slice of your post-math so they stay a convenience, not the main engine.
  * (Still scales a bit with upgrades — just much weaker than manual.)
  */
-export const INTERN_AUTO_POST_OUTPUT_MULT = 0.18;
+export const INTERN_AUTO_POST_OUTPUT_MULT = 0.3;
 /** First intern’s baseline rate; extra interns add sublinear speed (see INTERN_STACKING_EXP). */
-export const INTERN_BASE_POSTS_PER_SEC = 0.38;
+export const INTERN_BASE_POSTS_PER_SEC = 0.55;
 /** Total auto-post rate ∝ (intern count) ** this — stacks softer than linear. */
-export const INTERN_STACKING_EXP = 0.58;
+export const INTERN_STACKING_EXP = 0.62;
 
 /** Permanent prestige mult: 1 + prestigeLevel × this (linear, gentler than old curves). */
 export const PRESTIGE_MULT_PER_LEVEL = 0.24;
@@ -1506,7 +1506,7 @@ export function getActiveBrandDealSeasonPhase(nowMs = Date.now()) {
 }
 
 /** Bonus spawn weight per Brand Scout copy on meta-aligned deals (multiplicative). */
-export const BRAND_SCOUT_WEIGHT_PER_COPY = 0.035;
+export const BRAND_SCOUT_WEIGHT_PER_COPY = 0.055;
 
 /**
  * Extra weight on favored deals this week. Brand Scouts stack modestly on favored picks only.
@@ -1580,9 +1580,9 @@ export function getProducerPassiveMult(producerCount) {
   if (n === 0) return 1;
   let m = 1;
   for (let i = 0; i < n; i++) {
-    m *= 1 + 0.055 / (1 + i * 0.32);
+    m *= 1 + 0.078 / (1 + i * 0.28);
   }
-  return Math.min(1.95, m);
+  return Math.min(2.35, m);
 }
 
 // Manager types (for future automation)

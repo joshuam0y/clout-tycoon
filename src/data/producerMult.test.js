@@ -9,9 +9,9 @@ describe('getProducerPassiveMult', () => {
     const m5 = getProducerPassiveMult(5);
     const m20 = getProducerPassiveMult(20);
     const m200 = getProducerPassiveMult(200);
-    expect(m5).toBeGreaterThan(1.1);
+    expect(m5).toBeGreaterThan(1.2);
     expect(m20).toBeGreaterThan(m5);
-    expect(m200).toBe(1.95);
+    expect(m200).toBe(2.35);
     expect(m20 / m5).toBeLessThan(3);
   });
 });
