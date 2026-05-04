@@ -60,10 +60,23 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick, p
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
+
+  useEffect(
+    () => () => {
+      if (panRafRef.current != null) {
+        cancelAnimationFrame(panRafRef.current);
+        panRafRef.current = null;
+      }
+    },
+    []
+  );
   const [hoveredCell, setHoveredCell] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const dragStateRef = useRef(null);
   const suppressPlacementClickRef = useRef(false);
+  /** Coalesce pan to one setState per animation frame (touch can fire >60 move events/sec). */
+  const panRafRef = useRef(null);
+  const pendingViewOffsetRef = useRef(null);
 
   const viewportWorldBand = useMemo(() => {
     const ox = viewOffset.x;
@@ -185,8 +198,6 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick, p
 
   const visibleCells = useMemo(() => {
     const { minWX, maxWX, minWY, maxWY } = viewportWorldBand;
-    const ox = viewOffset.x;
-    const oy = viewOffset.y;
     const cells = [];
 
     for (let wy = minWY; wy <= maxWY; wy++) {
@@ -194,13 +205,13 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick, p
         cells.push({
           worldX: wx,
           worldY: wy,
-          left: wx * CELL_SIZE - ox,
-          top: wy * CELL_SIZE - oy
+          left: wx * CELL_SIZE,
+          top: wy * CELL_SIZE
         });
       }
     }
     return cells;
-  }, [viewportWorldBand, viewOffset]);
+  }, [viewportWorldBand]);
 
   const previewTiles = useMemo(() => {
     if (!selectedBuildingType || !hoveredCell) return [];
@@ -335,13 +346,19 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick, p
     );
   }, [influencers, viewportWorldBand]);
 
-  const toScreen = (worldX, worldY) => ({
-    left: worldX * CELL_SIZE - viewOffset.x,
-    top: worldY * CELL_SIZE - viewOffset.y
+  /** Layer-local coords (camera transform applies pan — avoids updating thousands of cell styles per frame). */
+  const toWorldLayer = (worldX, worldY) => ({
+    left: worldX * CELL_SIZE,
+    top: worldY * CELL_SIZE
   });
 
   const handlePointerDown = event => {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
+    if (panRafRef.current != null) {
+      cancelAnimationFrame(panRafRef.current);
+      panRafRef.current = null;
+    }
+    pendingViewOffsetRef.current = null;
     suppressPlacementClickRef.current = false;
     dragStateRef.current = {
       pointerId: event.pointerId,
@@ -358,6 +375,15 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick, p
     }
   };
 
+  const flushPanViewOffset = useCallback(() => {
+    panRafRef.current = null;
+    const next = pendingViewOffsetRef.current;
+    if (next) {
+      pendingViewOffsetRef.current = null;
+      setViewOffset(next);
+    }
+  }, []);
+
   const handlePointerMove = event => {
     if (!dragStateRef.current || event.pointerId !== dragStateRef.current.pointerId) return;
 
@@ -366,12 +392,16 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick, p
     const movedEnough = Math.abs(dxPx) > DRAG_THRESHOLD_PX || Math.abs(dyPx) > DRAG_THRESHOLD_PX;
     if (!movedEnough) return;
 
+    const firstPan = !dragStateRef.current.moved;
     dragStateRef.current.moved = true;
-    setViewOffset({
+    pendingViewOffsetRef.current = {
       x: dragStateRef.current.offsetStartX - dxPx,
       y: dragStateRef.current.offsetStartY - dyPx
-    });
-    setIsDragging(true);
+    };
+    if (panRafRef.current == null) {
+      panRafRef.current = requestAnimationFrame(flushPanViewOffset);
+    }
+    if (firstPan) setIsDragging(true);
   };
 
   const endPointerDrag = event => {
@@ -381,6 +411,12 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick, p
     } catch {
       /* already released */
     }
+    if (panRafRef.current != null) {
+      cancelAnimationFrame(panRafRef.current);
+      panRafRef.current = null;
+    }
+    flushPanViewOffset();
+
     const moved = dragStateRef.current.moved;
     dragStateRef.current = null;
     if (moved) {
@@ -414,74 +450,166 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick, p
           onPointerUp={endPointerDrag}
           onPointerCancel={endPointerDrag}
         >
-        {/* Grid cells */}
-        {visibleCells.map(cell => (
-          <div
-            key={`${cell.worldX}-${cell.worldY}`}
-            className={`grid-cell ${
-              selectedTool
-                ? hoveredCell
-                  ? hoveredPlacementState.valid
-                    ? 'clickable'
-                    : 'blocked'
-                  : 'clickable'
-                : ''
-            }`}
-            style={{
-              left: cell.left,
-              top: cell.top,
-              width: CELL_SIZE,
-              height: CELL_SIZE
-            }}
-            onMouseEnter={() => setHoveredCell({ x: cell.worldX, y: cell.worldY })}
-            onPointerEnter={() => setHoveredCell({ x: cell.worldX, y: cell.worldY })}
-            onClick={() => handleCellClick(cell.worldX, cell.worldY)}
-          />
-        ))}
+        <div
+          className="world-grid-camera"
+          style={{
+            transform: `translate3d(${-viewOffset.x}px, ${-viewOffset.y}px, 0)`,
+            willChange: isDragging ? 'transform' : 'auto'
+          }}
+        >
+          {/* Grid cells */}
+          {visibleCells.map(cell => (
+            <div
+              key={`${cell.worldX}-${cell.worldY}`}
+              className={`grid-cell ${
+                selectedTool
+                  ? hoveredCell
+                    ? hoveredPlacementState.valid
+                      ? 'clickable'
+                      : 'blocked'
+                    : 'clickable'
+                  : ''
+              }`}
+              style={{
+                left: cell.left,
+                top: cell.top,
+                width: CELL_SIZE,
+                height: CELL_SIZE
+              }}
+              onMouseEnter={() => setHoveredCell({ x: cell.worldX, y: cell.worldY })}
+              onPointerEnter={() => setHoveredCell({ x: cell.worldX, y: cell.worldY })}
+              onClick={() => handleCellClick(cell.worldX, cell.worldY)}
+            />
+          ))}
 
-        {/* Placement footprint preview */}
-        {footprintPreviewTiles.map(tile => (
-          <div
-            key={`footprint-${tile.x}-${tile.y}`}
-            className={`placement-footprint ${hoveredPlacementState.valid ? 'valid' : 'invalid'}`}
-            style={{
-              ...toScreen(tile.x, tile.y),
-              width: CELL_SIZE,
-              height: CELL_SIZE,
-              borderColor: hoveredPlacementState.valid
-                ? (selectedBuildingType?.color ?? selectedInfluencerType?.color ?? 'var(--neon-green)')
-                : 'var(--neon-orange)'
-            }}
-          />
-        ))}
+          {/* Placement footprint preview */}
+          {footprintPreviewTiles.map(tile => (
+            <div
+              key={`footprint-${tile.x}-${tile.y}`}
+              className={`placement-footprint ${hoveredPlacementState.valid ? 'valid' : 'invalid'}`}
+              style={{
+                ...toWorldLayer(tile.x, tile.y),
+                width: CELL_SIZE,
+                height: CELL_SIZE,
+                borderColor: hoveredPlacementState.valid
+                  ? (selectedBuildingType?.color ?? selectedInfluencerType?.color ?? 'var(--neon-green)')
+                  : 'var(--neon-orange)'
+              }}
+            />
+          ))}
 
-        {/* Building range preview while placing */}
-        {previewTiles.map(tile => (
-          <div
-            key={`preview-${tile.x}-${tile.y}`}
-            className={`range-preview-tile ${tile.isFootprint ? 'footprint' : 'in-range'}`}
-            style={{
-              ...toScreen(tile.x, tile.y),
-              width: CELL_SIZE,
-              height: CELL_SIZE,
-              borderColor: selectedBuildingType?.color ?? 'var(--neon-cyan)'
-            }}
-          />
-        ))}
+          {/* Building range preview while placing */}
+          {previewTiles.map(tile => (
+            <div
+              key={`preview-${tile.x}-${tile.y}`}
+              className={`range-preview-tile ${tile.isFootprint ? 'footprint' : 'in-range'}`}
+              style={{
+                ...toWorldLayer(tile.x, tile.y),
+                width: CELL_SIZE,
+                height: CELL_SIZE,
+                borderColor: selectedBuildingType?.color ?? 'var(--neon-cyan)'
+              }}
+            />
+          ))}
 
-        {/* Placed building inspect: buff radius + hover card */}
-        {placedBuildingHoverTiles.map(tile => (
-          <div
-            key={`placed-hover-${tile.x}-${tile.y}`}
-            className={`placed-building-hover-tile ${tile.isFootprint ? 'footprint' : 'in-range'}`}
-            style={{
-              ...toScreen(tile.x, tile.y),
-              width: CELL_SIZE,
-              height: CELL_SIZE,
-              borderColor: hoveredPlacedBuildingType?.color ?? 'var(--neon-cyan)'
-            }}
-          />
-        ))}
+          {/* Placed building inspect: buff radius + hover card */}
+          {placedBuildingHoverTiles.map(tile => (
+            <div
+              key={`placed-hover-${tile.x}-${tile.y}`}
+              className={`placed-building-hover-tile ${tile.isFootprint ? 'footprint' : 'in-range'}`}
+              style={{
+                ...toWorldLayer(tile.x, tile.y),
+                width: CELL_SIZE,
+                height: CELL_SIZE,
+                borderColor: hoveredPlacedBuildingType?.color ?? 'var(--neon-cyan)'
+              }}
+            />
+          ))}
+
+          {/* Buildings */}
+          {visibleBuildings.map(building => {
+            const type = buildingTypes.find(t => t.id === building.typeId);
+            return (
+              <div
+                key={building.id}
+                className="building"
+                style={{
+                  ...toWorldLayer(building.position.x, building.position.y),
+                  width: CELL_SIZE * type.size,
+                  height: CELL_SIZE * type.size,
+                  borderColor: type.color,
+                  boxShadow: `0 0 20px ${type.color}, inset 0 0 10px ${type.color}`
+                }}
+              >
+                <span className="building-icon">{type.icon}</span>
+                <div className="building-glow" style={{ backgroundColor: type.color }} />
+              </div>
+            );
+          })}
+
+          {/* Influencers */}
+          {visibleInfluencers.map(influencer => {
+            const type = influencerTypes.find(t => t.id === influencer.typeId);
+            const isBoostedPreview = boostedInfluencerIds.has(influencer.id);
+            return (
+              <div
+                key={influencer.id}
+                className={`influencer floating ${isBoostedPreview ? 'boosted-preview' : ''}`}
+                style={{
+                  ...toWorldLayer(influencer.position.x, influencer.position.y),
+                  width: CELL_SIZE,
+                  height: CELL_SIZE,
+                  borderColor: type.color,
+                  boxShadow: isBoostedPreview
+                    ? `0 0 24px ${selectedBuildingType?.color ?? type.color}, 0 0 10px ${type.color}`
+                    : `0 0 15px ${type.color}`,
+                  animationDelay: animationDelayFromId(influencer.id)
+                }}
+              >
+                <span className="influencer-icon">{type.icon}</span>
+                <div className="influencer-particles" style={{ backgroundColor: type.color }} />
+              </div>
+            );
+          })}
+
+          {hoveredTalentOnly &&
+            !selectedTool &&
+            (() => {
+              const tt = influencerTypes.find(t => t.id === hoveredTalentOnly.typeId);
+              if (!tt) return null;
+              const p = toWorldLayer(hoveredTalentOnly.position.x, hoveredTalentOnly.position.y);
+              return (
+                <div
+                  className="entity-hover-tooltip talent-hover-tooltip"
+                  style={{
+                    left: p.left + CELL_SIZE / 2,
+                    top: p.top
+                  }}
+                >
+                  <div className="entity-hover-title">
+                    {tt.icon} {tt.name}
+                  </div>
+                  <div className="entity-hover-line">
+                    Agency (this tile){' '}
+                    <strong>{formatRate(passiveByInfluencerId?.[hoveredTalentOnly.id] ?? 0)}</strong> Clout/s
+                  </div>
+                  <div className="entity-hover-line">
+                    Tuned base on tile <strong>{formatRate(passiveCatalogTunedCps(tt.baseCloutPerSecond))}</strong> Clout/s
+                    (passive balance ×{PASSIVE_GLOBAL_MULT}; no grid buffs).
+                  </div>
+                  <div className="entity-hover-line talent-hover-buff">
+                    Grid buff (structures + pairings){' '}
+                    <strong>
+                      ×
+                      {hoveredTalentGridBuff >= 10
+                        ? hoveredTalentGridBuff.toFixed(1)
+                        : hoveredTalentGridBuff.toFixed(2)}
+                    </strong>
+                  </div>
+                </div>
+              );
+            })()}
+        </div>
 
         {selectedBuildingType && hoveredCell && (
           <div className="range-preview-legend">
@@ -501,90 +629,6 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick, p
             </span>
           </div>
         )}
-
-        {/* Buildings */}
-        {visibleBuildings.map(building => {
-          const type = buildingTypes.find(t => t.id === building.typeId);
-          return (
-            <div
-              key={building.id}
-              className="building"
-              style={{
-                ...toScreen(building.position.x, building.position.y),
-                width: CELL_SIZE * type.size,
-                height: CELL_SIZE * type.size,
-                borderColor: type.color,
-                boxShadow: `0 0 20px ${type.color}, inset 0 0 10px ${type.color}`
-              }}
-            >
-              <span className="building-icon">{type.icon}</span>
-              <div className="building-glow" style={{ backgroundColor: type.color }} />
-            </div>
-          );
-        })}
-
-        {/* Influencers */}
-        {visibleInfluencers.map(influencer => {
-          const type = influencerTypes.find(t => t.id === influencer.typeId);
-          const isBoostedPreview = boostedInfluencerIds.has(influencer.id);
-          return (
-            <div
-              key={influencer.id}
-              className={`influencer floating ${isBoostedPreview ? 'boosted-preview' : ''}`}
-              style={{
-                ...toScreen(influencer.position.x, influencer.position.y),
-                width: CELL_SIZE,
-                height: CELL_SIZE,
-                borderColor: type.color,
-                boxShadow: isBoostedPreview
-                  ? `0 0 24px ${selectedBuildingType?.color ?? type.color}, 0 0 10px ${type.color}`
-                  : `0 0 15px ${type.color}`,
-                animationDelay: animationDelayFromId(influencer.id)
-              }}
-            >
-              <span className="influencer-icon">{type.icon}</span>
-              <div className="influencer-particles" style={{ backgroundColor: type.color }} />
-            </div>
-          );
-        })}
-
-        {hoveredTalentOnly &&
-          !selectedTool &&
-          (() => {
-            const tt = influencerTypes.find(t => t.id === hoveredTalentOnly.typeId);
-            if (!tt) return null;
-            const p = toScreen(hoveredTalentOnly.position.x, hoveredTalentOnly.position.y);
-            return (
-              <div
-                className="entity-hover-tooltip talent-hover-tooltip"
-                style={{
-                  left: p.left + CELL_SIZE / 2,
-                  top: p.top
-                }}
-              >
-                <div className="entity-hover-title">
-                  {tt.icon} {tt.name}
-                </div>
-                <div className="entity-hover-line">
-                  Agency (this tile){' '}
-                  <strong>{formatRate(passiveByInfluencerId?.[hoveredTalentOnly.id] ?? 0)}</strong> Clout/s
-                </div>
-                <div className="entity-hover-line">
-                  Tuned base on tile <strong>{formatRate(passiveCatalogTunedCps(tt.baseCloutPerSecond))}</strong> Clout/s
-                  (passive balance ×{PASSIVE_GLOBAL_MULT}; no grid buffs).
-                </div>
-                <div className="entity-hover-line talent-hover-buff">
-                  Grid buff (structures + pairings){' '}
-                  <strong>
-                    ×
-                    {hoveredTalentGridBuff >= 10
-                      ? hoveredTalentGridBuff.toFixed(1)
-                      : hoveredTalentGridBuff.toFixed(2)}
-                  </strong>
-                </div>
-              </div>
-            );
-          })()}
 
         </div>
 

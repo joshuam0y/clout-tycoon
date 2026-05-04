@@ -11,6 +11,10 @@ import { Notifications } from './components/Notifications';
 import { MonetizationPanel } from './components/MonetizationPanel';
 import { HowToPlayModal } from './components/HowToPlayModal';
 import { GameHudBar } from './components/GameHudBar';
+import { useMatchMedia } from './hooks/useMatchMedia';
+
+/** Layout breakpoint: single-column shell + bottom tabs (see App.css). */
+const MOBILE_LAYOUT_QUERY = '(max-width: 900px)';
 
 function App() {
   const gameState = useGameState();
@@ -18,6 +22,9 @@ function App() {
   const [showMonetizationPanel, setShowMonetizationPanel] = useState(false);
   const [howToPlayOpen, setHowToPlayOpen] = useState(true);
   const [saveVaultOpen, setSaveVaultOpen] = useState(false);
+  const isNarrowShell = useMatchMedia(MOBILE_LAYOUT_QUERY);
+  /** Mobile-only: which full-screen pane is visible */
+  const [mobileTab, setMobileTab] = useState('grid');
 
   useEffect(() => {
     const prime = () => {
@@ -34,6 +41,13 @@ function App() {
   useEffect(() => {
     document.title = `Clout Tycoon · ${formatNumber(gameState.clout)} Clout · P${gameState.prestigeCount}`;
   }, [gameState.clout, gameState.prestigeCount]);
+
+  /* After choosing a hire/build tool in the shop, jump to the grid to place it */
+  useEffect(() => {
+    if (isNarrowShell && gameState.selectedTool) {
+      setMobileTab('grid');
+    }
+  }, [isNarrowShell, gameState.selectedTool]);
 
   useEffect(() => {
     const onKey = e => {
@@ -142,58 +156,105 @@ function App() {
           gemPassiveTimedBoost={gameState.gemPassiveTimedBoost}
         />
 
-        <div className="game-layout" aria-label="Agency panels and grid">
-        {/* Left panel - Controls and stats */}
-        <ControlPanel
-          prestigeCount={gameState.prestigeCount}
-          prestigeMultiplier={gameState.prestigeMultiplier}
-          clickCloutPerClick={gameState.clickCloutPerClick}
-          runCloutEarned={gameState.runCloutEarned}
-          prestigeRunCloutRequired={gameState.prestigeRunCloutRequired}
-          activeFrenzy={gameState.activeFrenzy}
-          onClickPostContent={gameState.clickPostContent}
-          onPrestige={gameState.prestige}
-          onOpenShop={() => setShowMonetizationPanel(true)}
-          onOpenHowToPlay={() => setHowToPlayOpen(true)}
-          namedSaveSlots={gameState.namedSaveSlots}
-          activeProfileName={gameState.activeProfileName}
-          lastProfileSyncAt={gameState.lastProfileSyncAt}
-          onSaveNamed={gameState.saveGameNamed}
-          onLoadNamed={gameState.loadGameNamed}
-          onDeleteNamedSave={gameState.deleteNamedSaveSlot}
-          onClearProfileBackup={gameState.clearProfileBackup}
-          onResetLocalSave={gameState.resetAllLocalProgress}
-          onImportNamedSave={gameState.importNamedSaveJson}
-          saveVaultHotkeyActive={!howToPlayOpen && !showMonetizationPanel && !activeBrandDeal}
-          onSaveVaultOpenChange={setSaveVaultOpen}
-        />
+        <div
+          className={`game-layout ${isNarrowShell ? 'game-layout--mobile' : ''}`}
+          aria-label="Agency panels and grid"
+        >
+          <div
+            className={`game-layout__pane game-layout__pane--command ${
+              isNarrowShell && mobileTab !== 'command' ? 'is-hidden' : ''
+            }`}
+          >
+            <ControlPanel
+              prestigeCount={gameState.prestigeCount}
+              prestigeMultiplier={gameState.prestigeMultiplier}
+              clickCloutPerClick={gameState.clickCloutPerClick}
+              runCloutEarned={gameState.runCloutEarned}
+              prestigeRunCloutRequired={gameState.prestigeRunCloutRequired}
+              activeFrenzy={gameState.activeFrenzy}
+              onClickPostContent={gameState.clickPostContent}
+              onPrestige={gameState.prestige}
+              onOpenShop={() => setShowMonetizationPanel(true)}
+              onOpenHowToPlay={() => setHowToPlayOpen(true)}
+              namedSaveSlots={gameState.namedSaveSlots}
+              activeProfileName={gameState.activeProfileName}
+              lastProfileSyncAt={gameState.lastProfileSyncAt}
+              onSaveNamed={gameState.saveGameNamed}
+              onLoadNamed={gameState.loadGameNamed}
+              onDeleteNamedSave={gameState.deleteNamedSaveSlot}
+              onClearProfileBackup={gameState.clearProfileBackup}
+              onResetLocalSave={gameState.resetAllLocalProgress}
+              onImportNamedSave={gameState.importNamedSaveJson}
+              saveVaultHotkeyActive={!howToPlayOpen && !showMonetizationPanel && !activeBrandDeal}
+              onSaveVaultOpenChange={setSaveVaultOpen}
+            />
+          </div>
 
-        {/* Center - Game world */}
-        <GameWorld
-          influencers={gameState.influencers}
-          buildings={gameState.buildings}
-          selectedTool={gameState.selectedTool}
-          onCellClick={handleCellClick}
-          passiveByInfluencerId={gameState.passiveByInfluencerId}
-        />
+          <div
+            className={`game-layout__pane game-layout__pane--grid ${
+              isNarrowShell && mobileTab !== 'grid' ? 'is-hidden' : ''
+            }`}
+          >
+            <GameWorld
+              influencers={gameState.influencers}
+              buildings={gameState.buildings}
+              selectedTool={gameState.selectedTool}
+              onCellClick={handleCellClick}
+              passiveByInfluencerId={gameState.passiveByInfluencerId}
+            />
+          </div>
 
-        {/* Right panel - Shop */}
-        <ShopPanel
-          clout={gameState.clout}
-          followers={gameState.followers}
-          selectedTool={gameState.selectedTool}
-          onSelectTool={gameState.setSelectedTool}
-          influencers={gameState.influencers}
-          buildings={gameState.buildings}
-          clickUpgradeLevels={gameState.clickUpgradeLevels}
-          onBuyClickUpgrade={gameState.buyClickUpgrade}
-          managers={gameState.managers}
-          onBuyManager={gameState.buyManager}
-          passiveByTalentType={gameState.passiveByTalentType}
-          prestigeCount={gameState.prestigeCount}
-          catalogEra={gameState.catalogEra}
-        />
+          <div
+            className={`game-layout__pane game-layout__pane--shop ${
+              isNarrowShell && mobileTab !== 'shop' ? 'is-hidden' : ''
+            }`}
+          >
+            <ShopPanel
+              clout={gameState.clout}
+              followers={gameState.followers}
+              selectedTool={gameState.selectedTool}
+              onSelectTool={gameState.setSelectedTool}
+              influencers={gameState.influencers}
+              buildings={gameState.buildings}
+              clickUpgradeLevels={gameState.clickUpgradeLevels}
+              onBuyClickUpgrade={gameState.buyClickUpgrade}
+              managers={gameState.managers}
+              onBuyManager={gameState.buyManager}
+              passiveByTalentType={gameState.passiveByTalentType}
+              prestigeCount={gameState.prestigeCount}
+              catalogEra={gameState.catalogEra}
+            />
+          </div>
         </div>
+
+        {isNarrowShell && (
+          <nav className="mobile-tab-bar" aria-label="Switch section">
+            <button
+              type="button"
+              className={`mobile-tab-bar__btn ${mobileTab === 'grid' ? 'is-active' : ''}`}
+              onClick={() => setMobileTab('grid')}
+              aria-current={mobileTab === 'grid' ? 'page' : undefined}
+            >
+              Grid
+            </button>
+            <button
+              type="button"
+              className={`mobile-tab-bar__btn ${mobileTab === 'command' ? 'is-active' : ''}`}
+              onClick={() => setMobileTab('command')}
+              aria-current={mobileTab === 'command' ? 'page' : undefined}
+            >
+              Command
+            </button>
+            <button
+              type="button"
+              className={`mobile-tab-bar__btn ${mobileTab === 'shop' ? 'is-active' : ''}`}
+              onClick={() => setMobileTab('shop')}
+              aria-current={mobileTab === 'shop' ? 'page' : undefined}
+            >
+              Shop
+            </button>
+          </nav>
+        )}
       </div>
 
       {/* Brand deal popup */}

@@ -18,6 +18,16 @@
   position: relative;
   /* Clip panes so overlay UI is anchored to the visible map frame, not the oversized canvas */
   overflow: hidden;
+  touch-action: none;
+}
+
+.world-grid-camera {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  z-index: 1;
+  pointer-events: auto;
 }
 
 .world-grid {
@@ -111,7 +121,7 @@
   position: absolute;
   top: 8px;
   left: 8px;
-  z-index: 3;
+  z-index: 8;
   display: flex;
   gap: 6px;
   background: rgba(10, 10, 20, 0.7);

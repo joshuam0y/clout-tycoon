@@ -81,9 +81,11 @@ body {
 }
 
 #root {
-  width: 100vw;
+  width: 100%;
+  max-width: 100vw;
   height: 100dvh;
   min-height: 100dvh;
+  overscroll-behavior: none;
 }
 
 /* Neon grid background */
@@ -221,8 +223,8 @@ button:disabled:hover {
 /* Notification system */
 .notifications {
   position: fixed;
-  top: var(--spacing-lg);
-  right: var(--spacing-lg);
+  top: calc(var(--spacing-lg) + env(safe-area-inset-top, 0px));
+  right: calc(var(--spacing-lg) + env(safe-area-inset-right, 0px));
   z-index: 1000;
   display: flex;
   flex-direction: column;

@@ -1,11 +1,13 @@
 .app {
-  width: 100vw;
+  width: 100%;
+  max-width: 100vw;
   height: 100dvh;
   min-height: 100dvh;
   position: relative;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  overscroll-behavior: none;
 }
 
 .game-shell {
@@ -26,4 +28,93 @@
 
 .game-layout > * {
   min-height: 0;
+}
+
+/* Desktop: row of agency | grid | shop */
+.game-layout__pane {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+
+.game-layout:not(.game-layout--mobile) .game-layout__pane--command {
+  flex: 0 0 300px;
+  width: 300px;
+}
+
+.game-layout:not(.game-layout--mobile) .game-layout__pane--grid {
+  flex: 1;
+  min-width: 0;
+}
+
+.game-layout:not(.game-layout--mobile) .game-layout__pane--shop {
+  flex: 0 0 320px;
+  width: 320px;
+}
+
+/* Narrow screens: one pane at a time + bottom tabs */
+.game-layout--mobile {
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.game-layout--mobile .game-layout__pane.is-hidden {
+  display: none !important;
+}
+
+.game-layout--mobile .game-layout__pane:not(.is-hidden) {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+
+.game-layout--mobile .control-panel,
+.game-layout--mobile .shop-panel {
+  width: 100% !important;
+  max-width: none !important;
+  flex: 1 1 auto !important;
+  min-height: 0;
+}
+
+.mobile-tab-bar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  padding: 8px calc(10px + env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px))
+    calc(10px + env(safe-area-inset-left, 0px));
+  border-top: 1px solid rgba(0, 255, 255, 0.22);
+  background: linear-gradient(180deg, rgba(6, 10, 22, 0.96), rgba(4, 6, 18, 0.98));
+  box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.35);
+  z-index: 4;
+}
+
+.mobile-tab-bar__btn {
+  flex: 1;
+  min-height: 48px;
+  padding: 10px 8px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border-radius: 10px;
+  border: 2px solid rgba(0, 255, 255, 0.35);
+  background: rgba(0, 25, 38, 0.92);
+  color: var(--text-secondary, #99aacc);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-tab-bar__btn.is-active {
+  color: var(--neon-cyan, #00ffff);
+  border-color: rgba(0, 255, 255, 0.85);
+  background: rgba(0, 255, 255, 0.12);
+  box-shadow: 0 0 18px rgba(0, 255, 255, 0.18);
+}
+
+.mobile-tab-bar__btn:active:not(.is-active) {
+  opacity: 0.92;
 }
