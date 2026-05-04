@@ -548,40 +548,6 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick, p
           );
         })}
 
-        {hoveredPlacedBuilding &&
-          hoveredPlacedBuildingType &&
-          !selectedTool &&
-          (() => {
-            const bt = hoveredPlacedBuildingType;
-            const desc = clipTooltipDescription(bt.description);
-            return (
-              <div
-                className="entity-hover-tooltip building-hover-tooltip"
-                style={{
-                  borderColor: bt.color,
-                  boxShadow: `0 10px 32px rgba(0, 0, 0, 0.58), 0 0 28px ${bt.color}40, inset 0 1px 0 rgba(255, 255, 255, 0.07)`
-                }}
-              >
-                <div className="entity-hover-title">
-                  {bt.icon} {bt.name}
-                </div>
-                <div className="entity-hover-line">
-                  Footprint <strong>{bt.size}×{bt.size}</strong> · Buff radius <strong>{bt.range}</strong> (from edge)
-                  {' · '}
-                  <strong>{hoveredBuildingTalentInRange}</strong>{' '}
-                  {hoveredBuildingTalentInRange === 1 ? 'talent' : 'talents'} in range
-                  {bt.effect === 'multiply' && bt.multiplier ? (
-                    <>
-                      {' · '}
-                      Passive <strong>×{bt.multiplier}</strong>
-                    </>
-                  ) : null}
-                </div>
-                {desc ? <div className="entity-hover-desc">{desc}</div> : null}
-              </div>
-            );
-          })()}
-
         {hoveredTalentOnly &&
           !selectedTool &&
           (() => {
@@ -620,13 +586,48 @@ export const GameWorld = ({ influencers, buildings, selectedTool, onCellClick, p
             );
           })()}
 
+        </div>
+
+        {hoveredPlacedBuilding &&
+          hoveredPlacedBuildingType &&
+          !selectedTool &&
+          (() => {
+            const bt = hoveredPlacedBuildingType;
+            const desc = clipTooltipDescription(bt.description);
+            return (
+              <div
+                className="entity-hover-tooltip building-hover-tooltip"
+                style={{
+                  borderColor: bt.color,
+                  boxShadow: `0 10px 32px rgba(0, 0, 0, 0.58), 0 0 28px ${bt.color}40, inset 0 1px 0 rgba(255, 255, 255, 0.07)`
+                }}
+              >
+                <div className="entity-hover-title">
+                  {bt.icon} {bt.name}
+                </div>
+                <div className="entity-hover-line">
+                  Footprint <strong>{bt.size}×{bt.size}</strong> · Buff radius <strong>{bt.range}</strong> (from edge)
+                  {' · '}
+                  <strong>{hoveredBuildingTalentInRange}</strong>{' '}
+                  {hoveredBuildingTalentInRange === 1 ? 'talent' : 'talents'} in range
+                  {bt.effect === 'multiply' && bt.multiplier ? (
+                    <>
+                      {' · '}
+                      Passive <strong>×{bt.multiplier}</strong>
+                    </>
+                  ) : null}
+                </div>
+                {desc ? <div className="entity-hover-desc">{desc}</div> : null}
+              </div>
+            );
+          })()}
+
         <div className="camera-hint">
           {selectedTool
             ? placementToolHint
               ? `Placing ${placementToolHint} — valid tiles cyan, blocked red · tap to confirm · Esc clears · Home recenters · drag to pan`
               : 'Placement mode — tap the grid · Esc clears tool · Home recenters · drag to pan'
             : 'Drag / swipe to pan · Home recenters camera · infinite grid'}
-        </div>
         </div>
       </div>
     </main>
